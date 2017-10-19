@@ -1,0 +1,21 @@
+﻿@using Microsoft.AspNetCore.Mvc.RazorPages
+
+@if (TempData.ContainsKey(FlashMessages.Error))
+{
+    <div class="alert alert-danger">@TempData[FlashMessages.Error]</div>
+}
+
+@if (TempData.ContainsKey(FlashMessages.Info))
+{
+    <div class="alert alert-info">@TempData[FlashMessages.Info]</div>
+}
+
+@if (TempData.ContainsKey(FlashMessages.Warning))
+{
+    <div class="alert alert-warning">@TempData[FlashMessages.Warning]</div>
+}
+
+@if (TempData.ContainsKey(FlashMessages.Success))
+{
+    <div class="alert alert-success" role="alert">@TempData[FlashMessages.Success]</div>
+}

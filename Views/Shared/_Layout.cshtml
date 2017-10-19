@@ -38,6 +38,9 @@
             </div>
         </div>
     </nav>
+
+    @await Html.PartialAsync("_FlashMessages")
+
     <div class="container body-content">
         @RenderBody()
         <hr />

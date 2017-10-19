@@ -65,6 +65,7 @@ namespace viafront3.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    this.FlashSuccess("Logged in");
                     return RedirectToLocal(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -247,6 +248,7 @@ namespace viafront3.Controllers
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
+            this.FlashSuccess("Logged out");
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
