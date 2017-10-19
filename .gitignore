@@ -1,0 +1,24 @@
+# python turds
+*~
+*.swp
+*.swo
+
+# cs binaries
+bin/
+obj/
+
+# bower output
+wwwroot/lib/
+
+# npm output
+node_modules/
+
+# minitfied
+wwwroot/css/site.min.css
+wwwroot/js/site.min.js
+
+# logs
+logs/
+
+# db
+app.db
