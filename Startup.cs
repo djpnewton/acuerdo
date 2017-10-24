@@ -15,6 +15,16 @@ using viafront3.Services;
 
 namespace viafront3
 {
+    public class ExchangeSettings
+    {
+        public string AccessHttpHost { get; set; } = "http://localhost:8080";
+        public string Market { get; set; } = "BTCCNY";
+        public string MarketPriceUnit { get; set; } = "BTC";
+        public string MarketAmountUnit { get; set; } = "CNY";
+        public int OrderBookLimit { get; set; } = 99;
+        public string OrderBookInterval { get; set; } = "2";
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -27,6 +37,9 @@ namespace viafront3
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Add ExchangeSettings so it can be injected in controllers
+            services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
+
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
 
