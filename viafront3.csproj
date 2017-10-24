@@ -3,9 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <UserSecretsId>aspnet-viafront3-36E08FBB-CDE1-4E3F-9A57-E0D902DB5F9C</UserSecretsId>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
+
   <ItemGroup>
     <None Update="app.db" CopyToOutputDirectory="PreserveNewest" />
+    <Compile Include="**/*.cs" Exclude="bin/**;obj/**;via_jsonrpc/**;" />
   </ItemGroup>
 
   <ItemGroup>
@@ -21,6 +24,11 @@
     <DotNetCliToolReference Include="Microsoft.Extensions.SecretManager.Tools" Version="2.0.0" />
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="2.0.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="via_jsonrpc\via_jsonrpc\via_jsonrpc.csproj" />
+  </ItemGroup>
+
 
   <Target Name="PrebuildScript" BeforeTargets="PrepareForBuild">
     <Exec Command="node_modules/.bin/bower install" />

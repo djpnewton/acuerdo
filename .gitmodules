@@ -1,0 +1,3 @@
+[submodule "via_jsonrpc"]
+	path = via_jsonrpc
+	url = https://github.com/djpnewton/via_jsonrpc.git
