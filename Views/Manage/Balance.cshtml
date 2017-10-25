@@ -1,0 +1,44 @@
+﻿@model BalanceViewModel
+@{
+    ViewData["Title"] = "Balance";
+    ViewData.AddActivePage(ManageNavPages.Balance);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <table class="table table-bordered table-responsive table-hover">
+            <tr>
+                <th>
+                    Asset
+                </th>
+                <th>
+                    Available
+                </th>
+                <th>
+                    Frozen
+                </th>
+            </tr>
+            <tbody>@{
+                foreach (var item in Model.Balances)
+                {
+                    <tr>
+                        <td>
+                            @item.Key
+                        </td>
+                        <td>
+                            @item.Value.Available
+                        </td>
+                        <td>
+                            @item.Value.Freeze
+                        </td>
+                    </tr>
+                }
+            }</tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

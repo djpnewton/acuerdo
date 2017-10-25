@@ -19,6 +19,3 @@ wwwroot/js/site.min.js
 
 # logs
 logs/
-
-# db
-app.db

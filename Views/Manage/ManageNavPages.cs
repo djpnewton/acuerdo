@@ -11,6 +11,8 @@ namespace viafront3.Views.Manage
     {
         public static string ActivePageKey => "ActivePage";
 
+        public static string Balance => "Balance";
+
         public static string Index => "Index";
 
         public static string ChangePassword => "ChangePassword";
@@ -18,6 +20,8 @@ namespace viafront3.Views.Manage
         public static string ExternalLogins => "ExternalLogins";
 
         public static string TwoFactorAuthentication => "TwoFactorAuthentication";
+
+        public static string BalanceNavClass(ViewContext viewContext) => PageNavClass(viewContext, Balance);
 
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 

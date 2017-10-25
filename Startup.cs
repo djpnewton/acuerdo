@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pomelo.EntityFrameworkCore.MySql;
 using viafront3.Data;
 using viafront3.Models;
 using viafront3.Services;
@@ -41,7 +42,7 @@ namespace viafront3
             services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlite(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
