@@ -1,0 +1,14 @@
+﻿@using viafront3.Views.Market
+@using Microsoft.Extensions.Options
+@inject IOptions<ExchangeSettings> ExchangeSettings
+@{
+    var settings = ExchangeSettings.Value;
+}
+
+<ul class="nav nav-pills nav-stacked">
+    @foreach (var item in settings.Markets)
+    {
+        <li class="@MarketNavPages.PageNavClass(ViewContext, item.Key)"><a asp-action="Orderbook" asp-route-id="@item.Key">@item.Key</a></li>
+    }
+</ul>
+

@@ -1,14 +1,15 @@
-﻿@{
+﻿@using viafront3.Models.MarketViewModels
+@using viafront3.Views.Market
+@model OrderbookViewModel
+@{
     ViewData["Title"] = "Order Book";
-    var priceUnit = ViewData["PriceUnit"];
-    var amountUnit = ViewData["amountUnit"];
-    var orderDepth = ViewData["OrderDepth"] as via_jsonrpc.OrderDepth;
+    ViewData.AddActivePage(Model.Market);
 }
-<h2>@ViewData["Title"] - @ViewData["Market"]</h2>
+<h4>@ViewData["Title"] - @Model.MarketNice</h4>
 
 <div class="row">
     <div class="col-md-6">
-        <h3>Bid</h3>
+        <h4>Bid</h4>
         <table class="table table-bordered table-responsive table-hover">
             <tr>
                 <th>
@@ -19,14 +20,14 @@
                 </th>
             </tr>
             <tbody>@{
-                foreach (var item in orderDepth.bids)
+                foreach (var item in Model.OrderDepth.bids)
                 {
                     <tr>
                         <td>
-                            @item.ElementAt(0) @priceUnit
+                            @item.ElementAt(0) @Model.PriceUnit
                         </td>
                         <td>
-                            @item.ElementAt(1) @amountUnit
+                            @item.ElementAt(1) @Model.AmountUnit
                         </td>
                     </tr>
                 }
@@ -34,7 +35,7 @@
         </table>
     </div>
     <div class="col-md-6">
-        <h3>Ask</h3>
+        <h4>Ask</h4>
         <table class="table table-bordered table-responsive table-hover">
             <tr>
                 <th>
@@ -45,14 +46,14 @@
                 </th>
             </tr>
             <tbody>@{
-                foreach (var item in orderDepth.asks)
+                foreach (var item in Model.OrderDepth.asks)
                 {
                     <tr>
                         <td>
-                            @item.ElementAt(0) @priceUnit
+                            @item.ElementAt(0) @Model.PriceUnit
                         </td>
                         <td>
-                            @item.ElementAt(1) @amountUnit
+                            @item.ElementAt(1) @Model.AmountUnit
                         </td>
                     </tr>
                 }

@@ -16,12 +16,16 @@ using viafront3.Services;
 
 namespace viafront3
 {
+    public class MarketSettings
+    {
+        public string MarketPriceUnit { get; set; }
+        public string MarketAmountUnit { get; set; }
+    }
+
     public class ExchangeSettings
     {
         public string AccessHttpHost { get; set; } = "http://localhost:8080";
-        public string Market { get; set; } = "BTCCNY";
-        public string MarketPriceUnit { get; set; } = "BTC";
-        public string MarketAmountUnit { get; set; } = "CNY";
+        public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;
         public string OrderBookInterval { get; set; } = "2";
     }

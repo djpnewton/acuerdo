@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
+using viafront3.Models.MarketViewModels;
 using via_jsonrpc;
 
 namespace viafront3.Controllers
@@ -20,17 +21,26 @@ namespace viafront3.Controllers
             _settings = settings.Value;
         }
 
-        public IActionResult Orderbook()
+        public IActionResult Index()
+        {
+            return View();
+        }
+
+        public IActionResult Orderbook(string id)
         {
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
-            var orderDepth = via.OrderDepthQuery(_settings.Market, _settings.OrderBookLimit, _settings.OrderBookInterval);
+            var orderDepth = via.OrderDepthQuery(id, _settings.OrderBookLimit, _settings.OrderBookInterval);
 
-            ViewData["Market"] = string.Format("{0}/{1}", _settings.MarketAmountUnit, _settings.MarketPriceUnit);
-            ViewData["AmountUnit"] = _settings.MarketAmountUnit;
-            ViewData["PriceUnit"] = _settings.MarketPriceUnit;
-            ViewData["OrderDepth"] = orderDepth;
+            var model = new OrderbookViewModel
+            {
+                Market = id,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[id].MarketAmountUnit, _settings.Markets[id].MarketPriceUnit),
+                AmountUnit = _settings.Markets[id].MarketAmountUnit,
+                PriceUnit = _settings.Markets[id].MarketPriceUnit,
+                OrderDepth = orderDepth
+            };
 
-            return View();
+            return View(model);
         }
     }
 }
