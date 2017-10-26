@@ -112,7 +112,7 @@ namespace viafront3.Controllers
             var user = await GetUser();
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
-            this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2}, Price: {3})", order.market, order.side, order.amount, order.price));
+            this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
             return RedirectToAction("Trade", new { id = model.Market });
         }
     }
