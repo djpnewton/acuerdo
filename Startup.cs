@@ -28,6 +28,8 @@ namespace viafront3
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;
         public string OrderBookInterval { get; set; } = "2";
+        public string TakerFeeRate { get; set; } = "0.02";
+        public string MakerFeeRate { get; set; } = "0.01";
     }
 
     public class Startup
