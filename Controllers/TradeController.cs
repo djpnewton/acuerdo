@@ -52,18 +52,21 @@ namespace viafront3.Controllers
 
         public async Task<IActionResult> Trade(string id)
         {
+            var market = id;
             var user = await GetUser();
 
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var balances = via.BalanceQuery(user.Exchange.Id);
+            var ordersPending = via.OrdersPendingQuery(user.Exchange.Id, market, 0, 10);
 
             var model = new TradeViewModel
             {
                 Market = id,
-                MarketNice = string.Format("{0}/{1}", _settings.Markets[id].MarketAmountUnit, _settings.Markets[id].MarketPriceUnit),
-                AmountUnit = _settings.Markets[id].MarketAmountUnit,
-                PriceUnit = _settings.Markets[id].MarketPriceUnit,
-                Balances = balances
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].MarketAmountUnit, _settings.Markets[market].MarketPriceUnit),
+                AmountUnit = _settings.Markets[market].MarketAmountUnit,
+                PriceUnit = _settings.Markets[market].MarketPriceUnit,
+                Balances = balances,
+                OrdersPending = ordersPending
             };
 
             return View(model);

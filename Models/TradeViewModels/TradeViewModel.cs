@@ -19,10 +19,17 @@ namespace viafront3.Models.TradeViewModels
 
         public Dictionary<string, Balance> Balances { get; set; }
 
+        public OrdersPending OrdersPending { get; set; }
+
         public OrderSide Side { get; set; }
 
         public string Amount { get; set; }
 
         public string Price { get; set; }
+
+        public string FeeUnit(Order order)
+        {
+            return order.side == OrderSide.Ask ? PriceUnit : AmountUnit;
+        }
     }
 }

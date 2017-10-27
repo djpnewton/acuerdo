@@ -112,6 +112,70 @@
         </div>
     </div>
 </div>
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Pending Orders
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Bid/Ask
+                        </th>
+                        <th>
+                            Price (@Model.PriceUnit)
+                        </th>
+                        <th>
+                            Amount (@Model.AmountUnit)
+                        </th>
+                        <th>
+                            Remaining (@Model.AmountUnit)
+                        </th>
+                        <th>
+                            Traded (@Model.AmountUnit)
+                        </th>
+                        <th>
+                            Traded (@Model.PriceUnit)
+                        </th>
+                        <th>
+                            Fee
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.OrdersPending.records)
+                        {
+                            <tr>
+                                <td>
+                                    @item.side
+                                </td>
+                                <td>
+                                    @item.price
+                                </td>
+                                <td>
+                                    @item.amount
+                                </td>
+                                <td>
+                                    @item.left
+                                </td>
+                                <td>
+                                    @item.deal_stock
+                                </td>
+                                <td>
+                                    @item.deal_money
+                                </td>
+                                <td>
+                                    @item.deal_fee @Model.FeeUnit(item)
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
