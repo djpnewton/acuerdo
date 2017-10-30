@@ -9,7 +9,7 @@ namespace viafront3.Models.ManageViewModels
 {
     public class BalanceViewModel
     {
-        public string Username { get; set; }
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
 
         public Dictionary<string, Balance> Balances { get; set; }
     }

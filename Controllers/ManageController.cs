@@ -71,7 +71,7 @@ namespace viafront3.Controllers
 
             var model = new BalanceViewModel
             {
-                Username = user.UserName,
+                AssetSettings = _settings.Assets,
                 Balances = balances
             };
 

@@ -34,9 +34,9 @@ namespace viafront3.Controllers
             var model = new OrderbookViewModel
             {
                 Market = id,
-                MarketNice = string.Format("{0}/{1}", _settings.Markets[id].MarketAmountUnit, _settings.Markets[id].MarketPriceUnit),
-                AmountUnit = _settings.Markets[id].MarketAmountUnit,
-                PriceUnit = _settings.Markets[id].MarketPriceUnit,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[id].AmountUnit, _settings.Markets[id].PriceUnit),
+                AmountUnit = _settings.Markets[id].AmountUnit,
+                PriceUnit = _settings.Markets[id].PriceUnit,
                 OrderDepth = orderDepth
             };
 

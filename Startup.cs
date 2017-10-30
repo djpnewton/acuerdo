@@ -16,15 +16,23 @@ using viafront3.Services;
 
 namespace viafront3
 {
+    public class AssetSettings
+    {
+        public int Decimals { get; set; }
+    }
+
     public class MarketSettings
     {
-        public string MarketPriceUnit { get; set; }
-        public string MarketAmountUnit { get; set; }
+        public string PriceUnit { get; set; }
+        public string AmountUnit { get; set; }
+        public int PriceDecimals { get; set; }
+        public int AmountDecimals { get; set; }
     }
 
     public class ExchangeSettings
     {
         public string AccessHttpHost { get; set; } = "http://localhost:8080";
+        public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;
         public string OrderBookInterval { get; set; } = "2";

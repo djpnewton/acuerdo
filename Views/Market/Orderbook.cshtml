@@ -12,10 +12,10 @@
         <h4>Bid</h4>
         <table class="table table-bordered table-responsive table-hover">
             <tr>
-                <th>
+                <th class="pad-decimals">
                     Price
                 </th>
-                <th>
+                <th class="pad-decimals">
                     Amount
                 </th>
             </tr>
@@ -24,10 +24,16 @@
                 {
                     <tr>
                         <td>
-                            @item.ElementAt(0) @Model.PriceUnit
+                            <span class="pad-decimals-data">
+                            @item.ElementAt(0)
+                            </span>
+                            &nbsp;@Model.PriceUnit
                         </td>
                         <td>
-                            @item.ElementAt(1) @Model.AmountUnit
+                            <span class="pad-decimals-data">
+                            @item.ElementAt(1)
+                            </span>
+                            &nbsp;@Model.AmountUnit
                         </td>
                     </tr>
                 }
@@ -38,10 +44,10 @@
         <h4>Ask</h4>
         <table class="table table-bordered table-responsive table-hover">
             <tr>
-                <th>
+                <th class="pad-decimals">
                     Price
                 </th>
-                <th>
+                <th class="pad-decimals">
                     Amount
                 </th>
             </tr>
@@ -50,10 +56,16 @@
                 {
                     <tr>
                         <td>
-                            @item.ElementAt(0) @Model.PriceUnit
+                            <span class="pad-decimals-data">
+                            @item.ElementAt(0)
+                            </span>
+                            &nbsp;@Model.PriceUnit
                         </td>
                         <td>
-                            @item.ElementAt(1) @Model.AmountUnit
+                            <span class="pad-decimals-data">
+                            @item.ElementAt(1)
+                            </span>
+                            &nbsp;@Model.AmountUnit
                         </td>
                     </tr>
                 }
@@ -61,3 +73,7 @@
         </table>
     </div>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

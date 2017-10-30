@@ -62,9 +62,9 @@ namespace viafront3.Controllers
             var model = new TradeViewModel
             {
                 Market = id,
-                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].MarketAmountUnit, _settings.Markets[market].MarketPriceUnit),
-                AmountUnit = _settings.Markets[market].MarketAmountUnit,
-                PriceUnit = _settings.Markets[market].MarketPriceUnit,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
+                AssetSettings = _settings.Assets,
+                Settings = _settings.Markets[market],
                 Balances = balances,
                 OrdersPending = ordersPending
             };

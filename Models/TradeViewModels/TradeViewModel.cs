@@ -13,9 +13,9 @@ namespace viafront3.Models.TradeViewModels
 
         public string MarketNice { get; set; }
 
-        public string AmountUnit { get; set; }
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
 
-        public string PriceUnit { get; set; }
+        public MarketSettings Settings { get; set; }
 
         public Dictionary<string, Balance> Balances { get; set; }
 
@@ -29,7 +29,12 @@ namespace viafront3.Models.TradeViewModels
 
         public string FeeUnit(Order order)
         {
-            return order.side == OrderSide.Ask ? PriceUnit : AmountUnit;
+            return order.side == OrderSide.Ask ? Settings.PriceUnit : Settings.AmountUnit;
+        }
+
+        public int FeeDecimals(Order order)
+        {
+            return order.side == OrderSide.Ask ? Settings.PriceDecimals : Settings.AmountDecimals;
         }
     }
 }

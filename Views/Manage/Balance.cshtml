@@ -1,4 +1,5 @@
-﻿@model BalanceViewModel
+﻿@using viafront3.Views
+@model BalanceViewModel
 @{
     ViewData["Title"] = "Balance";
     ViewData.AddActivePage(ManageNavPages.Balance);
@@ -12,10 +13,10 @@
                 <th>
                     Asset
                 </th>
-                <th>
+                <th class="pad-decimals">
                     Available
                 </th>
-                <th>
+                <th class="pad-decimals">
                     Frozen
                 </th>
             </tr>
@@ -27,10 +28,14 @@
                             @item.Key
                         </td>
                         <td>
-                            @item.Value.Available
+                            <span class="pad-decimals-data">
+                            @ViewUtils.FormatStrDec(item.Value.Available, Model.AssetSettings[item.Key].Decimals)
+                            </span>
                         </td>
                         <td>
-                            @item.Value.Freeze
+                            <span class="pad-decimals-data">
+                            @ViewUtils.FormatStrDec(item.Value.Freeze, Model.AssetSettings[item.Key].Decimals)
+                            </span>
                         </td>
                     </tr>
                 }
@@ -41,4 +46,5 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
 }
