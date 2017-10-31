@@ -144,6 +144,15 @@
                                     </span>
                                     &nbsp;@Model.FeeUnit(item)
                                 </td>
+                                <td>
+                                    <form asp-controller="Trade" asp-action="CancelOrder" method="post" id="cancel-order-form-@item.id">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" asp-for="Market" value="@Model.Market"/>
+                                        <input type="hidden" asp-for="OrderId" value="@item.id"/>
+                                        <button type="button" class="btn btn-warning btn-xs form-cancel-button"
+                                        data-toggle="modal" data-target="#confirm-submit">Cancel</button>
+                                    </form>
+                                </td>
                             </tr>
                         }
                     }</tbody>
@@ -152,6 +161,34 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Order Cancellation
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to cancel the following order?
+                </p>
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr id="modal-table-header">
+                    </tr>
+                    <tbody>
+                        <tr id="modal-table-row"></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-cancellation" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-md-12">
         <div class="panel panel-default">
@@ -200,4 +237,5 @@
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+    @await Html.PartialAsync("_OrderCancellationScriptPartial")
 }

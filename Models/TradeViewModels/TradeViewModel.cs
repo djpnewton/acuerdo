@@ -27,6 +27,8 @@ namespace viafront3.Models.TradeViewModels
 
         public string Price { get; set; }
 
+        public int OrderId { get; set; }
+
         public string FeeUnit(Order order)
         {
             return order.side == OrderSide.Ask ? Settings.PriceUnit : Settings.AmountUnit;

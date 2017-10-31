@@ -118,5 +118,16 @@ namespace viafront3.Controllers
             this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
             return RedirectToAction("Trade", new { id = model.Market });
         }
+
+        [ValidateAntiForgeryToken]
+        [HttpPost] 
+        public async Task<IActionResult> CancelOrder(TradeViewModel model)
+        {
+            var user = await GetUser();
+            var via = new ViaJsonRpc(_settings.AccessHttpHost);
+            var order = via.OrderCancelQuery(user.Exchange.Id, model.Market, model.OrderId);
+            this.FlashSuccess("Order Cancelled");
+            return RedirectToAction("Trade", new { id = model.Market });
+        }
     }
 }
