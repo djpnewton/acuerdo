@@ -16,6 +16,14 @@ using viafront3.Services;
 
 namespace viafront3
 {
+    public class MySqlSettings
+    {
+        public string Host { get; set; }
+        public string Database { get; set; }
+        public string User { get; set; }
+        public string Password { get; set; }
+    }
+
     public class AssetSettings
     {
         public int Decimals { get; set; }
@@ -31,6 +39,7 @@ namespace viafront3
 
     public class ExchangeSettings
     {
+        public MySqlSettings MySql { get; set; } = new MySqlSettings();
         public string AccessHttpHost { get; set; } = "http://localhost:8080";
         public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();

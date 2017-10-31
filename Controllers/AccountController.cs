@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
 using viafront3.Models.AccountViewModels;
+using viafront3.Data;
 using viafront3.Services;
 
 namespace viafront3.Controllers
@@ -22,19 +23,25 @@ namespace viafront3.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
+        private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
+        private readonly ExchangeSettings _settings;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
+            ApplicationDbContext context,
             IEmailSender emailSender,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IOptions<ExchangeSettings> settings)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _context = context;
             _emailSender = emailSender;
             _logger = logger;
+            _settings = settings.Value;
         }
 
         [TempData]
@@ -233,6 +240,12 @@ namespace viafront3.Controllers
 
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     _logger.LogInformation("User created a new account with password.");
+
+                    if (user.EnsureExchangePresent(_context))
+                        _context.SaveChanges();
+                    if (!user.EnsureBackendTablesPresent(_logger, _settings.MySql))
+                        _logger.LogError("Failed to ensure backend tables present");
+
                     return RedirectToLocal(returnUrl);
                 }
                 AddErrors(result);
