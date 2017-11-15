@@ -21,6 +21,9 @@ namespace viafront3.Models.TradeViewModels
 
         public OrdersPending OrdersPending { get; set; }
 
+        public OrdersCompleted BidOrdersCompleted { get; set; }
+        public OrdersCompleted AskOrdersCompleted { get; set; }
+
         public OrderSide Side { get; set; }
 
         public string Amount { get; set; }

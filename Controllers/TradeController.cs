@@ -58,6 +58,9 @@ namespace viafront3.Controllers
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var balances = via.BalanceQuery(user.Exchange.Id);
             var ordersPending = via.OrdersPendingQuery(user.Exchange.Id, market, 0, 10);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var bidOrdersCompleted = via.OrdersCompletedQuery(user.Exchange.Id, market, 1, now, 0, 10, OrderSide.Bid);
+            var askOrdersCompleted = via.OrdersCompletedQuery(user.Exchange.Id, market, 1, now, 0, 10, OrderSide.Ask);
 
             var model = new TradeViewModel
             {
@@ -66,7 +69,9 @@ namespace viafront3.Controllers
                 AssetSettings = _settings.Assets,
                 Settings = _settings.Markets[market],
                 Balances = balances,
-                OrdersPending = ordersPending
+                OrdersPending = ordersPending,
+                BidOrdersCompleted = bidOrdersCompleted,
+                AskOrdersCompleted = askOrdersCompleted
             };
 
             return View(model);

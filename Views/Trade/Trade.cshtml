@@ -162,6 +162,156 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Bid Orders
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                        </th>
+                        <th>
+                            Type
+                        </th>
+                        <th class="pad-decimals">
+                            Price (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Amount (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Fee
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.BidOrdersCompleted.records)
+                        {
+                            <tr>
+                                <td>
+                                    @item.ctime
+                                </td>
+                                <td>
+                                    @item.type
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.CompletedOrderPrice(item, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
+                                    </span>
+                                    &nbsp;@Model.FeeUnit(item)
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Ask Orders
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                        </th>
+                        <th>
+                            Type
+                        </th>
+                        <th class="pad-decimals">
+                            Price (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Amount (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Fee
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.AskOrdersCompleted.records)
+                        {
+                            <tr>
+                                <td>
+                                    @item.ctime
+                                </td>
+                                <td>
+                                    @item.type
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.CompletedOrderPrice(item, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
+                                    </span>
+                                    &nbsp;@Model.FeeUnit(item)
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
