@@ -2,6 +2,10 @@
     Layout = "/Views/Shared/_Layout.cshtml";
 }
 
+@section Head {
+    @RenderSection("Head", required: false)
+}
+
 <h2>Market</h2>
 
 <div>

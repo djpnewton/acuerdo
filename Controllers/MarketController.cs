@@ -42,5 +42,19 @@ namespace viafront3.Controllers
 
             return View(model);
         }
+
+        public IActionResult KLines(string id, long start, long end, long interval)
+        {
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            if (start == 0)
+                start = now - 24 * 3600;
+            if (end == 0)
+                end = now;
+            if (interval == 0)
+                interval = 3600;
+            var via = new ViaJsonRpc(_settings.AccessHttpHost);
+            var klines = via.KlineQuery(id, start, end, interval);
+            return Json(klines);
+        }
     }
 }
