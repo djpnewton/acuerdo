@@ -26,6 +26,16 @@ path.candle.down {
     text-shadow:none;
 }
 
+.close.annotation.down path {
+    fill: #FF0000;
+}
+
+.close.annotation.down text{
+    font-size: 10px!important;
+    fill: white;
+    text-shadow:none;
+}
+
 .crosshair {
     cursor: crosshair;
 }

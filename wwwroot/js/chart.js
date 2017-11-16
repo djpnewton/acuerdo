@@ -90,7 +90,12 @@ var viachart = (function () {
         svg.selectAll("g.x.axis").call(xAxis);
         svg.selectAll("g.y.axis.price").call(yAxisPrice);
         svg.selectAll("g.y.axis.volume").call(yAxisVolume);
-        svg.select("g.close.annotation").datum([data[data.length-1]]).call(closeAnnotation);
+        var lastDatum = data[data.length-1];
+        console.log(lastDatum);
+        if (lastDatum.close < lastDatum.open)
+            svg.select("g.close.annotation.down").datum([lastDatum]).call(closeAnnotation);
+        else
+            svg.select("g.close.annotation.up").datum([lastDatum]).call(closeAnnotation);
     }
 
     return {
@@ -139,6 +144,8 @@ var viachart = (function () {
 
             svg.append("g")
                     .attr("class", "close annotation up");
+            svg.append("g")
+                    .attr("class", "close annotation down");
 
             svg.append('g')
                     .attr("class", "crosshair")
