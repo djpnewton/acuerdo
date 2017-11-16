@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class ChangePasswordViewModel
+    public class ChangePasswordViewModel : BaseViewModel
     {
         [Required]
         [DataType(DataType.Password)]

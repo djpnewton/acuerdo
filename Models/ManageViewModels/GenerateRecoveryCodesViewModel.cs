@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class GenerateRecoveryCodesViewModel
+    public class GenerateRecoveryCodesViewModel : BaseViewModel
     {
         public string[] RecoveryCodes { get; set; }
     }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class TwoFactorAuthenticationViewModel
+    public class TwoFactorAuthenticationViewModel : BaseViewModel
     {
         public bool HasAuthenticator { get; set; }
 

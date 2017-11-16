@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class IndexViewModel
+    public class IndexViewModel : BaseViewModel
     {
         public string Username { get; set; }
 

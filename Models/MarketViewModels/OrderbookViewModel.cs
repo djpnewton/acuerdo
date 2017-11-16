@@ -7,7 +7,7 @@ using via_jsonrpc;
 
 namespace viafront3.Models.MarketViewModels
 {
-    public class OrderbookViewModel
+    public class OrderbookViewModel : BaseViewModel
     {
         public string Market { get; set; }
 

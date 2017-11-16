@@ -13,9 +13,15 @@ namespace viafront3.Models
     public class ApplicationUser : IdentityUser
     {
         public Exchange Exchange{ get; set; }
-        public bool EnsureExchangePresent(ApplicationDbContext context)
+
+        public void LoadExchange(ApplicationDbContext context)
         {
             context.Entry(this).Reference(u => u.Exchange).Load();
+        }
+
+        public bool EnsureExchangePresent(ApplicationDbContext context)
+        {
+            LoadExchange(context);
             if (Exchange == null)
             {
                 var exch = new Exchange{ ApplicationUserId=Id };

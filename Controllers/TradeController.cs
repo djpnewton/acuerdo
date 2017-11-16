@@ -14,46 +14,27 @@ using via_jsonrpc;
 namespace viafront3.Controllers
 {
     [Route("[controller]/[action]")]
-    public class TradeController : Controller
+    public class TradeController : BaseController
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _context;
-
         private readonly ExchangeSettings _settings;
 
         public TradeController(
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings)
+          IOptions<ExchangeSettings> settings) : base(userManager, context)
         {
-            _userManager = userManager;
-            _context = context;
             _settings = settings.Value;
-        }
-
-        async Task<ApplicationUser> GetUser()
-        {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
-
-            if (user.EnsureExchangePresent(_context))
-                _context.SaveChanges();
-
-            return user;
         }
 
         public IActionResult Index()
         {
-            return View();
+            return View(BaseViewModel());
         }
 
         public async Task<IActionResult> Trade(string id)
         {
             var market = id;
-            var user = await GetUser();
+            var user = await GetUser(required: true);
 
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var balances = via.BalanceQuery(user.Exchange.Id);
@@ -64,6 +45,7 @@ namespace viafront3.Controllers
 
             var model = new TradeViewModel
             {
+                User = user,
                 Market = id,
                 MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
                 AssetSettings = _settings.Assets,
@@ -102,7 +84,7 @@ namespace viafront3.Controllers
             if (!result.Item1)
                 return result.Item2;
 
-            var user = await GetUser();
+            var user = await GetUser(required: true);
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, model.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
             this.FlashSuccess(string.Format("Limit Order Created ({0} - {1}, Amount: {2}, Price: {3})", order.market, order.side, order.amount, order.price));
@@ -117,7 +99,7 @@ namespace viafront3.Controllers
             if (!result.Item1)
                 return result.Item2;
 
-            var user = await GetUser();
+            var user = await GetUser(required: true);
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
             this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
@@ -128,7 +110,7 @@ namespace viafront3.Controllers
         [HttpPost] 
         public async Task<IActionResult> CancelOrder(TradeViewModel model)
         {
-            var user = await GetUser();
+            var user = await GetUser(required: true);
             var via = new ViaJsonRpc(_settings.AccessHttpHost);
             var order = via.OrderCancelQuery(user.Exchange.Id, model.Market, model.OrderId);
             this.FlashSuccess("Order Cancelled");

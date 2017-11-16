@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class ExternalLoginsViewModel
+    public class ExternalLoginsViewModel : BaseViewModel
     {
         public IList<UserLoginInfo> CurrentLogins { get; set; }
 

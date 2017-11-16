@@ -7,7 +7,7 @@ using via_jsonrpc;
 
 namespace viafront3.Models.ManageViewModels
 {
-    public class BalanceViewModel
+    public class BalanceViewModel : BaseViewModel
     {
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
 
