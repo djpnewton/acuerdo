@@ -63,7 +63,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.PriceUnit ???)</label>
+                        <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit)</label>
                         <div class="col-10">
                             <input class="form-control" type="number" id="form-market-amount" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
                             <span asp-validation-for="Amount" class="text-danger"></span>
