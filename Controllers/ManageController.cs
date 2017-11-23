@@ -20,14 +20,12 @@ namespace viafront3.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]
-    public class ManageController : BaseController
+    public class ManageController : BaseSettingsController
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
         private readonly UrlEncoder _urlEncoder;
-
-        private readonly ExchangeSettings _settings;
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -38,13 +36,12 @@ namespace viafront3.Controllers
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings) : base(userManager, context)
+          IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
             _urlEncoder = urlEncoder;
-            _settings = settings.Value;
         }
 
         [TempData]

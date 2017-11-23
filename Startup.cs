@@ -41,6 +41,7 @@ namespace viafront3
     {
         public MySqlSettings MySql { get; set; } = new MySqlSettings();
         public string AccessHttpHost { get; set; } = "http://localhost:8080";
+        public string AccessWsIp { get; set; } = "127.0.0.1";
         public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;

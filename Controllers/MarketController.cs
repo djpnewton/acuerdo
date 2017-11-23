@@ -14,15 +14,12 @@ using via_jsonrpc;
 namespace viafront3.Controllers
 {
     [Route("[controller]/[action]")]
-    public class MarketController : BaseController
+    public class MarketController : BaseSettingsController
     {
-        private readonly ExchangeSettings _settings;
-
         public MarketController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
-            IOptions<ExchangeSettings> settings) : base(userManager, context)
+            IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
         {
-            _settings = settings.Value;
         }
 
         public IActionResult Index()
