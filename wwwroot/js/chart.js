@@ -91,7 +91,6 @@ var viachart = (function () {
         svg.selectAll("g.y.axis.price").call(yAxisPrice);
         svg.selectAll("g.y.axis.volume").call(yAxisVolume);
         var lastDatum = data[data.length-1];
-        console.log(lastDatum);
         if (lastDatum.close < lastDatum.open)
             svg.select("g.close.annotation.down").datum([lastDatum]).call(closeAnnotation);
         else

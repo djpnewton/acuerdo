@@ -80,6 +80,11 @@
 </div>
 
 <div class="row">
+    <a href="#" onclick="loadChart('1H');">1H</a>
+    <a href="#" onclick="loadChart('4H');">4H</a>
+    <a href="#" onclick="loadChart('1D');">1D</a>
+    <a href="#" onclick="loadChart('1W');">1W</a>
+    <a href="#" onclick="loadChart('1M');">1M</a>
     <div class="col-md-12" id="chart">
     </div>
 </div>
@@ -91,22 +96,46 @@
 
 <script>
     function ready(fn) {
-    if (document.readyState != 'loading'){
-        fn();
-    } else if (document.addEventListener) {
-        document.addEventListener('DOMContentLoaded', fn);
-    } else {
-        document.attachEvent('onreadystatechange', function() {
-        if (document.readyState != 'loading')
+        if (document.readyState != 'loading'){
             fn();
-        });
-    }
+        } else if (document.addEventListener) {
+            document.addEventListener('DOMContentLoaded', fn);
+        } else {
+            document.attachEvent('onreadystatechange', function() {
+            if (document.readyState != 'loading')
+                fn();
+            });
+        }
     }
 
-    ready(function() { 
-        $.getJSON("/Market/klines?id=@Model.Market", function(data) {
-            viachart.create("#chart");
+    function loadChart(intervalCode) {
+        var multiplier = parseInt(intervalCode[0]);
+        var period = intervalCode[1];
+        var intervalSeconds = 3600;
+        switch (period) {
+            case "H":
+                intervalSeconds = multiplier * 3600;
+                break;
+            case "D":
+                intervalSeconds = multiplier * 3600 * 24;
+                break;
+            case "W":
+                intervalSeconds = multiplier * 3600 * 24 * 7;
+                break;
+            case "M":
+                intervalSeconds = multiplier * 3600 * 24 * 7 * 30;
+                break;
+        }
+        var unixTimestamp = Math.floor(+new Date()/1000);
+        var start = unixTimestamp - intervalSeconds * 30;
+        var url = "/Market/klines?id=@Model.Market&start=" + start + "&end=" + unixTimestamp + "&interval=" + intervalSeconds;
+        $.getJSON(url, function(data) {
             viachart.load(data);
         });
+    }
+
+    ready(function() {
+        viachart.create("#chart");
+        loadChart("1H");
     });
 </script>
