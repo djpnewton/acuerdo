@@ -7,6 +7,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace viafront3
 {
@@ -14,7 +15,25 @@ namespace viafront3
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
+            if (args.Length > 0 && args[0] == "console")
+                BuildConsoleHost(args);
+            else
+                BuildWebHost(args).Run();
+        }
+
+        public static void BuildConsoleHost(string[] args)
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json");
+            var configuration = builder.Build();
+            var startup = new Startup(configuration);
+            var sc = new ServiceCollection();
+            startup.ConfigureServices(sc);
+            var serviceProvider = sc.BuildServiceProvider();
+
+            if (args.Length > 3 && args[1] == "addrole")
+                Utils.GiveUserRole(serviceProvider, args[2], args[3]).Wait();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

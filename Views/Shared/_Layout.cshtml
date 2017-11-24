@@ -40,6 +40,10 @@
                     @if (SignInManager.IsSignedIn(User))
                     {
                     <li><a asp-area="" asp-controller="Trade" asp-action="Index">Trade</a></li>
+                        @if(User.IsInRole("admin"))
+                        {
+                    <li><a asp-area="" asp-controller="Internal" asp-action="Index">Internal</a></li>
+                        }
                     }
                     <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
                     <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>

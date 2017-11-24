@@ -78,6 +78,8 @@ namespace viafront3
             services.AddSingleton<IWebsocketTokens, WebsocketTokens>();
 
             services.AddMvc();
+
+            Utils.CreateRoles(services.BuildServiceProvider()).Wait();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

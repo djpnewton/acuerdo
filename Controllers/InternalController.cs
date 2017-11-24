@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -16,6 +17,7 @@ using via_jsonrpc;
 
 namespace viafront3.Controllers
 {
+    [Authorize(Roles = "admin")]
     [Route("[controller]/[action]")]
     public class InternalController : BaseSettingsController
     {
@@ -34,6 +36,7 @@ namespace viafront3.Controllers
             return View(BaseViewModel());
         }
 
+        [AllowAnonymous]
         [Produces("application/json")]
         public IActionResult WebsocketAuth()
         {
