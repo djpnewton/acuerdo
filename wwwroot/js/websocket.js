@@ -3,6 +3,7 @@ var ws = (function () {
     var sock = null;
     var output = null;
     var callId = 0;
+    var pendingCalls = [];
 
     function log(msg) {
         console.log(msg);
@@ -13,10 +14,18 @@ var ws = (function () {
         log("calling: " + method + "(id: " + callId + ") ");
         if (paramsList === undefined)
             paramsList = [];
-        else
-            log(paramsList)
         var msg = JSON.stringify({id: callId++, method: method, params: paramsList});
         sock.send(msg);
+    }
+
+    function getPendingCall(id) {
+        var call = null;
+        for (var i = 0; i < pendingCalls.length; i++)
+            if (pendingCalls[i].id == id) {
+                call = pendingCalls[i];
+                pendingCalls.splice(i, 1);
+            }
+        return call;
     }
 
     return {
@@ -31,15 +40,23 @@ var ws = (function () {
             sock.onopen = function (event) {
                 log("opened ws to " + url);
                 sendMsg("server.time");
-                if (token !== undefined)
+                sendMsg("deals.subscribe", ["BTCUSD"]);
+                if (token !== undefined) {
+                    pendingCalls.push({id: callId, method: "server.auth"});
                     sendMsg("server.auth", [token, "viafront"]);
-                ping_id = setTimeout(ping, 20000); 
+                }
+                ping_id = setTimeout(ping, 60000); 
             };
             sock.onmessage = function(event) {
                 log(event.data);
                 var msg = JSON.parse(event.data);
                 if (msg.result == "pong") {
-                    ping_id = setTimeout(ping, 20000); 
+                    ping_id = setTimeout(ping, 60000); 
+                }
+                var call = getPendingCall(msg.id);
+                if (call != null) {
+                    if (call.method == "server.auth" && msg.error == null)
+                        sendMsg("order.subscribe", ["BTCUSD"]);
                 }
             }
             sock.onerror = function(event) {
