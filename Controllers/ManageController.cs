@@ -52,7 +52,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            var via = new ViaJsonRpc(_settings.AccessHttpHost);
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balances = via.BalanceQuery(user.Exchange.Id);
 
             var model = new BalanceViewModel

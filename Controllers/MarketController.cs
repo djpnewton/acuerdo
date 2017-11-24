@@ -29,7 +29,7 @@ namespace viafront3.Controllers
 
         public IActionResult Orderbook(string id)
         {
-            var via = new ViaJsonRpc(_settings.AccessHttpHost);
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var orderDepth = via.OrderDepthQuery(id, _settings.OrderBookLimit, _settings.OrderBookInterval);
 
             var model = new OrderbookViewModel
@@ -54,7 +54,7 @@ namespace viafront3.Controllers
                 end = now;
             if (interval == 0)
                 interval = 3600;
-            var via = new ViaJsonRpc(_settings.AccessHttpHost);
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var klines = via.KlineQuery(id, start, end, interval);
             return Json(klines);
         }

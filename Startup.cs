@@ -40,7 +40,8 @@ namespace viafront3
     public class ExchangeSettings
     {
         public MySqlSettings MySql { get; set; } = new MySqlSettings();
-        public string AccessHttpHost { get; set; } = "http://localhost:8080";
+        public string AccessHttpUrl { get; set; } = "http://localhost:8080";
+        public string AccessWsUrl { get; set; } = "ws://localhost:8090";
         public string AccessWsIp { get; set; } = "127.0.0.1";
         public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
@@ -74,6 +75,7 @@ namespace viafront3
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
+            services.AddSingleton<IWebsocketTokens, WebsocketTokens>();
 
             services.AddMvc();
         }

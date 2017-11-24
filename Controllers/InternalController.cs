@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using viafront3.Models;
-using viafront3.Models.TradeViewModels;
+using viafront3.Models.InternalViewModels;
 using viafront3.Data;
+using viafront3.Services;
 using via_jsonrpc;
 
 namespace viafront3.Controllers
@@ -18,10 +19,19 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class InternalController : BaseSettingsController
     {
+        private readonly IWebsocketTokens _websocketTokens;
+
         public InternalController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
-            IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
+            IOptions<ExchangeSettings> settings,
+            IWebsocketTokens websocketTokens) : base(userManager, context, settings)
         {
+            _websocketTokens = websocketTokens;
+        }
+
+        public IActionResult Index()
+        {
+            return View(BaseViewModel());
         }
 
         [Produces("application/json")]
@@ -33,10 +43,24 @@ namespace viafront3.Controllers
             StringValues token;
             if (!Request.Headers.TryGetValue("Authorization", out token))
                 return BadRequest();
-            //TODO: check token and match it up to a user id or fail 
-            //if (token != blahblah)
-            //    return Unauthorized();
-            return Ok(new { code = 0, message = (string)null, data = new { user_id = 1}});
+            var wsToken = _websocketTokens.Remove(token);
+            if (wsToken == null)
+                return Unauthorized();
+            return Ok(new { code = 0, message = (string)null, data = new { user_id = wsToken.ExchangeUserId}});
+        }
+
+        public IActionResult TestWebsocket()
+        {
+            var user = GetUser(required: true).Result;
+
+            var model = new TestWebsocketViewModel
+            {
+                User = user,
+                WebsocketToken = _websocketTokens.NewToken(user.Exchange.Id),
+                WebsocketUrl = _settings.AccessWsUrl
+            };
+
+            return View(model);
         }
     }
 }

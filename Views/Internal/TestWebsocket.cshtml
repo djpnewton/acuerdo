@@ -1,0 +1,43 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model TestWebsocketViewModel
+@{
+    ViewData["Title"] = "Test Websocket";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Websocket Token - @Model.WebsocketToken
+            </div>
+            <div class="panel-body">
+                <textarea id="wsResult" rows="10" cols="80">
+                </textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_WebsocketScriptsPartial")
+}
+
+<script>
+    function ready(fn) {
+        if (document.readyState != 'loading'){
+            fn();
+        } else if (document.addEventListener) {
+            document.addEventListener('DOMContentLoaded', fn);
+        } else {
+            document.attachEvent('onreadystatechange', function() {
+            if (document.readyState != 'loading')
+                fn();
+            });
+        }
+    }
+
+    ready(function() {
+        ws.start("#wsResult", "@Model.WebsocketUrl", "@Model.WebsocketToken");
+    });
+</script>
