@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.AccountViewModels
 {
-    public class LoginWithRecoveryCodeViewModel
+    public class LoginWithRecoveryCodeViewModel : BaseViewModel
     {
             [Required]
             [DataType(DataType.Text)]

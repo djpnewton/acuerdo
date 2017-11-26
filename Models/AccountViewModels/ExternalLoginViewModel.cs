@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace viafront3.Models.AccountViewModels
 {
-    public class ExternalLoginViewModel
+    public class ExternalLoginViewModel : BaseViewModel
     {
         [Required]
         [EmailAddress]

@@ -19,14 +19,11 @@ namespace viafront3.Controllers
 {
     [Authorize]
     [Route("[controller]/[action]")]
-    public class AccountController : Controller
+    public class AccountController : BaseSettingsController
     {
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly ApplicationDbContext _context;
         private readonly IEmailSender _emailSender;
         private readonly ILogger _logger;
-        private readonly ExchangeSettings _settings;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -34,14 +31,11 @@ namespace viafront3.Controllers
             ApplicationDbContext context,
             IEmailSender emailSender,
             ILogger<AccountController> logger,
-            IOptions<ExchangeSettings> settings)
+            IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
         {
-            _userManager = userManager;
             _signInManager = signInManager;
-            _context = context;
             _emailSender = emailSender;
             _logger = logger;
-            _settings = settings.Value;
         }
 
         [TempData]
@@ -55,7 +49,7 @@ namespace viafront3.Controllers
             await HttpContext.SignOutAsync(IdentityConstants.ExternalScheme);
 
             ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            return View(new LoginViewModel { User = null });
         }
 
         [HttpPost]
@@ -63,6 +57,8 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
+            model.User = null;
+
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
@@ -107,7 +103,7 @@ namespace viafront3.Controllers
                 throw new ApplicationException($"Unable to load two-factor authentication user.");
             }
 
-            var model = new LoginWith2faViewModel { RememberMe = rememberMe };
+            var model = new LoginWith2faViewModel { User = null, RememberMe = rememberMe };
             ViewData["ReturnUrl"] = returnUrl;
 
             return View(model);
@@ -118,6 +114,8 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWith2fa(LoginWith2faViewModel model, bool rememberMe, string returnUrl = null)
         {
+            model.User = null;
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -164,7 +162,7 @@ namespace viafront3.Controllers
 
             ViewData["ReturnUrl"] = returnUrl;
 
-            return View();
+            return View(new LoginWithRecoveryCodeViewModel{ User = null });
         }
 
         [HttpPost]
@@ -172,6 +170,8 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LoginWithRecoveryCode(LoginWithRecoveryCodeViewModel model, string returnUrl = null)
         {
+            model.User = null;
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -201,7 +201,7 @@ namespace viafront3.Controllers
             {
                 _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
-                return View();
+                return View(new LoginWithRecoveryCodeViewModel{ User = null });
             }
         }
 
@@ -209,7 +209,7 @@ namespace viafront3.Controllers
         [AllowAnonymous]
         public IActionResult Lockout()
         {
-            return View();
+            return View(BaseViewModel());
         }
 
         [HttpGet]
@@ -217,7 +217,7 @@ namespace viafront3.Controllers
         public IActionResult Register(string returnUrl = null)
         {
             ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            return View(new RegisterViewModel { User = null });
         }
 
         [HttpPost]
@@ -252,6 +252,7 @@ namespace viafront3.Controllers
             }
 
             // If we got this far, something failed, redisplay form
+            model.User = null;
             return View(model);
         }
 
@@ -308,7 +309,7 @@ namespace viafront3.Controllers
                 ViewData["ReturnUrl"] = returnUrl;
                 ViewData["LoginProvider"] = info.LoginProvider;
                 var email = info.Principal.FindFirstValue(ClaimTypes.Email);
-                return View("ExternalLogin", new ExternalLoginViewModel { Email = email });
+                return View("ExternalLogin", new ExternalLoginViewModel { User = null, Email = email });
             }
         }
 
@@ -341,6 +342,7 @@ namespace viafront3.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
+            model.User = null;
             return View(nameof(ExternalLogin), model);
         }
 
@@ -358,14 +360,14 @@ namespace viafront3.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{userId}'.");
             }
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            return View(result.Succeeded ? "ConfirmEmail" : "Error");
+            return View(result.Succeeded ? "ConfirmEmail" : "Error", BaseViewModel());
         }
 
         [HttpGet]
         [AllowAnonymous]
         public IActionResult ForgotPassword()
         {
-            return View();
+            return View(new ForgotPasswordViewModel { User = null });
         }
 
         [HttpPost]
@@ -392,6 +394,7 @@ namespace viafront3.Controllers
             }
 
             // If we got this far, something failed, redisplay form
+            model.User = null;
             return View(model);
         }
 
@@ -399,7 +402,7 @@ namespace viafront3.Controllers
         [AllowAnonymous]
         public IActionResult ForgotPasswordConfirmation()
         {
-            return View();
+            return View(BaseViewModel());
         }
 
         [HttpGet]
@@ -410,7 +413,7 @@ namespace viafront3.Controllers
             {
                 throw new ApplicationException("A code must be supplied for password reset.");
             }
-            var model = new ResetPasswordViewModel { Code = code };
+            var model = new ResetPasswordViewModel { User = null, Code = code };
             return View(model);
         }
 
@@ -435,21 +438,21 @@ namespace viafront3.Controllers
                 return RedirectToAction(nameof(ResetPasswordConfirmation));
             }
             AddErrors(result);
-            return View();
+            return View(new ResetPasswordViewModel{ User = null });
         }
 
         [HttpGet]
         [AllowAnonymous]
         public IActionResult ResetPasswordConfirmation()
         {
-            return View();
+            return View(BaseViewModel());
         }
 
 
         [HttpGet]
         public IActionResult AccessDenied()
         {
-            return View();
+            return View(BaseViewModel());
         }
 
         #region Helpers
