@@ -31,5 +31,10 @@ namespace viafront3.Views
             var price = tradedMoney / tradedAmount;
             return FormatDec(price, decimals);
         }
+
+        public static string FormatUnixTime(long time)
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(time).ToString("yyyy/MM/dd HH:mm");
+        }
     }
 }

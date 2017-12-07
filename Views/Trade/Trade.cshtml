@@ -197,7 +197,7 @@
                         {
                             <tr>
                                 <td>
-                                    @item.ctime
+                                    @ViewUtils.FormatUnixTime((long)item.ctime)
                                 </td>
                                 <td>
                                     @item.type
@@ -272,7 +272,7 @@
                         {
                             <tr>
                                 <td>
-                                    @item.ctime
+                                    @ViewUtils.FormatUnixTime((long)item.ctime)
                                 </td>
                                 <td>
                                     @item.type
