@@ -21,20 +21,26 @@
                             Email
                         </th>
                         <th>
+                            Exchange Id
+                        </th>
+                        <th>
                             Roles
                         </th>
                     </tr>
                     <tbody>@{
-                        foreach (var userRoleInfo in Model.UserRoleInfos)
+                        foreach (var userInfo in Model.UserInfos)
                         {
-                            var user = userRoleInfo.User;
-                            var roles = userRoleInfo.Roles;
+                            var user = userInfo.User;
+                            var roles = userInfo.Roles;
                             <tr>
                                 <td>
                                     @user.Id
                                 </td>
                                 <td>
                                     @user.Email
+                                </td>
+                                <td>
+                                    @userInfo.ExchangeId
                                 </td>
                                 <td>
                                     @string.Join(",", roles)

@@ -40,17 +40,19 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
 
-            var users = (from u in _context.Users
-                let query = (from ur in _context.Set<IdentityUserRole<string>>()
-                    where ur.UserId.Equals(u.Id)
-                    join r in _context.Roles on ur.RoleId equals r.Id select r.Name)
-                    select new UserRoleInfo() {User = u, Roles = query.ToList<string>()})
-                    .ToList();
+            var userInfos = (from u in _context.Users
+                        join e in _context.Exchange on u.Id equals e.ApplicationUserId
+                        let query = (from ur in _context.Set<IdentityUserRole<string>>()
+                            where ur.UserId.Equals(u.Id)
+                            join r in _context.Roles on ur.RoleId equals r.Id select r.Name)
+                        select new UserInfo() {User = u, ExchangeId = e.Id, Roles = query.ToList<string>()})
+                        .ToList();
+                        
 
             var model = new UsersViewModel
             {
                 User = user,
-                UserRoleInfos = users
+                UserInfos = userInfos
             };
             return View(model);
         }

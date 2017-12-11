@@ -8,14 +8,15 @@ using via_jsonrpc;
 
 namespace viafront3.Models.InternalViewModels
 {
-    public class UserRoleInfo
+    public class UserInfo
     {
         public ApplicationUser User { set; get; }
+        public int ExchangeId { set; get; } 
         public List<string> Roles { set; get; } 
     }
 
     public class UsersViewModel : BaseViewModel
     {
-        public List<UserRoleInfo> UserRoleInfos { get; set; }
+        public List<UserInfo> UserInfos { get; set; }
     }
 }
