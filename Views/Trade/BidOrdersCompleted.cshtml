@@ -1,0 +1,104 @@
+﻿@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@model OrdersCompletedViewModel
+@{
+    ViewData["Title"] = "Completed Bid Orders";
+    ViewData.AddActivePage(Model.Market);
+}
+<h4>@ViewData["Title"] - @Model.MarketNice</h4>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Bid Orders
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                        </th>
+                        <th>
+                            Type
+                        </th>
+                        <th class="pad-decimals">
+                            Price (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Amount (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.AmountUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Traded (@Model.Settings.PriceUnit)
+                        </th>
+                        <th class="pad-decimals">
+                            Fee
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.OrdersCompleted.records)
+                        {
+                            <tr>
+                                <td>
+                                    @ViewUtils.FormatUnixTime((long)item.ctime)
+                                </td>
+                                <td>
+                                    @item.type
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.CompletedOrderPrice(item, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
+                                    </span>
+                                    &nbsp;@Model.FeeUnit(item)
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+                @{
+                    var offset = Model.OrdersCompleted.offset;
+                    var limit = Model.OrdersCompleted.limit;
+                }
+                @if (offset >= limit)
+                {
+                    <a href="/Trade/BidOrdersCompleted?id=@Model.Market&offset=@(offset - limit)&limit=@limit">prev</a>
+                }
+                else if (offset > 0)
+                {
+                    <a href="/Trade/BidOrdersCompleted?id=@Model.Market&offset=0&limit=@limit">prev</a>
+                }
+                @if (Model.OrdersCompleted.records.Count >= Model.OrdersCompleted.limit)
+                {
+                    <a href="/Trade/BidOrdersCompleted?id=@Model.Market&offset=@(offset + limit)&limit=@limit">next</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

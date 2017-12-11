@@ -157,6 +157,10 @@
                         }
                     }</tbody>
                 </table>
+                @if (Model.OrdersPending.records.Count >= Model.OrdersPending.limit)
+                {
+                    <a href="/Trade/OrdersPending?id=@Model.Market">more</a>
+                }
             </div>
         </div>
     </div>
@@ -232,6 +236,10 @@
                         }
                     }</tbody>
                 </table>
+                @if (Model.BidOrdersCompleted.records.Count >= Model.BidOrdersCompleted.limit)
+                {
+                    <a href="/Trade/BidOrdersCompleted?id=@Model.Market">more</a>
+                }
             </div>
         </div>
     </div>
@@ -307,6 +315,10 @@
                         }
                     }</tbody>
                 </table>
+                @if (Model.AskOrdersCompleted.records.Count >= Model.AskOrdersCompleted.limit)
+                {
+                    <a href="/Trade/AskOrdersCompleted?id=@Model.Market">more</a>
+                }
             </div>
         </div>
     </div>

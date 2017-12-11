@@ -56,6 +56,72 @@ namespace viafront3.Controllers
             return View(model);
         }
 
+        public async Task<IActionResult> OrdersPending(string id, int offset=0, int limit=10)
+        {
+            var market = id;
+            var user = await GetUser(required: true);
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var ordersPending = via.OrdersPendingQuery(user.Exchange.Id, market, offset, limit);
+
+            var model = new OrdersPendingViewModel
+            {
+                User = user,
+                Market = id,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
+                AssetSettings = _settings.Assets,
+                Settings = _settings.Markets[market],
+                OrdersPending = ordersPending,
+            };
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> BidOrdersCompleted(string id, int offset=0, int limit=10)
+        {
+            var market = id;
+            var user = await GetUser(required: true);
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var bidOrdersCompleted = via.OrdersCompletedQuery(user.Exchange.Id, market, 1, now, offset, limit, OrderSide.Bid);
+
+            var model = new OrdersCompletedViewModel
+            {
+                User = user,
+                Market = id,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
+                AssetSettings = _settings.Assets,
+                Settings = _settings.Markets[market],
+                OrdersCompleted = bidOrdersCompleted,
+            };
+
+            return View(model);
+        }
+
+        public async Task<IActionResult> AskOrdersCompleted(string id, int offset=0, int limit=10)
+        {
+            var market = id;
+            var user = await GetUser(required: true);
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var askOrdersCompleted = via.OrdersCompletedQuery(user.Exchange.Id, market, 1, now, offset, limit, OrderSide.Ask);
+
+            var model = new OrdersCompletedViewModel
+            {
+                User = user,
+                Market = id,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
+                AssetSettings = _settings.Assets,
+                Settings = _settings.Markets[market],
+                OrdersCompleted = askOrdersCompleted,
+            };
+
+            return View(model);
+        }
+
         IActionResult FlashErrorAndRedirect(string action, string market, string error)
         {
             this.FlashError(error);

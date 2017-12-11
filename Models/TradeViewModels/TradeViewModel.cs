@@ -7,7 +7,7 @@ using via_jsonrpc;
 
 namespace viafront3.Models.TradeViewModels
 {
-    public class TradeViewModel : BaseViewModel
+    public class BaseTradeViewModel : BaseViewModel
     {
         public string Market { get; set; }
 
@@ -16,21 +16,6 @@ namespace viafront3.Models.TradeViewModels
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
 
         public MarketSettings Settings { get; set; }
-
-        public Dictionary<string, Balance> Balances { get; set; }
-
-        public OrdersPending OrdersPending { get; set; }
-
-        public OrdersCompleted BidOrdersCompleted { get; set; }
-        public OrdersCompleted AskOrdersCompleted { get; set; }
-
-        public OrderSide Side { get; set; }
-
-        public string Amount { get; set; }
-
-        public string Price { get; set; }
-
-        public int OrderId { get; set; }
 
         public string FeeUnit(Order order)
         {
@@ -41,5 +26,36 @@ namespace viafront3.Models.TradeViewModels
         {
             return order.side == OrderSide.Ask ? Settings.PriceDecimals : Settings.AmountDecimals;
         }
+    }
+
+    public class TradeViewModel : BaseTradeViewModel
+    {
+        public Dictionary<string, Balance> Balances { get; set; }
+
+        public OrdersPending OrdersPending { get; set; }
+
+        public OrdersCompleted BidOrdersCompleted { get; set; }
+
+        public OrdersCompleted AskOrdersCompleted { get; set; }
+
+        public OrderSide Side { get; set; }
+
+        public string Amount { get; set; }
+
+        public string Price { get; set; }
+
+        public int OrderId { get; set; }
+    }
+
+    public class OrdersPendingViewModel : BaseTradeViewModel
+    {
+        public OrdersPending OrdersPending { get; set; }
+
+        public int OrderId { get; set; }
+    }
+    
+    public class OrdersCompletedViewModel : BaseTradeViewModel
+    {
+        public OrdersCompleted OrdersCompleted { get; set; }
     }
 }
