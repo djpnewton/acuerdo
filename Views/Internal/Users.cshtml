@@ -1,0 +1,49 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model UsersViewModel
+@{
+    ViewData["Title"] = "Internal stuff";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Users
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Id
+                        </th>
+                        <th>
+                            Email
+                        </th>
+                        <th>
+                            Roles
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var userRoleInfo in Model.UserRoleInfos)
+                        {
+                            var user = userRoleInfo.User;
+                            var roles = userRoleInfo.Roles;
+                            <tr>
+                                <td>
+                                    @user.Id
+                                </td>
+                                <td>
+                                    @user.Email
+                                </td>
+                                <td>
+                                    @string.Join(",", roles)
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
