@@ -1,0 +1,42 @@
+@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@using via_jsonrpc
+@model BalancesPartialViewModel
+@{
+    var assetSettings = (Dictionary<string, AssetSettings>)ViewData["asset_settings"];
+}
+
+<table class="table table-condensed table-responsive table-hover">
+    <tr>
+        <th>
+            Asset
+        </th>
+        <th class="pad-decimals">
+            Available
+        </th>
+        <th class="pad-decimals">
+            Frozen
+        </th>
+    </tr>
+    <tbody>@{
+        foreach (var item in Model.Balances)
+        {
+            <tr>
+                <td>
+                    @item.Key
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.Value.Available, assetSettings[item.Key].Decimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.Value.Freeze, assetSettings[item.Key].Decimals)
+                    </span>
+                </td>
+            </tr>
+        }
+    }</tbody>
+</table>

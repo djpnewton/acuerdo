@@ -82,85 +82,8 @@
                 Pending Orders
             </div>
             <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                            Bid/Ask
-                        </th>
-                        <th class="pad-decimals">
-                            Price (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Amount (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Remaining (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Fee
-                        </th>
-                    </tr>
-                    <tbody>@{
-                        foreach (var item in Model.OrdersPending.records)
-                        {
-                            <tr>
-                                <td>
-                                    @item.side
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.price, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.left, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
-                                    </span>
-                                    &nbsp;@Model.FeeUnit(item)
-                                </td>
-                                <td>
-                                    <form asp-controller="Trade" asp-action="CancelOrder" method="post" id="cancel-order-form-@item.id">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" asp-for="Market" value="@Model.Market"/>
-                                        <input type="hidden" asp-for="OrderId" value="@item.id"/>
-                                        <button type="button" class="btn btn-warning btn-xs form-cancel-button"
-                                        data-toggle="modal" data-target="#confirm-submit">Cancel</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
-                @if (Model.OrdersPending.records.Count >= Model.OrdersPending.limit)
-                {
-                    <a href="/Trade/OrdersPending?id=@Model.Market">more</a>
-                }
+                @Html.Partial("_PendingOrdersPartial", Model.OrdersPending,
+                    new ViewDataDictionary(this.ViewData) { { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
     </div>
@@ -173,73 +96,8 @@
                 Completed Bid Orders
             </div>
             <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                        </th>
-                        <th>
-                            Type
-                        </th>
-                        <th class="pad-decimals">
-                            Price (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Amount (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Fee
-                        </th>
-                    </tr>
-                    <tbody>@{
-                        foreach (var item in Model.BidOrdersCompleted.records)
-                        {
-                            <tr>
-                                <td>
-                                    @ViewUtils.FormatUnixTime((long)item.ctime)
-                                </td>
-                                <td>
-                                    @item.type
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.CompletedOrderPrice(item, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
-                                    </span>
-                                    &nbsp;@Model.FeeUnit(item)
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
-                @if (Model.BidOrdersCompleted.records.Count >= Model.BidOrdersCompleted.limit)
-                {
-                    <a href="/Trade/BidOrdersCompleted?id=@Model.Market">more</a>
-                }
+                @Html.Partial("_CompletedOrdersPartial", Model.BidOrdersCompleted,
+                    new ViewDataDictionary(this.ViewData) { { "type", "Bid" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
     </div>
@@ -252,100 +110,8 @@
                 Completed Ask Orders
             </div>
             <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                        </th>
-                        <th>
-                            Type
-                        </th>
-                        <th class="pad-decimals">
-                            Price (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Amount (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.AmountUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Traded (@Model.Settings.PriceUnit)
-                        </th>
-                        <th class="pad-decimals">
-                            Fee
-                        </th>
-                    </tr>
-                    <tbody>@{
-                        foreach (var item in Model.AskOrdersCompleted.records)
-                        {
-                            <tr>
-                                <td>
-                                    @ViewUtils.FormatUnixTime((long)item.ctime)
-                                </td>
-                                <td>
-                                    @item.type
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.CompletedOrderPrice(item, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.amount, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_stock, Model.Settings.AmountDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_money, Model.Settings.PriceDecimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.deal_fee, Model.FeeDecimals(item))
-                                    </span>
-                                    &nbsp;@Model.FeeUnit(item)
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
-                @if (Model.AskOrdersCompleted.records.Count >= Model.AskOrdersCompleted.limit)
-                {
-                    <a href="/Trade/AskOrdersCompleted?id=@Model.Market">more</a>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                Confirm Order Cancellation
-            </div>
-            <div class="modal-body">
-                <p>
-                    Are you sure you want to cancel the following order?
-                </p>
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr id="modal-table-header">
-                    </tr>
-                    <tbody>
-                        <tr id="modal-table-row"></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
-                <a href="#" id="confirm-cancellation" class="btn btn-success success">Yes</a>
+                @Html.Partial("_CompletedOrdersPartial", Model.AskOrdersCompleted,
+                    new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
     </div>
@@ -358,39 +124,8 @@
                 Current Balances
             </div>
             <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                            Asset
-                        </th>
-                        <th class="pad-decimals">
-                            Available
-                        </th>
-                        <th class="pad-decimals">
-                            Frozen
-                        </th>
-                    </tr>
-                    <tbody>@{
-                        foreach (var item in Model.Balances)
-                        {
-                            <tr>
-                                <td>
-                                    @item.Key
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.Value.Available, Model.AssetSettings[item.Key].Decimals)
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(item.Value.Freeze, Model.AssetSettings[item.Key].Decimals)
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
+                @Html.Partial("_UserBalancesPartial", Model.Balances,
+                    new ViewDataDictionary(this.ViewData) { { "asset_settings", Model.AssetSettings } })
             </div>
         </div>
     </div>

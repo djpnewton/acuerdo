@@ -1,0 +1,136 @@
+﻿@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@model OrdersPendingPartialViewModel
+@{
+    var tradeModel = (BaseTradeViewModel)ViewData["trade_model"];
+    var market = tradeModel.Market;
+    var settings = tradeModel.Settings;
+}
+
+<table class="table table-condensed table-responsive table-hover">
+    <tr>
+        <th>
+            Bid/Ask
+        </th>
+        <th class="pad-decimals">
+            Price (@settings.PriceUnit)
+        </th>
+        <th class="pad-decimals">
+            Amount (@settings.AmountUnit)
+        </th>
+        <th class="pad-decimals">
+            Remaining (@settings.AmountUnit)
+        </th>
+        <th class="pad-decimals">
+            Traded (@settings.AmountUnit)
+        </th>
+        <th class="pad-decimals">
+            Traded (@settings.PriceUnit)
+        </th>
+        <th class="pad-decimals">
+            Fee
+        </th>
+    </tr>
+    <tbody>@{
+        foreach (var item in Model.OrdersPending.records)
+        {
+            <tr>
+                <td>
+                    @item.side
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.price, settings.PriceDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.amount, settings.AmountDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.left, settings.AmountDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_stock, settings.AmountDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_money, settings.PriceDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_fee, tradeModel.FeeDecimals(item))
+                    </span>
+                    &nbsp;@tradeModel.FeeUnit(item)
+                </td>
+                <td>
+                    <form asp-controller="Trade" asp-action="CancelOrder" method="post" id="cancel-order-form-@item.id">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Market" value="@market"/>
+                        <input type="hidden" asp-for="OrderId" value="@item.id"/>
+                        <button type="button" class="btn btn-warning btn-xs form-cancel-button"
+                        data-toggle="modal" data-target="#confirm-submit">Cancel</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    }</tbody>
+</table>
+@{
+    var count = Model.OrdersPending.records.Count;
+    var offset = Model.OrdersPending.offset;
+    var limit = Model.OrdersPending.limit;
+    if ((bool)ViewData["use_pagination"])
+    {
+        if (offset >= limit)
+        {
+            <a href="/Trade/OrdersPending?id=@market&offset=@(offset - limit)&limit=@limit">prev</a>
+        }
+        else if (offset > 0)
+        {
+            <a href="/Trade/OrdersPending?id=@market&offset=0&limit=@limit">prev</a>
+        }
+        if (count >= limit)
+        {
+            <a href="/Trade/OrdersPending?id=@market&offset=@(offset + limit)&limit=@limit">next</a>
+        }
+    }
+    else if (count >= limit)
+    {
+        <a href="/Trade/OrdersPending?id=@market">more</a>
+    }
+}
+
+<div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Order Cancellation
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to cancel the following order?
+                </p>
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr id="modal-table-header">
+                    </tr>
+                    <tbody>
+                        <tr id="modal-table-row"></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-cancellation" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>

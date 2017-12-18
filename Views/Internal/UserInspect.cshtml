@@ -1,0 +1,62 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model UserViewModel
+@{
+    ViewData["Title"] = "User Inspect";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                User
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Id
+                        </th>
+                        <th>
+                            Email
+                        </th>
+                        <th>
+                            Exchange Id
+                        </th>
+                    </tr>
+                    <tbody>
+                        <tr>
+                            <td>
+                                @Model.UserInspect.Id
+                            </td>
+                            <td>
+                                @Model.UserInspect.Email
+                            </td>
+                            <td>
+                                @Model.UserInspect.Exchange.Id
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Current Balances
+            </div>
+            <div class="panel-body">
+                @Html.Partial("_UserBalancesPartial", Model.Balances,
+                    new ViewDataDictionary(this.ViewData) { { "asset_settings", Model.AssetSettings } })
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

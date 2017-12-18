@@ -47,8 +47,8 @@ namespace viafront3.Controllers
                 MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
                 AssetSettings = _settings.Assets,
                 Settings = _settings.Markets[market],
-                Balances = balances,
-                OrdersPending = ordersPending,
+                Balances = new BalancesPartialViewModel{Balances=balances},
+                OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
                 BidOrdersCompleted = bidOrdersCompleted,
                 AskOrdersCompleted = askOrdersCompleted
             };
@@ -72,7 +72,7 @@ namespace viafront3.Controllers
                 MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
                 AssetSettings = _settings.Assets,
                 Settings = _settings.Markets[market],
-                OrdersPending = ordersPending,
+                OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
             };
 
             return View(model);
@@ -171,7 +171,7 @@ namespace viafront3.Controllers
 
         [ValidateAntiForgeryToken]
         [HttpPost] 
-        public async Task<IActionResult> CancelOrder(TradeViewModel model)
+        public async Task<IActionResult> CancelOrder(OrdersPendingPartialViewModel model)
         {
             var user = await GetUser(required: true);
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);

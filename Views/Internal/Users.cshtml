@@ -2,7 +2,7 @@
 @using viafront3.Views
 @model UsersViewModel
 @{
-    ViewData["Title"] = "Internal stuff";
+    ViewData["Title"] = "User list";
 }
 
 <div class="row">
@@ -34,7 +34,7 @@
                             var roles = userInfo.Roles;
                             <tr>
                                 <td>
-                                    @user.Id
+                                    <a href="UserInspect?id=@user.Id">@user.Id</a>
                                 </td>
                                 <td>
                                     @user.Email

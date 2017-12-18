@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Primitives;
 using viafront3.Models;
 using viafront3.Models.InternalViewModels;
+using viafront3.Models.TradeViewModels;
 using viafront3.Data;
 using viafront3.Services;
 using via_jsonrpc;
@@ -53,6 +54,23 @@ namespace viafront3.Controllers
             {
                 User = user,
                 UserInfos = userInfos
+            };
+            return View(model);
+        }
+        public IActionResult UserInspect(string id)
+        {
+            var user = GetUser(required: true).Result;
+            var userInspect = _userManager.FindByIdAsync(id).Result;
+            userInspect.EnsureExchangePresent(_context);
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balances = via.BalanceQuery(userInspect.Exchange.Id);
+
+            var model = new UserViewModel
+            {
+                User = user,
+                UserInspect = userInspect,
+                Balances = new BalancesPartialViewModel{Balances=balances},
+                AssetSettings = _settings.Assets,
             };
             return View(model);
         }

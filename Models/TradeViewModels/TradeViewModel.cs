@@ -7,6 +7,8 @@ using via_jsonrpc;
 
 namespace viafront3.Models.TradeViewModels
 {
+    using Balances = Dictionary<string, Balance>;
+    
     public class BaseTradeViewModel : BaseViewModel
     {
         public string Market { get; set; }
@@ -28,11 +30,33 @@ namespace viafront3.Models.TradeViewModels
         }
     }
 
+    public class BalancesPartialViewModel
+    {
+        public Balances Balances { get; set; }
+    }
+
+    public class OrdersPendingPartialViewModel
+    {
+        public OrdersPending OrdersPending { get; set; }
+        public string Market { get; set; }
+        public int OrderId { get; set; }
+    }
+
+    public class OrdersPendingViewModel : BaseTradeViewModel
+    {
+        public OrdersPendingPartialViewModel OrdersPending { get; set; }
+    }
+    
+    public class OrdersCompletedViewModel : BaseTradeViewModel
+    {
+        public OrdersCompleted OrdersCompleted { get; set; }
+    }
+
     public class TradeViewModel : BaseTradeViewModel
     {
-        public Dictionary<string, Balance> Balances { get; set; }
+        public BalancesPartialViewModel Balances { get; set; }
 
-        public OrdersPending OrdersPending { get; set; }
+        public OrdersPendingPartialViewModel OrdersPending { get; set; }
 
         public OrdersCompleted BidOrdersCompleted { get; set; }
 
@@ -43,19 +67,5 @@ namespace viafront3.Models.TradeViewModels
         public string Amount { get; set; }
 
         public string Price { get; set; }
-
-        public int OrderId { get; set; }
-    }
-
-    public class OrdersPendingViewModel : BaseTradeViewModel
-    {
-        public OrdersPending OrdersPending { get; set; }
-
-        public int OrderId { get; set; }
-    }
-    
-    public class OrdersCompletedViewModel : BaseTradeViewModel
-    {
-        public OrdersCompleted OrdersCompleted { get; set; }
     }
 }

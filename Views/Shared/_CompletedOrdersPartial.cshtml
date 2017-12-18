@@ -1,0 +1,99 @@
+@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@using via_jsonrpc
+@model OrdersCompleted
+@{
+    var tradeModel = (BaseTradeViewModel)ViewData["trade_model"];
+    var market = tradeModel.Market;
+    var settings = tradeModel.Settings;
+}
+
+<table class="table table-condensed table-responsive table-hover">
+    <tr>
+        <th>
+        </th>
+        <th>
+            Type
+        </th>
+        <th class="pad-decimals">
+            Price (@settings.PriceUnit)
+        </th>
+        <th class="pad-decimals">
+            Amount (@settings.AmountUnit)
+        </th>
+        <th class="pad-decimals">
+            Traded (@settings.AmountUnit)
+        </th>
+        <th class="pad-decimals">
+            Traded (@settings.PriceUnit)
+        </th>
+        <th class="pad-decimals">
+            Fee
+        </th>
+    </tr>
+    <tbody>@{
+        foreach (var item in Model.records)
+        {
+            <tr>
+                <td>
+                    @ViewUtils.FormatUnixTime((long)item.ctime)
+                </td>
+                <td>
+                    @item.type
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.CompletedOrderPrice(item, settings.PriceDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.amount, settings.AmountDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_stock, settings.AmountDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_money, settings.PriceDecimals)
+                    </span>
+                </td>
+                <td>
+                    <span class="pad-decimals-data">
+                    @ViewUtils.FormatStrDec(item.deal_fee, tradeModel.FeeDecimals(item))
+                    </span>
+                    &nbsp;@tradeModel.FeeUnit(item)
+                </td>
+            </tr>
+        }
+    }</tbody>
+</table>
+@{
+    var type = (string)ViewData["type"];
+    var count = Model.records.Count;
+    var offset = Model.offset;
+    var limit = Model.limit;
+    if ((bool)ViewData["use_pagination"])
+    {
+        if (offset >= limit)
+        {
+            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=@(offset - limit)&limit=@limit">prev</a>
+        }
+        else if (offset > 0)
+        {
+            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=0&limit=@limit">prev</a>
+        }
+        if (count >= limit)
+        {
+            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=@(offset + limit)&limit=@limit">next</a>
+        }
+    }
+    else if (count >= limit)
+    {
+        <a href="/Trade/@(type)OrdersCompleted?id=@market">more</a>
+    }
+}
