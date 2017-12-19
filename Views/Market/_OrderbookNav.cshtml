@@ -8,7 +8,7 @@
 <ul class="nav nav-pills nav-stacked">
     @foreach (var item in settings.Markets)
     {
-        <li class="@MarketNavPages.PageNavClass(ViewContext, item.Key)"><a asp-action="Orderbook" asp-route-id="@item.Key">@item.Key</a></li>
+        <li class="@MarketNavPages.PageNavClass(ViewContext, item.Key)"><a asp-action="Orderbook" asp-route-market="@item.Key">@item.Key</a></li>
     }
 </ul>
 

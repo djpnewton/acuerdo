@@ -1,0 +1,54 @@
+﻿@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@model TradeViewModel
+@{
+    ViewData["Title"] = "User Trades";
+}
+<h4>@ViewData["Title"] - @Model.MarketNice</h4>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Pending Orders
+            </div>
+            <div class="panel-body">
+                @Html.Partial("_PendingOrdersPartial", Model.OrdersPending,
+                    new ViewDataDictionary(this.ViewData) { { "use_pagination", false }, { "trade_model", Model }, { "cancellation", false } })
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Bid Orders
+            </div>
+            <div class="panel-body">
+                @Html.Partial("_CompletedOrdersPartial", Model.BidOrdersCompleted,
+                    new ViewDataDictionary(this.ViewData) { { "type", "Bid" }, { "use_pagination", false }, { "trade_model", Model } })
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Ask Orders
+            </div>
+            <div class="panel-body">
+                @Html.Partial("_CompletedOrdersPartial", Model.AskOrdersCompleted,
+                    new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", false }, { "trade_model", Model } })
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

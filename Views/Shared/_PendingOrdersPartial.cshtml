@@ -3,6 +3,11 @@
 @using viafront3.Views
 @model OrdersPendingPartialViewModel
 @{
+    string userid = null;
+    if (ViewData.ContainsKey("userid"))
+    {
+        userid = (string)ViewData["userid"];
+    }
     var tradeModel = (BaseTradeViewModel)ViewData["trade_model"];
     var market = tradeModel.Market;
     var settings = tradeModel.Settings;
@@ -70,6 +75,8 @@
                     </span>
                     &nbsp;@tradeModel.FeeUnit(item)
                 </td>
+                @if (!(ViewData.ContainsKey("cancellation") && (bool)ViewData["cancellation"] == false))
+                {
                 <td>
                     <form asp-controller="Trade" asp-action="CancelOrder" method="post" id="cancel-order-form-@item.id">
                         @Html.AntiForgeryToken()
@@ -79,6 +86,7 @@
                         data-toggle="modal" data-target="#confirm-submit">Cancel</button>
                     </form>
                 </td>
+                }
             </tr>
         }
     }</tbody>
@@ -91,20 +99,20 @@
     {
         if (offset >= limit)
         {
-            <a href="/Trade/OrdersPending?id=@market&offset=@(offset - limit)&limit=@limit">prev</a>
+            <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="@(offset-limit)" asp-route-limit="@limit">prev</a>
         }
         else if (offset > 0)
         {
-            <a href="/Trade/OrdersPending?id=@market&offset=0&limit=@limit">prev</a>
+            <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="0" asp-route-limit="@limit">prev</a>
         }
         if (count >= limit)
         {
-            <a href="/Trade/OrdersPending?id=@market&offset=@(offset + limit)&limit=@limit">next</a>
+            <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
         }
     }
     else if (count >= limit)
     {
-        <a href="/Trade/OrdersPending?id=@market">more</a>
+        <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market">more</a>
     }
 }
 

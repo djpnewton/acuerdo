@@ -1,0 +1,26 @@
+﻿@using viafront3.Models.TradeViewModels
+@using viafront3.Views.Trade
+@using viafront3.Views
+@model OrdersCompletedViewModel
+@{
+    ViewData["Title"] = "User Completed Ask Orders";
+}
+<h4>@ViewData["Title"] - @Model.MarketNice</h4>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Completed Ask Orders
+            </div>
+            <div class="panel-body">
+                @Html.Partial("_CompletedOrdersPartial", Model.OrdersCompleted,
+                    new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", true }, { "trade_model", Model } })
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

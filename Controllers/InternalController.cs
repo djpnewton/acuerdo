@@ -57,6 +57,7 @@ namespace viafront3.Controllers
             };
             return View(model);
         }
+
         public IActionResult UserInspect(string id)
         {
             var user = GetUser(required: true).Result;
@@ -73,6 +74,46 @@ namespace viafront3.Controllers
                 AssetSettings = _settings.Assets,
             };
             return View(model);
+        }
+
+        public IActionResult UserInspectTrades(string id, string market)
+        {
+            var user = GetUser(required: true).Result;
+            var userInspect = _userManager.FindByIdAsync(id).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            ViewData["userid"] = id;
+            return View(TradeViewModel.Construct(user, userInspect, market, _settings));
+        }
+
+        public async Task<IActionResult> OrdersPending(string userid, string market, int offset=0, int limit=10)
+        {
+            var user = await GetUser(required: true);
+            var userInspect = _userManager.FindByIdAsync(userid).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            ViewData["userid"] = userid;
+            return View(OrdersPendingViewModel.Construct(user, userInspect, market, _settings, offset, limit));
+        }
+
+        public async Task<IActionResult> BidOrdersCompleted(string userid, string market, int offset=0, int limit=10)
+        {
+            var user = await GetUser(required: true);
+            var userInspect = _userManager.FindByIdAsync(userid).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            ViewData["userid"] = userid;
+            return View(OrdersCompletedViewModel.Construct(user, userInspect, market, OrderSide.Bid, _settings, offset, limit));
+        }
+
+        public async Task<IActionResult> AskOrdersCompleted(string userid, string market, int offset=0, int limit=10)
+        {
+            var user = await GetUser(required: true);
+            var userInspect = _userManager.FindByIdAsync(userid).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            ViewData["userid"] = userid;
+            return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
 
         [AllowAnonymous]

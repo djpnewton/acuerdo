@@ -45,11 +45,49 @@ namespace viafront3.Models.TradeViewModels
     public class OrdersPendingViewModel : BaseTradeViewModel
     {
         public OrdersPendingPartialViewModel OrdersPending { get; set; }
+
+        static public OrdersPendingViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, ExchangeSettings settings, int offset, int limit)
+        {
+            var via = new ViaJsonRpc(settings.AccessHttpUrl);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var ordersPending = via.OrdersPendingQuery(tradeUser.Exchange.Id, market, offset, limit);
+
+            var model = new OrdersPendingViewModel
+            {
+                User = loggedInUser,
+                Market = market,
+                MarketNice = string.Format("{0}/{1}", settings.Markets[market].AmountUnit, settings.Markets[market].PriceUnit),
+                AssetSettings = settings.Assets,
+                Settings = settings.Markets[market],
+                OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
+            };
+
+            return model;
+        }
     }
     
     public class OrdersCompletedViewModel : BaseTradeViewModel
     {
         public OrdersCompleted OrdersCompleted { get; set; }
+
+        static public OrdersCompletedViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, OrderSide side, ExchangeSettings settings, int offset, int limit)
+        {
+            var via = new ViaJsonRpc(settings.AccessHttpUrl);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var bidOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, offset, limit, side);
+
+            var model = new OrdersCompletedViewModel
+            {
+                User = loggedInUser,
+                Market = market,
+                MarketNice = string.Format("{0}/{1}", settings.Markets[market].AmountUnit, settings.Markets[market].PriceUnit),
+                AssetSettings = settings.Assets,
+                Settings = settings.Markets[market],
+                OrdersCompleted = bidOrdersCompleted,
+            };
+
+            return model;
+        }
     }
 
     public class TradeViewModel : BaseTradeViewModel
@@ -67,5 +105,30 @@ namespace viafront3.Models.TradeViewModels
         public string Amount { get; set; }
 
         public string Price { get; set; }
+
+        static public TradeViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, ExchangeSettings settings)
+        {
+            var via = new ViaJsonRpc(settings.AccessHttpUrl);
+            var balances = via.BalanceQuery(tradeUser.Exchange.Id);
+            var ordersPending = via.OrdersPendingQuery(tradeUser.Exchange.Id, market, 0, 10);
+            var now = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var bidOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, 0, 10, OrderSide.Bid);
+            var askOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, 0, 10, OrderSide.Ask);
+
+            var model = new TradeViewModel
+            {
+                User = loggedInUser,
+                Market = market,
+                MarketNice = string.Format("{0}/{1}", settings.Markets[market].AmountUnit, settings.Markets[market].PriceUnit),
+                AssetSettings = settings.Assets,
+                Settings = settings.Markets[market],
+                Balances = new BalancesPartialViewModel{Balances=balances},
+                OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
+                BidOrdersCompleted = bidOrdersCompleted,
+                AskOrdersCompleted = askOrdersCompleted
+            };
+
+            return model;
+        }
     }
 }

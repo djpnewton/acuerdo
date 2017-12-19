@@ -4,6 +4,11 @@
 @using via_jsonrpc
 @model OrdersCompleted
 @{
+    string userid = null;
+    if (ViewData.ContainsKey("userid"))
+    {
+        userid = (string)ViewData["userid"];
+    }
     var tradeModel = (BaseTradeViewModel)ViewData["trade_model"];
     var market = tradeModel.Market;
     var settings = tradeModel.Settings;
@@ -81,19 +86,19 @@
     {
         if (offset >= limit)
         {
-            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=@(offset - limit)&limit=@limit">prev</a>
+            <a asp-action="@(type)OrdersCompleted" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="@(offset-limit)" asp-route-limit="@limit">prev</a>
         }
         else if (offset > 0)
         {
-            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=0&limit=@limit">prev</a>
+            <a asp-action="@(type)OrdersCompleted" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="0" asp-route-limit="@limit">prev</a>
         }
         if (count >= limit)
         {
-            <a href="/Trade/@(type)OrdersCompleted?id=@market&offset=@(offset + limit)&limit=@limit">next</a>
+            <a asp-action="@(type)OrdersCompleted" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
         }
     }
     else if (count >= limit)
     {
-        <a href="/Trade/@(type)OrdersCompleted?id=@market">more</a>
+        <a asp-action="@(type)OrdersCompleted" asp-route-userid="@userid" asp-route-market="@market">more</a>
     }
 }

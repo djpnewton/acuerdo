@@ -4,6 +4,11 @@
 @{
     ViewData["Title"] = "User Inspect";
 }
+@using Microsoft.Extensions.Options
+@inject IOptions<ExchangeSettings> ExchangeSettings
+@{
+    var settings = ExchangeSettings.Value;
+}
 
 <div class="row">
     <div class="col-md-12">
@@ -52,6 +57,24 @@
             <div class="panel-body">
                 @Html.Partial("_UserBalancesPartial", Model.Balances,
                     new ViewDataDictionary(this.ViewData) { { "asset_settings", Model.AssetSettings } })
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Trades
+            </div>
+            <div class="panel-body">
+                <ul class="nav nav-pills nav-stacked">
+                    @foreach (var item in settings.Markets)
+                    {
+                        <li><a asp-action="UserInspectTrades" asp-route-id="@Model.UserInspect.Id" asp-route-market="@item.Key">@item.Key</a></li>
+                    }
+                </ul>
             </div>
         </div>
     </div>
