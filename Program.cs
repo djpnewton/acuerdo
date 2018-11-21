@@ -32,6 +32,8 @@ namespace viafront3
             startup.ConfigureServices(sc);
             var serviceProvider = sc.BuildServiceProvider();
 
+            if (args.Length > 1 && args[1] == "initroles")
+                Utils.CreateRoles(serviceProvider).Wait();
             if (args.Length > 3 && args[1] == "addrole")
                 Utils.GiveUserRole(serviceProvider, args[2], args[3]).Wait();
         }
