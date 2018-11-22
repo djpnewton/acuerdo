@@ -27,26 +27,28 @@ namespace viafront3.Controllers
             return View(BaseViewModel());
         }
 
-        public IActionResult Orderbook(string id)
+        public IActionResult Orderbook(string market)
         {
+            Debug.Assert(market != null);
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var orderDepth = via.OrderDepthQuery(id, _settings.OrderBookLimit, _settings.OrderBookInterval);
+            var orderDepth = via.OrderDepthQuery(market, _settings.OrderBookLimit, _settings.OrderBookInterval);
 
             var model = new OrderbookViewModel
             {
                 User = GetUser().Result,
-                Market = id,
-                MarketNice = string.Format("{0}/{1}", _settings.Markets[id].AmountUnit, _settings.Markets[id].PriceUnit),
-                AmountUnit = _settings.Markets[id].AmountUnit,
-                PriceUnit = _settings.Markets[id].PriceUnit,
+                Market = market,
+                MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
+                AmountUnit = _settings.Markets[market].AmountUnit,
+                PriceUnit = _settings.Markets[market].PriceUnit,
                 OrderDepth = orderDepth
             };
 
             return View(model);
         }
 
-        public IActionResult KLines(string id, long start, long end, long interval)
+        public IActionResult KLines(string market, long start, long end, long interval)
         {
+            Debug.Assert(market != null);
             var now = DateTimeOffset.Now.ToUnixTimeSeconds();
             if (start == 0)
                 start = now - 24 * 3600;
@@ -55,7 +57,7 @@ namespace viafront3.Controllers
             if (interval == 0)
                 interval = 3600;
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var klines = via.KlineQuery(id, start, end, interval);
+            var klines = via.KlineQuery(market, start, end, interval);
             return Json(klines);
         }
     }

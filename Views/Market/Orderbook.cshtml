@@ -128,7 +128,7 @@
         }
         var unixTimestamp = Math.floor(+new Date()/1000);
         var start = unixTimestamp - intervalSeconds * 30;
-        var url = "/Market/klines?id=@Model.Market&start=" + start + "&end=" + unixTimestamp + "&interval=" + intervalSeconds;
+        var url = "/Market/klines?market=@Model.Market&start=" + start + "&end=" + unixTimestamp + "&interval=" + intervalSeconds;
         $.getJSON(url, function(data) {
             viachart.load(data);
         });
