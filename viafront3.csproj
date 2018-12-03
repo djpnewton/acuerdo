@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <None Update="app.db" CopyToOutputDirectory="PreserveNewest" />
-    <Compile Include="**/*.cs" Exclude="bin/**;obj/**;via_jsonrpc/**;" />
+    <Compile Include="**/*.cs" Exclude="bin/**;obj/**;via_jsonrpc/**;xchwallet/**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="via_jsonrpc\via_jsonrpc\via_jsonrpc.csproj" />
+    <ProjectReference Include="xchwallet\xchwallet\xchwallet.csproj"/>
   </ItemGroup>
 
   <Target Name="PrebuildScript" BeforeTargets="PrepareForBuild">

@@ -1,3 +1,6 @@
 [submodule "via_jsonrpc"]
 	path = via_jsonrpc
 	url = https://github.com/djpnewton/via_jsonrpc.git
+[submodule "xchwallet"]
+	path = xchwallet
+	url = https://github.com/djpnewton/xchwallet.git
