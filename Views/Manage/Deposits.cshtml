@@ -1,0 +1,16 @@
+﻿@using viafront3.Views
+@using Microsoft.Extensions.Options
+@inject IOptions<ExchangeSettings> ExchangeSettings
+@{
+    ViewData.AddActivePage(ManageNavPages.Deposits);
+    var settings = ExchangeSettings.Value;
+}
+
+<h4>@ViewData["Title"]</h4>
+
+<ul class="nav nav-pills nav-stacked">
+    @foreach (var item in settings.Assets)
+    {
+        <li><a asp-action="Deposit" asp-route-asset="@item.Key">@item.Key</a></li>
+    }
+</ul>

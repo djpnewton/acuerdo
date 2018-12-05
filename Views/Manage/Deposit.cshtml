@@ -1,0 +1,14 @@
+﻿@using viafront3.Views
+@model DepositViewModel
+@{
+    ViewData["Title"] = "Deposit";
+    ViewData.AddActivePage(ManageNavPages.Deposits);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        @Model.Asset Deposit Address: @Model.DepositAddress
+    </div>
+</div>
+

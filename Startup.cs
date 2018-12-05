@@ -51,6 +51,14 @@ namespace viafront3
         public string MakerFeeRate { get; set; } = "0.01";
     }
 
+    public class WalletSettings
+    {
+        public bool Mainnet { get; set; } = false;
+        public string WavesSeedHex { get; set; } = "0123456789";
+        public string WavesNodeUrl { get; set; } = "http://localhost:6869";
+        public string WavesWalletFile { get; set; } = "waves_wallet.json";
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
