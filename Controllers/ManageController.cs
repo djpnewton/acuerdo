@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using System.Numerics;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -92,13 +93,79 @@ namespace viafront3.Controllers
 
             var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
                 _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
-            var address = wallet.NewAddress(user.Email);
+            var addrs = wallet.GetAddresses(user.Id);
+            IAddress addr = null;
+            if (addrs.Any())
+                addr = addrs.First();
+            else
+            {
+                addr = wallet.NewAddress(user.Id);
+                wallet.Save(_walletSettings.WavesWalletFile);
+            }
 
             var model = new DepositViewModel
             {
                 User = user,
                 Asset = asset,
-                DepositAddress = address.Address,
+                DepositAddress = addr.Address,
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> TransactionCheck(string asset, string address)
+        {
+            var user = await GetUser(required: true);
+
+            // we can only deposit waves for now
+            if (asset != "WAVES")
+                throw new Exception("Only 'WAVES' support atm");
+
+            // get wallet transactions
+            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
+                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            var addrs = wallet.GetAddresses(user.Id);
+            IAddress addr = null;
+            if (addrs.Any())
+                addr = addrs.First();
+            else
+                addr = wallet.NewAddress(user.Id);
+            var txs = wallet.GetAddrTransactions(addr.Address);
+            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
+            BigInteger newDeposits = 0;
+            foreach (var tx in unackedTxs)
+                if (tx.Direction == WalletDirection.Incomming)
+                    newDeposits += tx.Amount;
+            var newDepositsHuman = wallet.AmountToHumanFriendly(newDeposits);
+
+            // ack txs and save wallet
+            wallet.AcknowledgeTransactions(user.Id, unackedTxs);
+            wallet.Save(_walletSettings.WavesWalletFile);
+
+            // register new deposits with the exchange backend
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            foreach (var tx in unackedTxs)
+            {
+                if (tx.Direction == WalletDirection.Incomming)
+                {
+                    var amount = wallet.AmountToHumanFriendly(tx.Amount);
+                    var source = new Dictionary<string, object>();
+                    source["txid"] = tx.Id;
+                    var businessId = tx.Date;
+                    via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
+                }
+            } 
+
+            var model = new TransactionCheckViewModel
+            {
+                User = user,
+                Asset = asset,
+                DepositAddress = addr.Address,
+                Transactions = txs,
+                NewTransactions = unackedTxs,
+                NewDeposits = newDeposits,
+                NewDepositsHuman = newDepositsHuman,
             };
 
             return View(model);

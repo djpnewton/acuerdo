@@ -9,6 +9,7 @@
 <div class="row">
     <div class="col-md-6">
         @Model.Asset Deposit Address: @Model.DepositAddress
+        <a asp-action="TransactionCheck" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress">Check for transactions</a>
     </div>
 </div>
 
