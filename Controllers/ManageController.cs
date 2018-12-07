@@ -161,13 +161,73 @@ namespace viafront3.Controllers
             {
                 User = user,
                 Asset = asset,
+                AssetSettings = _settings.Assets,
                 DepositAddress = addr.Address,
+                Wallet = wallet,
                 Transactions = txs,
                 NewTransactions = unackedTxs,
                 NewDeposits = newDeposits,
                 NewDepositsHuman = newDepositsHuman,
             };
 
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Withdrawals()
+        {
+            var user = await GetUser(required: true);
+            var model = new BaseViewModel
+            {
+                User = user
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Withdraw(string asset)
+        {
+            var user = await GetUser(required: true);
+
+            // we can only withdraw waves for now
+            if (asset != "WAVES")
+                throw new Exception("Only 'WAVES' support atm");
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, asset);
+
+            var model = new WithdrawViewModel
+            {
+                User = user,
+                Asset = asset,
+                BalanceAvailable = balance.Available,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Withdraw(WithdrawViewModel model)
+        {
+            var user = await GetUser(required: true);
+
+            // we can only withdraw waves for now
+            if (model.Asset != "WAVES")
+                throw new Exception("Only 'WAVES' support atm");
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+            model.BalanceAvailable = balance.Available;
+
+            if (ModelState.IsValid)
+            {
+                this.FlashError("Not yet implemented");
+                return View(model);
+            }
+
+            // If we got this far, something failed, redisplay form
             return View(model);
         }
 

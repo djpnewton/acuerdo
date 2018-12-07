@@ -13,6 +13,7 @@ namespace viafront3.Views.Manage
 
         public static string Balance => "Balance";
         public static string Deposits => "Deposits";
+        public static string Withdrawals => "Withdrawals";
 
         public static string Index => "Index";
 
@@ -24,6 +25,7 @@ namespace viafront3.Views.Manage
 
         public static string BalanceNavClass(ViewContext viewContext) => PageNavClass(viewContext, Balance);
         public static string DepositsNavClass(ViewContext viewContext) => PageNavClass(viewContext, Deposits);
+        public static string WithdrawalsNavClass(ViewContext viewContext) => PageNavClass(viewContext, Withdrawals);
 
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 

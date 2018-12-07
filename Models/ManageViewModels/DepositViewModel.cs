@@ -17,6 +17,8 @@ namespace viafront3.Models.ManageViewModels
 
     public class TransactionCheckViewModel : DepositViewModel
     {
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+        public IWallet Wallet { get; set; }
         public IEnumerable<ITransaction> Transactions { get; set; }
         public IEnumerable<ITransaction> NewTransactions { get; set; }
         public BigInteger NewDeposits { get; set; }

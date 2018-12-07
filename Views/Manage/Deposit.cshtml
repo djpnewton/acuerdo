@@ -8,8 +8,15 @@
 <h4>@ViewData["Title"]</h4>
 <div class="row">
     <div class="col-md-6">
-        @Model.Asset Deposit Address: @Model.DepositAddress
-        <a asp-action="TransactionCheck" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress">Check for transactions</a>
+        <div class="panel panel-default">
+            <div class="panel-heading">@Model.Asset Deposit Address</div>
+            <div class="panel-body">
+                @Model.DepositAddress
+            </div>
+            <div class="panel-footer">
+                <a asp-action="TransactionCheck" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress">Check for transactions</a>
+            </div>
+        </div> 
     </div>
 </div>
 

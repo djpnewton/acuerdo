@@ -9,17 +9,44 @@
 <h4>@ViewData["Title"]</h4>
 <div class="row">
     <div class="col-md-6">
-        @Model.Asset Deposit Address: @Model.DepositAddress
-        <br/>
-        Transactions:
-        <ul>
-        @{
-            foreach (var item in Model.Transactions)
-            {
-                <li>@item</li>
-            }
-        }
-        </ul>
+        <div class="panel panel-default">
+            <div class="panel-heading">@Model.Asset Deposit Address</div>
+            <div class="panel-body">
+                @Model.DepositAddress
+            </div>
+        </div> 
+        <table class="table table-bordered table-responsive table-hover">
+            <tr>
+                <th>
+                    TX ID
+                </th>
+                <th>
+                    From
+                </th>
+                <th class="pad-decimals">
+                    Amount
+                </th>
+            </tr>
+            <tbody>@{
+                foreach (var item in Model.Transactions)
+                {
+                    <tr>
+                        <td>
+                            @item.Id
+                        </td>
+                        <td>
+                            @item.From
+                        </td>
+                        <td>
+                            <span class="pad-decimals-data">
+                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToHumanFriendly(item.Amount),
+                                Model.AssetSettings[Model.Asset].Decimals)
+                            </span>
+                        </td>
+                    </tr>
+                }
+            }</tbody>
+        </table>
         @{
             if (Model.NewDeposits > 0)
             {
@@ -30,3 +57,7 @@
     </div>
 </div>
 
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

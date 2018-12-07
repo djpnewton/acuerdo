@@ -1,0 +1,34 @@
+﻿@using viafront3.Views
+@model WithdrawViewModel
+@{
+    ViewData["Title"] = "Withdrawal";
+    ViewData.AddActivePage(ManageNavPages.Withdrawals);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <strong>@Model.BalanceAvailable @Model.Asset Available</strong>
+        <form asp-action="Withdraw" method="post" class="form-group">
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="Asset" value="@Model.Asset" />
+            <div class="form-group">
+                <label asp-for="WithdrawalAddress"></label>
+                <input asp-for="WithdrawalAddress" class="form-control" />
+                <span asp-validation-for="WithdrawalAddress" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Amount"></label>
+                <input asp-for="Amount" class="form-control" />
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-default">Withdraw @Model.Asset</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}
