@@ -4,7 +4,6 @@
 @{
     ViewData["Title"] = "Transaction Check";
     ViewData.AddActivePage(ManageNavPages.Deposits);
-    var newTxs = Model.NewTransactions.Any();
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -29,25 +28,22 @@
                 </th>
             </tr>
             <tbody>@{
-                foreach (var item in Model.Transactions)
+                foreach (var item in Model.TransactionsIncomming)
                 {
-                    if (item.Direction == WalletDirection.Incomming)
-                    {
-                        <tr>
-                            <td>
-                                @item.Id
-                            </td>
-                            <td>
-                                @item.From
-                            </td>
-                            <td>
-                                <span class="pad-decimals-data">
-                                @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
-                                    Model.AssetSettings[Model.Asset].Decimals)
-                                </span>
-                            </td>
-                        </tr>
-                    }
+                    <tr>
+                        <td>
+                            @item.Id
+                        </td>
+                        <td>
+                            @item.From
+                        </td>
+                        <td>
+                            <span class="pad-decimals-data">
+                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                                Model.AssetSettings[Model.Asset].Decimals)
+                            </span>
+                        </td>
+                    </tr>
                 }
             }</tbody>
         </table>

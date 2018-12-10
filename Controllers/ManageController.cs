@@ -131,12 +131,13 @@ namespace viafront3.Controllers
                 addr = addrs.First();
             else
                 addr = wallet.NewAddress(user.Id);
-            var txs = wallet.GetAddrTransactions(addr.Address);
-            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
+            var txs = wallet.GetAddrTransactions(addr.Address)
+                .Where(t => t.Direction == WalletDirection.Incomming);;
+            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address)
+                .Where(t => t.Direction == WalletDirection.Incomming);;
             BigInteger newDeposits = 0;
             foreach (var tx in unackedTxs)
-                if (tx.Direction == WalletDirection.Incomming)
-                    newDeposits += tx.Amount;
+                newDeposits += tx.Amount;
             var newDepositsHuman = wallet.AmountToString(newDeposits);
 
             // ack txs and save wallet
@@ -147,16 +148,13 @@ namespace viafront3.Controllers
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             foreach (var tx in unackedTxs)
             {
-                if (tx.Direction == WalletDirection.Incomming)
-                {
-                    var amount = wallet.AmountToString(tx.Amount);
-                    var source = new Dictionary<string, object>();
-                    source["txid"] = tx.Id;
-                    var businessId = wallet.GetNextTxWalletId(user.Id);
-                    wallet.SetTxWalletId(user.Id, tx.Id, businessId);
-                    wallet.Save(_walletSettings.WavesWalletFile);
-                    via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
-                }
+                var amount = wallet.AmountToString(tx.Amount);
+                var source = new Dictionary<string, object>();
+                source["txid"] = tx.Id;
+                var businessId = wallet.GetNextTxWalletId(user.Id);
+                wallet.SetTxWalletId(user.Id, tx.Id, businessId);
+                wallet.Save(_walletSettings.WavesWalletFile);
+                via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             } 
 
             var model = new TransactionCheckViewModel
@@ -166,8 +164,8 @@ namespace viafront3.Controllers
                 AssetSettings = _settings.Assets,
                 DepositAddress = addr.Address,
                 Wallet = wallet,
-                Transactions = txs,
-                NewTransactions = unackedTxs,
+                TransactionsIncomming = txs,
+                NewTransactionsIncomming = unackedTxs,
                 NewDeposits = newDeposits,
                 NewDepositsHuman = newDepositsHuman,
             };
@@ -277,6 +275,7 @@ namespace viafront3.Controllers
                 else
                     this.FlashSuccess(string.Format("{0} {1} withdrawn to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
                 wallet.SetTxWalletId(_walletSettings.ConsolidatedFundsTag, txids, businessId);
+                wallet.SetTagOnBehalfOf(_walletSettings.ConsolidatedFundsTag, txids, user.Id);
                 wallet.Save(_walletSettings.WavesWalletFile);
 
                 return View(model);

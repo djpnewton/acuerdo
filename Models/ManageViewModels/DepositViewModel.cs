@@ -15,12 +15,17 @@ namespace viafront3.Models.ManageViewModels
         public string DepositAddress { get; set; }
     }
 
-    public class TransactionCheckViewModel : DepositViewModel
+    public class UserTransactionsViewModel : DepositViewModel
     {
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public IWallet Wallet { get; set; }
-        public IEnumerable<ITransaction> Transactions { get; set; }
-        public IEnumerable<ITransaction> NewTransactions { get; set; }
+        public IEnumerable<ITransaction> TransactionsIncomming { get; set; }
+        public IEnumerable<ITransaction> TransactionsOutgoing { get; set; }
+    }
+
+    public class TransactionCheckViewModel : UserTransactionsViewModel
+    {
+        public IEnumerable<ITransaction> NewTransactionsIncomming { get; set; }
         public BigInteger NewDeposits { get; set; }
         public string NewDepositsHuman { get; set; }
     }

@@ -8,13 +8,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using viafront3.Models;
 using viafront3.Models.InternalViewModels;
 using viafront3.Models.TradeViewModels;
+using viafront3.Models.ManageViewModels;
 using viafront3.Data;
 using viafront3.Services;
 using via_jsonrpc;
+using xchwallet;
 
 namespace viafront3.Controllers
 {
@@ -23,13 +26,19 @@ namespace viafront3.Controllers
     public class InternalController : BaseSettingsController
     {
         private readonly IWebsocketTokens _websocketTokens;
+        private readonly ILogger _logger;
+        private readonly WalletSettings _walletSettings;
 
         public InternalController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
             IOptions<ExchangeSettings> settings,
-            IWebsocketTokens websocketTokens) : base(userManager, context, settings)
+            IOptions<WalletSettings> walletSettings,
+            IWebsocketTokens websocketTokens,
+            ILogger<InternalController> logger) : base(userManager, context, settings)
         {
+            _walletSettings = walletSettings.Value;
             _websocketTokens = websocketTokens;
+            _logger = logger;
         }
 
         public IActionResult Index()
@@ -86,6 +95,37 @@ namespace viafront3.Controllers
             return View(TradeViewModel.Construct(user, userInspect, market, _settings));
         }
 
+        public IActionResult UserInspectBlockchainTxs(string id, string asset)
+        {
+            var user = GetUser(required: true).Result;
+            var userInspect = _userManager.FindByIdAsync(id).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            // we can only do waves for now
+            if (asset != "WAVES")
+                throw new Exception("Only 'WAVES' support atm");
+
+            // get wallet transactions
+            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
+                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            var txsIn = wallet.GetTransactions(user.Id)
+                .Where(t => t.Direction == WalletDirection.Incomming);
+            var txsOutOnBehalf = wallet.GetTransactions(_walletSettings.ConsolidatedFundsTag)
+                .Where(t => t.WalletDetails.TagOnBehalfOf == user.Id);
+
+            ViewData["userid"] = id;
+            var model = new UserTransactionsViewModel
+            {
+                User = user,
+                Asset = asset,
+                DepositAddress = null,
+                AssetSettings = _settings.Assets,
+                Wallet = wallet,
+                TransactionsIncomming = txsIn,
+                TransactionsOutgoing = txsOutOnBehalf
+            };
+            return View(model);
+        }
         public async Task<IActionResult> OrdersPending(string userid, string market, int offset=0, int limit=10)
         {
             var user = await GetUser(required: true);
