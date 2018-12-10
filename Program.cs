@@ -34,8 +34,12 @@ namespace viafront3
 
             if (args.Length > 1 && args[1] == "initroles")
                 Utils.CreateRoles(serviceProvider).Wait();
-            if (args.Length > 3 && args[1] == "addrole")
+            else if (args.Length > 3 && args[1] == "addrole")
                 Utils.GiveUserRole(serviceProvider, args[2], args[3]).Wait();
+            else if (args.Length > 3 && args[1] == "consolidate_wallet")
+                Utils.ConsolidateWallet(serviceProvider, args[2], args[3]).Wait();
+            else
+                Console.WriteLine("ERROR: no matching command");
         }
 
         public static IWebHost BuildWebHost(string[] args) =>

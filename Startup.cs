@@ -54,9 +54,12 @@ namespace viafront3
     public class WalletSettings
     {
         public bool Mainnet { get; set; } = false;
+        public string ConsolidatedFundsTag { get; set; } = "Consolidate";
         public string WavesSeedHex { get; set; } = "0123456789";
         public string WavesNodeUrl { get; set; } = "http://localhost:6869";
         public string WavesWalletFile { get; set; } = "waves_wallet.json";
+        public long WavesFeeUnit { get; set; } = 100000;
+        public long WavesFeeMax { get; set; } = 100000 * 10;
     }
 
     public class Startup

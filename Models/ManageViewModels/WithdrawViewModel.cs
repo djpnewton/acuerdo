@@ -14,6 +14,6 @@ namespace viafront3.Models.ManageViewModels
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
         public string WithdrawalAddress { get; set; }
-        public string Amount { get; set; }
+        public decimal Amount { get; set; }
     }
 }

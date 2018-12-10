@@ -137,7 +137,7 @@ namespace viafront3.Controllers
             foreach (var tx in unackedTxs)
                 if (tx.Direction == WalletDirection.Incomming)
                     newDeposits += tx.Amount;
-            var newDepositsHuman = wallet.AmountToHumanFriendly(newDeposits);
+            var newDepositsHuman = wallet.AmountToString(newDeposits);
 
             // ack txs and save wallet
             wallet.AcknowledgeTransactions(user.Id, unackedTxs);
@@ -149,10 +149,12 @@ namespace viafront3.Controllers
             {
                 if (tx.Direction == WalletDirection.Incomming)
                 {
-                    var amount = wallet.AmountToHumanFriendly(tx.Amount);
+                    var amount = wallet.AmountToString(tx.Amount);
                     var source = new Dictionary<string, object>();
                     source["txid"] = tx.Id;
-                    var businessId = tx.Date;
+                    var businessId = wallet.GetNextTxWalletId(user.Id);
+                    wallet.SetTxWalletId(user.Id, tx.Id, businessId);
+                    wallet.Save(_walletSettings.WavesWalletFile);
                     via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
                 }
             } 
@@ -223,7 +225,60 @@ namespace viafront3.Controllers
 
             if (ModelState.IsValid)
             {
-                this.FlashError("Not yet implemented");
+                var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
+                    _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+
+                // validate amount
+                var amountInt = wallet.StringToAmount(model.Amount.ToString());
+                var availableInt = wallet.StringToAmount(balance.Available);
+                if (amountInt > availableInt)
+                {
+                    this.FlashError("Amount must be less then or equal to available balance");
+                    return View(model);
+                }
+                if (amountInt <= 0)
+                {
+                    this.FlashError("Amount must be greather then or equal to 0");
+                    return View(model);
+                }
+
+                // validate address
+                if (!wallet.ValidateAddress(model.WithdrawalAddress))
+                {
+                    this.FlashError("Withdrawal address is not valid");
+                    return View(model);
+                }
+
+                var businessId = wallet.GetNextTxWalletId(_walletSettings.ConsolidatedFundsTag);
+
+                // register withdrawal with the exchange backend
+                var negativeAmount = -model.Amount;
+                try
+                {
+                    via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", businessId, negativeAmount.ToString(), null);
+                }
+                catch (System.Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
+                        user.Exchange.Id, model.Asset, businessId, negativeAmount);
+                    throw;
+                }
+                
+                // send funds and save wallet
+                IEnumerable<string> txids = null;
+                var res = wallet.Spend(_walletSettings.ConsolidatedFundsTag, _walletSettings.ConsolidatedFundsTag,
+                    model.WithdrawalAddress, amountInt, _walletSettings.WavesFeeMax, _walletSettings.WavesFeeUnit, out txids);
+                if (res != WalletError.Success)
+                {
+                    _logger.LogError("Failed to withdraw funds (wallet error: {0}, asset: {1}, address: {2}, amount: {3}, businessId: {4}",
+                        res, model.Asset, model.WithdrawalAddress, amountInt, businessId);
+                    this.FlashError(string.Format("Failed to withdraw funds ({0})", res));
+                }
+                else
+                    this.FlashSuccess(string.Format("{0} {1} withdrawn to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
+                wallet.SetTxWalletId(_walletSettings.ConsolidatedFundsTag, txids, businessId);
+                wallet.Save(_walletSettings.WavesWalletFile);
+
                 return View(model);
             }
 
