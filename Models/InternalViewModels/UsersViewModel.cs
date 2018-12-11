@@ -27,4 +27,11 @@ namespace viafront3.Models.InternalViewModels
         public BalancesPartialViewModel Balances { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
+
+    public class UserBalanceHistoryViewModel : BaseViewModel
+    {
+        public string Asset { get; set; }
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+        public BalanceHistory BalanceHistory { get; set; }
+    }
 }

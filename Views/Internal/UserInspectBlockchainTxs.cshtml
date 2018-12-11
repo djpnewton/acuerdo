@@ -17,6 +17,9 @@
                 <table class="table table-bordered table-responsive table-hover">
             <tr>
                 <th>
+                    Date
+                </th>
+                <th>
                     TX ID
                 </th>
                 <th>
@@ -28,16 +31,22 @@
                 <th class="pad-decimals">
                     Amount
                 </th>
+                <th>
+                    Id
+                </th>
             </tr>
             <tbody>@{
                 foreach (var item in Model.TransactionsIncomming)
                 {
                     <tr>
                         <td>
+                            @ViewUtils.FormatUnixTime(item.Date)
+                        </td>
+                        <td>
                             @item.Id
                         </td>
                         <td>
-                            @item.From
+                            <span class="truncate">@item.From</span>
                         </td>
                         <td>
                             @item.To
@@ -47,6 +56,9 @@
                             @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
                                 Model.AssetSettings[Model.Asset].Decimals)
                             </span>
+                        </td>
+                        <td>
+                            @item.WalletDetails.Id
                         </td>
                     </tr>
                 }
@@ -67,6 +79,9 @@
                 <table class="table table-bordered table-responsive table-hover">
             <tr>
                 <th>
+                    Date
+                </th>
+                <th>
                     TX ID
                 </th>
                 <th>
@@ -75,8 +90,11 @@
                 <th>
                     To
                 </th>
-                <th class="pad-decimals">
+               <th class="pad-decimals">
                     Amount
+                </th>
+                <th>
+                    Id
                 </th>
             </tr>
             <tbody>@{
@@ -84,10 +102,13 @@
                 {
                     <tr>
                         <td>
+                            @ViewUtils.FormatUnixTime(item.Date)
+                        </td>
+                        <td>
                             @item.Id
                         </td>
                         <td>
-                            @item.From
+                            <span class="truncate">@item.From</span>
                         </td>
                         <td>
                             @item.To
@@ -97,6 +118,9 @@
                             @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
                                 Model.AssetSettings[Model.Asset].Decimals)
                             </span>
+                        </td>
+                        <td>
+                            @item.WalletDetails.Id
                         </td>
                     </tr>
                 }

@@ -98,8 +98,6 @@ namespace viafront3.Controllers
         public IActionResult UserInspectBlockchainTxs(string id, string asset)
         {
             var user = GetUser(required: true).Result;
-            var userInspect = _userManager.FindByIdAsync(id).Result;
-            userInspect.EnsureExchangePresent(_context);
 
             // we can only do waves for now
             if (asset != "WAVES")
@@ -126,6 +124,31 @@ namespace viafront3.Controllers
             };
             return View(model);
         }
+
+        public IActionResult UserInspectExchangeBalanceHistory(string id, string asset, int offset=0)
+        {
+            var user = GetUser(required: true).Result;
+            var userInspect = _userManager.FindByIdAsync(id).Result;
+            userInspect.EnsureExchangePresent(_context);
+
+            // we can only do waves for now
+            if (asset != "WAVES")
+                throw new Exception("Only 'WAVES' support atm");
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var history = via.BalanceHistoryQuery(userInspect.Exchange.Id, asset, "", 0, 0, offset, 50);
+
+            ViewData["userid"] = id;
+            var model = new UserBalanceHistoryViewModel
+            {
+                User = user,
+                Asset = asset,
+                AssetSettings = _settings.Assets,
+                BalanceHistory = history
+            };
+            return View(model);
+        }
+
         public async Task<IActionResult> OrdersPending(string userid, string market, int offset=0, int limit=10)
         {
             var user = await GetUser(required: true);

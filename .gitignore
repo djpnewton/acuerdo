@@ -3,6 +3,9 @@
 *.swp
 *.swo
 
+# mac turds
+.DS_Store
+
 # cs binaries
 bin/
 obj/

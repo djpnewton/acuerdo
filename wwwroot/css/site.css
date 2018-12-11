@@ -41,3 +41,11 @@
 .greyed-digits {
     color: grey;
 }
+
+.truncate {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 75px;
+    display: inline-block;
+}

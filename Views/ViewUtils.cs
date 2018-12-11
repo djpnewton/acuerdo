@@ -1,5 +1,7 @@
 using System;
 using System.Globalization;
+using System.Collections.Generic;
+using Newtonsoft.Json;
 using via_jsonrpc;
 
 namespace viafront3.Views
@@ -35,6 +37,16 @@ namespace viafront3.Views
         public static string FormatUnixTime(long time)
         {
             return DateTimeOffset.FromUnixTimeSeconds(time).ToString("yyyy/MM/dd HH:mm");
+        }
+
+        public static string FormatUnixTime(float time)
+        {
+            return FormatUnixTime((long)time);
+        }
+
+        public static string FormatDict(Dictionary<string, object> dict)
+        {
+            return JsonConvert.SerializeObject(dict);
         }
     }
 }
