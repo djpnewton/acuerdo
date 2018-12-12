@@ -5,28 +5,20 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
-namespace viafront3.Views.Manage
+namespace viafront3.Views.Wallet
 {
-    public static class ManageNavPages
+    public static class WalletNavPages
     {
         public static string ActivePageKey => "ActivePage";
 
         public static string Index => "Index";
-
-        public static string ChangePassword => "ChangePassword";
-
-        public static string ExternalLogins => "ExternalLogins";
-
-        public static string TwoFactorAuthentication => "TwoFactorAuthentication";
+        public static string Deposits => "Deposits";
+        public static string Withdrawals => "Withdrawals";
 
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
+        public static string DepositsNavClass(ViewContext viewContext) => PageNavClass(viewContext, Deposits);
+        public static string WithdrawalsNavClass(ViewContext viewContext) => PageNavClass(viewContext, Withdrawals);
 
-        public static string ChangePasswordNavClass(ViewContext viewContext) => PageNavClass(viewContext, ChangePassword);
-
-        public static string ExternalLoginsNavClass(ViewContext viewContext) => PageNavClass(viewContext, ExternalLogins);
-
-        public static string TwoFactorAuthenticationNavClass(ViewContext viewContext) => PageNavClass(viewContext, TwoFactorAuthentication);
-    
         public static string PageNavClass(ViewContext viewContext, string page)
         {
             var activePage = viewContext.ViewData["ActivePage"] as string;

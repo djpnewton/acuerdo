@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using via_jsonrpc;
 
-namespace viafront3.Models.ManageViewModels
+namespace viafront3.Models.WalletViewModels
 {
     public class BalanceViewModel : BaseViewModel
     {

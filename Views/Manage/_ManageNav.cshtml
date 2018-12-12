@@ -5,9 +5,6 @@
 }
 
 <ul class="nav nav-pills nav-stacked">
-    <li class="@ManageNavPages.BalanceNavClass(ViewContext)"><a asp-action="Balance">Balance</a></li>
-    <li class="@ManageNavPages.DepositsNavClass(ViewContext)"><a asp-action="Deposits">Deposits</a></li>
-    <li class="@ManageNavPages.WithdrawalsNavClass(ViewContext)"><a asp-action="Withdrawals">Withdrawals</a></li>
     <li class="@ManageNavPages.IndexNavClass(ViewContext)"><a asp-action="Index">Profile</a></li>
     <li class="@ManageNavPages.ChangePasswordNavClass(ViewContext)"><a asp-action="ChangePassword">Password</a></li>
     @if (hasExternalLogins)

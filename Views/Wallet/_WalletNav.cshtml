@@ -1,0 +1,8 @@
+﻿@using viafront3.Views.Wallet
+
+<ul class="nav nav-pills nav-stacked">
+    <li class="@WalletNavPages.IndexNavClass(ViewContext)"><a asp-action="Index">Balance</a></li>
+    <li class="@WalletNavPages.DepositsNavClass(ViewContext)"><a asp-action="Deposits">Deposits</a></li>
+    <li class="@WalletNavPages.WithdrawalsNavClass(ViewContext)"><a asp-action="Withdrawals">Withdrawals</a></li>
+</ul>
+

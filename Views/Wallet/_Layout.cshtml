@@ -1,0 +1,21 @@
+﻿@{ 
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Manage your wallet</h2>
+
+<div>
+    <div class="row">
+        <div class="col-md-3">
+            @await Html.PartialAsync("_WalletNav")
+        </div>
+        <div class="col-md-9">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}
+        

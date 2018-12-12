@@ -1,8 +1,10 @@
-﻿@using viafront3.Views
+﻿@using viafront3.Models.WalletViewModels
+@using viafront3.Views.Wallet
+@using viafront3.Views
 @model BalanceViewModel
 @{
     ViewData["Title"] = "Balance";
-    ViewData.AddActivePage(ManageNavPages.Balance);
+    ViewData.AddActivePage(WalletNavPages.Index);
 }
 
 <h4>@ViewData["Title"]</h4>

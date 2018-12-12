@@ -1,9 +1,11 @@
-﻿@using viafront3.Views
+﻿@using viafront3.Models.WalletViewModels
+@using viafront3.Views.Wallet
+@using viafront3.Views
 @using xchwallet;
 @model TransactionCheckViewModel
 @{
     ViewData["Title"] = "Transaction Check";
-    ViewData.AddActivePage(ManageNavPages.Deposits);
+    ViewData.AddActivePage(WalletNavPages.Deposits);
 }
 
 <h4>@ViewData["Title"]</h4>

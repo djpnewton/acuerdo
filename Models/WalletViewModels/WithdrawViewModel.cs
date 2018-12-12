@@ -7,7 +7,7 @@ using System.Numerics;
 using via_jsonrpc;
 using xchwallet;
 
-namespace viafront3.Models.ManageViewModels
+namespace viafront3.Models.WalletViewModels
 {
     public class WithdrawViewModel : BaseViewModel
     {

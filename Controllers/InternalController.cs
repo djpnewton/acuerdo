@@ -13,7 +13,7 @@ using Microsoft.Extensions.Primitives;
 using viafront3.Models;
 using viafront3.Models.InternalViewModels;
 using viafront3.Models.TradeViewModels;
-using viafront3.Models.ManageViewModels;
+using viafront3.Models.WalletViewModels;
 using viafront3.Data;
 using viafront3.Services;
 using via_jsonrpc;

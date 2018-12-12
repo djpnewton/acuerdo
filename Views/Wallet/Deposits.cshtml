@@ -1,8 +1,9 @@
 ﻿@using viafront3.Views
+@using viafront3.Views.Wallet
 @using Microsoft.Extensions.Options
 @inject IOptions<ExchangeSettings> ExchangeSettings
 @{
-    ViewData.AddActivePage(ManageNavPages.Deposits);
+    ViewData.AddActivePage(WalletNavPages.Deposits);
     var settings = ExchangeSettings.Value;
 }
 
