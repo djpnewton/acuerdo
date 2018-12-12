@@ -25,17 +25,17 @@ namespace viafront3.Controllers
     public class WalletController : BaseSettingsController
     {
         private readonly ILogger _logger;
-        private readonly WalletSettings _walletSettings;
+        private readonly IWalletProvider _walletProvider;
 
         public WalletController(
           UserManager<ApplicationUser> userManager,
           ILogger<ManageController> logger,
           ApplicationDbContext context,
           IOptions<ExchangeSettings> settings,
-          IOptions<WalletSettings> walletSettings) : base(userManager, context, settings)
+          IWalletProvider walletProvider) : base(userManager, context, settings)
         {
             _logger = logger;
-            _walletSettings = walletSettings.Value;
+            _walletProvider = walletProvider;
         }
 
         [HttpGet]
@@ -43,6 +43,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balances = via.BalanceQuery(user.Exchange.Id);
 
@@ -73,12 +74,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            // we can only deposit waves for now
-            if (asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
-            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
-                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            var wallet = _walletProvider.Get(asset);
             var addrs = wallet.GetAddresses(user.Id);
             IAddress addr = null;
             if (addrs.Any())
@@ -86,7 +82,7 @@ namespace viafront3.Controllers
             else
             {
                 addr = wallet.NewAddress(user.Id);
-                wallet.Save(_walletSettings.WavesWalletFile);
+                _walletProvider.Save(wallet, asset);
             }
 
             var model = new DepositViewModel
@@ -104,13 +100,8 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            // we can only deposit waves for now
-            if (asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
             // get wallet transactions
-            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
-                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            var wallet = _walletProvider.Get(asset);
             var addrs = wallet.GetAddresses(user.Id);
             IAddress addr = null;
             if (addrs.Any())
@@ -128,10 +119,10 @@ namespace viafront3.Controllers
 
             // ack txs and save wallet
             wallet.AcknowledgeTransactions(user.Id, unackedTxs);
-            wallet.Save(_walletSettings.WavesWalletFile);
+            _walletProvider.Save(wallet, asset);
 
             // register new deposits with the exchange backend
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             foreach (var tx in unackedTxs)
             {
                 var amount = wallet.AmountToString(tx.Amount);
@@ -139,7 +130,7 @@ namespace viafront3.Controllers
                 source["txid"] = tx.Id;
                 var businessId = wallet.GetNextTxWalletId(user.Id);
                 wallet.SetTxWalletId(user.Id, tx.Id, businessId);
-                wallet.Save(_walletSettings.WavesWalletFile);
+                _walletProvider.Save(wallet, asset);
                 via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             } 
 
@@ -176,10 +167,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            // we can only withdraw waves for now
-            if (asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balance = via.BalanceQuery(user.Exchange.Id, asset);
 
@@ -199,18 +187,14 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            // we can only withdraw waves for now
-            if (model.Asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
             model.BalanceAvailable = balance.Available;
 
             if (ModelState.IsValid)
             {
-                var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
-                    _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+                var wallet = _walletProvider.Get(model.Asset);
 
                 // validate amount
                 var amountInt = wallet.StringToAmount(model.Amount.ToString());
@@ -233,7 +217,8 @@ namespace viafront3.Controllers
                     return View(model);
                 }
 
-                var businessId = wallet.GetNextTxWalletId(_walletSettings.ConsolidatedFundsTag);
+                var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
+                var businessId = wallet.GetNextTxWalletId(consolidatedFundsTag);
 
                 // register withdrawal with the exchange backend
                 var negativeAmount = -model.Amount;
@@ -250,8 +235,9 @@ namespace viafront3.Controllers
                 
                 // send funds and save wallet
                 IEnumerable<string> txids = null;
-                var res = wallet.Spend(_walletSettings.ConsolidatedFundsTag, _walletSettings.ConsolidatedFundsTag,
-                    model.WithdrawalAddress, amountInt, _walletSettings.WavesFeeMax, _walletSettings.WavesFeeUnit, out txids);
+                var res = wallet.Spend(consolidatedFundsTag, consolidatedFundsTag,
+                    model.WithdrawalAddress, amountInt, _walletProvider.FeeMax(model.Asset),
+                    _walletProvider.FeeUnit(model.Asset), out txids);
                 if (res != WalletError.Success)
                 {
                     _logger.LogError("Failed to withdraw funds (wallet error: {0}, asset: {1}, address: {2}, amount: {3}, businessId: {4}",
@@ -260,9 +246,9 @@ namespace viafront3.Controllers
                 }
                 else
                     this.FlashSuccess(string.Format("{0} {1} withdrawn to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
-                wallet.SetTxWalletId(_walletSettings.ConsolidatedFundsTag, txids, businessId);
-                wallet.SetTagOnBehalfOf(_walletSettings.ConsolidatedFundsTag, txids, user.Id);
-                wallet.Save(_walletSettings.WavesWalletFile);
+                wallet.SetTxWalletId(consolidatedFundsTag, txids, businessId);
+                wallet.SetTagOnBehalfOf(consolidatedFundsTag, txids, user.Id);
+                _walletProvider.Save(wallet, model.Asset);
 
                 return View(model);
             }

@@ -30,6 +30,7 @@ namespace viafront3.Controllers
         public IActionResult Orderbook(string market)
         {
             Debug.Assert(market != null);
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var orderDepth = via.OrderDepthQuery(market, _settings.OrderBookLimit, _settings.OrderBookInterval);
 
@@ -56,6 +57,7 @@ namespace viafront3.Controllers
                 end = now;
             if (interval == 0)
                 interval = 3600;
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var klines = via.KlineQuery(market, start, end, interval);
             return Json(klines);

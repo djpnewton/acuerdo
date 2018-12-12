@@ -78,6 +78,7 @@ namespace viafront3.Controllers
                 return result.Item2;
 
             var user = await GetUser(required: true);
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, model.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
             this.FlashSuccess(string.Format("Limit Order Created ({0} - {1}, Amount: {2}, Price: {3})", order.market, order.side, order.amount, order.price));
@@ -93,6 +94,7 @@ namespace viafront3.Controllers
                 return result.Item2;
 
             var user = await GetUser(required: true);
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", bid_amount_money: false);
             this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
@@ -104,6 +106,7 @@ namespace viafront3.Controllers
         public async Task<IActionResult> CancelOrder(OrdersPendingPartialViewModel model)
         {
             var user = await GetUser(required: true);
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var order = via.OrderCancelQuery(user.Exchange.Id, model.Market, model.OrderId);
             this.FlashSuccess("Order Cancelled");

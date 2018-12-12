@@ -27,16 +27,16 @@ namespace viafront3.Controllers
     {
         private readonly IWebsocketTokens _websocketTokens;
         private readonly ILogger _logger;
-        private readonly WalletSettings _walletSettings;
+        private readonly IWalletProvider _walletProvider;
 
         public InternalController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
             IOptions<ExchangeSettings> settings,
-            IOptions<WalletSettings> walletSettings,
+            IWalletProvider walletProvider,
             IWebsocketTokens websocketTokens,
             ILogger<InternalController> logger) : base(userManager, context, settings)
         {
-            _walletSettings = walletSettings.Value;
+            _walletProvider = walletProvider;
             _websocketTokens = websocketTokens;
             _logger = logger;
         }
@@ -72,6 +72,7 @@ namespace viafront3.Controllers
             var user = GetUser(required: true).Result;
             var userInspect = _userManager.FindByIdAsync(id).Result;
             userInspect.EnsureExchangePresent(_context);
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balances = via.BalanceQuery(userInspect.Exchange.Id);
 
@@ -99,16 +100,11 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
 
-            // we can only do waves for now
-            if (asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
             // get wallet transactions
-            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
-                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            var wallet = _walletProvider.Get(asset);
             var txsIn = wallet.GetTransactions(user.Id)
                 .Where(t => t.Direction == WalletDirection.Incomming);
-            var txsOutOnBehalf = wallet.GetTransactions(_walletSettings.ConsolidatedFundsTag)
+            var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
                 .Where(t => t.WalletDetails.TagOnBehalfOf == user.Id);
 
             ViewData["userid"] = id;
@@ -131,10 +127,7 @@ namespace viafront3.Controllers
             var userInspect = _userManager.FindByIdAsync(id).Result;
             userInspect.EnsureExchangePresent(_context);
 
-            // we can only do waves for now
-            if (asset != "WAVES")
-                throw new Exception("Only 'WAVES' support atm");
-
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var history = via.BalanceHistoryQuery(userInspect.Exchange.Id, asset, "", 0, 0, offset, 50);
 

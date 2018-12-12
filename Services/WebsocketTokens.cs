@@ -15,7 +15,6 @@ namespace viafront3.Services
             Created = DateTime.Now;
             ExchangeUserId = exchangeUserId;
         }
-
     }
 
     public interface IWebsocketTokens

@@ -76,6 +76,7 @@ namespace viafront3
         {
             // Add ExchangeSettings so it can be injected in controllers
             services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
+            services.Configure<WalletSettings>(options => Configuration.GetSection("Wallet").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
@@ -87,6 +88,7 @@ namespace viafront3
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddSingleton<IWebsocketTokens, WebsocketTokens>();
+            services.AddSingleton<IWalletProvider, WalletProvider>();
 
             services.AddMvc();
         }
