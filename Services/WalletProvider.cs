@@ -13,10 +13,7 @@ namespace viafront3.Services
         IWallet Get(string asset);
         void Save(IWallet wallet, string asset);
         string ConsolidatedFundsTag();
-        long FeeUnit(string asset);
-        long FeeMax(string asset);
-        //TODO: return some generic wallet settings structure FeeUnit/FeeMax etc... 
-        //      which excludes the wallet backend specific stuff
+        CommonAssetSettings CommonAssetSettings(string asset);
         //TODO: add more assets
     }
 
@@ -40,7 +37,7 @@ namespace viafront3.Services
 
             IWallet wallet = null;
             if (asset == "WAVES")
-                wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
+                wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesAssetSettings.WalletFile,
                     _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
 
             if (wallet != null)
@@ -55,7 +52,7 @@ namespace viafront3.Services
         public void Save(IWallet wallet, string asset)
         {
             if (asset == "WAVES")
-                wallet.Save(_walletSettings.WavesWalletFile);
+                wallet.Save(_walletSettings.WavesAssetSettings.WalletFile);
             else
                 throw new Exception(string.Format("Wallet '{0}' not supported", asset));
         }
@@ -65,18 +62,10 @@ namespace viafront3.Services
             return _walletSettings.ConsolidatedFundsTag;
         }
 
-        public long FeeUnit(string asset)
+        public CommonAssetSettings CommonAssetSettings(string asset)
         {
             if (asset == "WAVES")
-                return _walletSettings.WavesFeeUnit;
-            else
-                throw new Exception(string.Format("Wallet '{0}' not supported", asset));
-        }
-
-        public long FeeMax(string asset)
-        {
-            if (asset == "WAVES")
-                return _walletSettings.WavesFeeMax;
+                return _walletSettings.WavesAssetSettings;
             else
                 throw new Exception(string.Format("Wallet '{0}' not supported", asset));
         }

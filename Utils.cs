@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using viafront3.Models;
+using viafront3.Services;
 using xchwallet;
 
 namespace viafront3
@@ -41,8 +42,6 @@ namespace viafront3
 
         public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, string userEmail)
         {
-            var _walletSettings = serviceProvider.GetRequiredService<IOptions<WalletSettings>>().Value;
-            
             var factory = new LoggerFactory().AddConsole(LogLevel.Debug);
             var _logger = factory.CreateLogger("main");
 
@@ -50,20 +49,18 @@ namespace viafront3
             var user = await userManager.FindByEmailAsync(userEmail);
 
             asset = asset.ToUpper();
-            if (asset != "WAVES")
-                throw new Exception("only waves supported atm");
+            var walletProvider = serviceProvider.GetRequiredService<WalletProvider>();
+            var wallet = walletProvider.Get(asset);
+            var assetSettings = walletProvider.CommonAssetSettings(asset);
 
-            Console.WriteLine("Consolidating {0} to {1} for asset {2}", userEmail, _walletSettings.ConsolidatedFundsTag, asset);
-            
-            var wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesWalletFile,
-                _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            Console.WriteLine("Consolidating {0} to {1} for asset {2}", userEmail, walletProvider.ConsolidatedFundsTag(), asset);
 
             IEnumerable<string> txids;
-            var res = wallet.Consolidate(new List<string>() {user.Id}, _walletSettings.ConsolidatedFundsTag, _walletSettings.WavesFeeMax, _walletSettings.WavesFeeUnit, out txids);
+            var res = wallet.Consolidate(new List<string>() {user.Id}, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
             Console.WriteLine(res);
             foreach (var txid in txids)
                 Console.WriteLine(txid);
-            wallet.Save(_walletSettings.WavesWalletFile);
+            wallet.Save(assetSettings.WalletFile);
             return res;
         }
 

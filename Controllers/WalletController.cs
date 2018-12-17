@@ -235,9 +235,9 @@ namespace viafront3.Controllers
                 
                 // send funds and save wallet
                 IEnumerable<string> txids = null;
+                var assetSettings = _walletProvider.CommonAssetSettings(model.Asset);
                 var res = wallet.Spend(consolidatedFundsTag, consolidatedFundsTag,
-                    model.WithdrawalAddress, amountInt, _walletProvider.FeeMax(model.Asset),
-                    _walletProvider.FeeUnit(model.Asset), out txids);
+                    model.WithdrawalAddress, amountInt, assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
                 if (res != WalletError.Success)
                 {
                     _logger.LogError("Failed to withdraw funds (wallet error: {0}, asset: {1}, address: {2}, amount: {3}, businessId: {4}",
