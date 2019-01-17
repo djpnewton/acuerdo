@@ -1,0 +1,48 @@
+---
+- name: dependency provisioning
+  hosts: all
+  become: yes
+  become_method: sudo
+  gather_facts: false
+  tasks:
+    - raw: sudo apt-get update
+    - name: install python2
+      raw: sudo apt-get -y install python-minimal
+
+- hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: install aptitude
+      apt: 
+        name: aptitude
+        state: present
+
+    - name: Upgrade to latest debian packages
+      apt:
+        upgrade: yes
+        update_cache: yes   
+
+    - name: Install Required Packages
+      action: apt pkg={{item}} state=installed
+      with_items:
+        - git
+        - vim
+        - jq
+        - parted
+        - e2fsprogs
+
+    # https://github.com/ansible/ansible/issues/23914      
+    - name: resize partition
+      shell: 'echo yes | parted ---pretend-input-tty /dev/vda resizepart 1 Yes 100% 2>&1 > /dev/null || true'
+      when: vagrant == "true"
+      ignore_errors: yes
+
+    - name: resize filesystem
+      shell: 'resize2fs /dev/vda1'
+      when: vagrant == "true"
+      ignore_errors: yes
+
+- include: firewall.yml
+- include: dotnetcore.yml
+- include: viafront.yml

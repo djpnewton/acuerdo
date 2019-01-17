@@ -52,7 +52,7 @@ then
     TESTNET=true
 fi 
 
-ADMIN_HOST=123.123.123.123
+ADMIN_HOST=`dig +short $FRONTEND_HOST`
 AUTH_URL=http://$FRONTEND_HOST:5000/Internal/WebsocketAuth
 
 MYSQL_HOST=127.0.0.1

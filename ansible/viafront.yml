@@ -1,0 +1,96 @@
+---
+- name: viafront
+  hosts: all
+  become: yes
+  become_user: root
+
+  tasks:
+    - name: ansible group
+      group: 
+        name: viafront
+        state: present
+
+    - name: ansible user
+      user:
+        name: viafront
+        shell: /usr/sbin/nologin
+        groups: viafront
+        system: yes
+        state: present
+
+    - name: copy viafront
+      synchronize:
+        src: '{{ playbook_dir | dirname }}/'
+        dest: /opt/viafront
+
+    - name: set viafront files owner
+      file:
+        dest: /opt/viafront
+        owner: viafront
+        group: viafront
+        mode: 0755
+        recurse: yes
+
+    - name: set mysql host for asp.net db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("DefaultConnection": "Server=)10\.50\.1\.2(;Database)'
+        replace: '\1{{backend_host}}\2'
+
+    - name: set mysql host for viaxch db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("Host": ")10\.50\.1\.2(")'
+        replace: '\1{{backend_host}}\2'
+
+    - name: set accesshttp url 
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("AccessHttpUrl": "http:\/\/)10\.50\.1\.2(:8080")'
+        replace: '\1{{backend_host}}\2'
+
+    - name: set accessws url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.2(:8090")'
+        replace: '\1{{backend_host}}\2'
+
+    - name: set waves node url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("WavesNodeUrl": "http:\/\/)localhost(:6869")'
+        replace: '\1{{blockchain_host}}\2'
+
+    - name: copy viafront.service
+      template:
+        src: templates/viafront.service
+        dest: /etc/systemd/system/viafront.service
+
+    - name: install npm & node
+      action: apt pkg={{item}} state=installed
+      with_items:
+        - nodejs-legacy
+        - npm
+
+    - name: install bower
+      shell: npm install bower
+
+#    - name: install static assets from bower
+#      shell: bower install
+
+    - name: dotnet install packages and do EF migrations
+      shell: cd /opt/viafront; dotnet restore; dotnet ef database update
+      become: yes
+      become_user: viafront
+
+    - name: stop viafront service
+      service: 
+        name: viafront
+        state: stopped
+        enabled: no
+
+    - name: start viafront service
+      service: 
+        name: viafront
+        state: started
+        enabled: yes

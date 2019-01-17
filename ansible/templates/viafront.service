@@ -1,0 +1,19 @@
+[Unit]
+Description=viafront
+After=network.target
+
+[Service]
+User=viafront
+Group=viafront
+
+ExecStart=/bin/bash -c "cd /opt/viafront; dotnet run --urls http://0.0.0.0:5000"
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
