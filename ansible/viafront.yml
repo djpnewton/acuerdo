@@ -4,6 +4,8 @@
   become: yes
   become_user: root
 
+  vars:
+    dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development' if DEPLOY_TYPE == 'test' else '' }}"
   tasks:
     - name: ansible group
       group: 
@@ -59,6 +61,12 @@
       replace:
         path: /opt/viafront/appsettings.json
         regexp: '("WavesNodeUrl": "http:\/\/)localhost(:6869")'
+        replace: '\1{{blockchain_host}}\2'
+
+    - name: set nbxexplorer url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("NbxplorerUrl": "http:\/\/)localhost(:24444")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: copy viafront.service

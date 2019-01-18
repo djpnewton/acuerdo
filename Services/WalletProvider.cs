@@ -39,6 +39,14 @@ namespace viafront3.Services
             if (asset == "WAVES")
                 wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesAssetSettings.WalletFile,
                     _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+            else if (asset == "BTC")
+            {
+                var network = NBitcoin.Network.TestNet;
+                if (_walletSettings.Mainnet)
+                    network = NBitcoin.Network.Main;
+                wallet = new BtcWallet(_logger, _walletSettings.BtcSeedHex, _walletSettings.BtcAssetSettings.WalletFile,
+                    network, new Uri(_walletSettings.NbxplorerUrl));
+            }
 
             if (wallet != null)
             {
@@ -53,6 +61,8 @@ namespace viafront3.Services
         {
             if (asset == "WAVES")
                 wallet.Save(_walletSettings.WavesAssetSettings.WalletFile);
+            else if (asset == "BTC")
+                wallet.Save(_walletSettings.BtcAssetSettings.WalletFile); 
             else
                 throw new Exception(string.Format("Wallet '{0}' not supported", asset));
         }
@@ -66,6 +76,8 @@ namespace viafront3.Services
         {
             if (asset == "WAVES")
                 return _walletSettings.WavesAssetSettings;
+            else if (asset == "BTC")
+                return _walletSettings.BtcAssetSettings;
             else
                 throw new Exception(string.Format("Wallet '{0}' not supported", asset));
         }
