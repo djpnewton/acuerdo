@@ -83,11 +83,13 @@
     - name: install bower
       shell: npm install bower
 
-#    - name: install static assets from bower
-#      shell: bower install
-
     - name: dotnet install packages and do EF migrations
       shell: cd /opt/viafront; dotnet restore; dotnet ef database update
+      become: yes
+      become_user: viafront
+
+    - name: add roles
+      shell: cd /opt/viafront; dotnet run console initroles
       become: yes
       become_user: viafront
 

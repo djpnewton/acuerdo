@@ -40,26 +40,35 @@ namespace viafront3
                 await userManager.AddToRoleAsync(user, adminRole.Name);
         }
 
-        public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, string userEmail)
+        public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, IEnumerable<string> userEmails)
         {
             var factory = new LoggerFactory().AddConsole(LogLevel.Debug);
             var _logger = factory.CreateLogger("main");
 
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            var user = await userManager.FindByEmailAsync(userEmail);
 
             asset = asset.ToUpper();
-            var walletProvider = serviceProvider.GetRequiredService<WalletProvider>();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
             var wallet = walletProvider.Get(asset);
             var assetSettings = walletProvider.CommonAssetSettings(asset);
 
-            Console.WriteLine("Consolidating {0} to {1} for asset {2}", userEmail, walletProvider.ConsolidatedFundsTag(), asset);
+            var userIds = new List<string>();
+            Console.WriteLine("Consolidating asset '{0}' to tag '{1}'", asset, walletProvider.ConsolidatedFundsTag());
+            foreach (var email in userEmails)
+            {
+                var emailTrimmed = email.Trim();
+                var user = await userManager.FindByEmailAsync(emailTrimmed);
+                Console.WriteLine("  from user: {0} - {1}", emailTrimmed, user.Id);
+                userIds.Add(user.Id);
+            }
+            Console.WriteLine();
 
             IEnumerable<string> txids;
-            var res = wallet.Consolidate(new List<string>() {user.Id}, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
+            var res = wallet.Consolidate(userIds, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
             Console.WriteLine(res);
             foreach (var txid in txids)
                 Console.WriteLine(txid);
+            Console.WriteLine("Writing to '{0}'..", assetSettings.WalletFile);
             wallet.Save(assetSettings.WalletFile);
             return res;
         }

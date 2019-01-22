@@ -8,20 +8,81 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using CommandLine;
+using CommandLine.Text;
 
 namespace viafront3
 {
     public class Program
     {
-        public static void Main(string[] args)
+        [Verb("server", HelpText = "Run the server")]
+        class Server
         {
-            if (args.Length > 0 && args[0] == "console")
-                BuildConsoleHost(args);
-            else
-                BuildWebHost(args).Run();
         }
 
-        public static void BuildConsoleHost(string[] args)
+        [Verb("initroles", HelpText = "Init roles in the database")]
+        class InitRoles
+        {
+        }
+
+        [Verb("addrole", HelpText = "Add a role to a user")]
+        class AddRole
+        { 
+            [Option('e', "email", Required = true, HelpText = "User email")]
+            public string Email { get; set; }
+            [Option('r', "role", Required = true, HelpText = "Role")]
+            public string Role { get; set; }
+        }
+
+        [Verb("consolidate_wallet", HelpText = "Consolidate funds in a wallet")]
+        class ConsolidateWallet
+        { 
+            [Option('a', "asset", Required = true, HelpText = "Asset")]
+            public string Asset { get; set; }
+            [Option('e', "emails", Required = true, Separator = ',',  HelpText = "List of user emails (separated by commas)")]
+            public IEnumerable<string> Emails { get; set; }
+        }
+
+        static int RunInitRolesAndReturnExitCode(InitRoles opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.CreateRoles(sp).Wait();
+            return 0;
+        }
+
+        static int RunAddRoleAndReturnExitCode(AddRole opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.GiveUserRole(sp, opts.Email, opts.Role).Wait();
+            return 0;
+        }
+
+        static int RunConsolidateAndReturnExitCode(ConsolidateWallet opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails).Wait();
+            return 0;
+        }
+
+        public static int Main(string[] args)
+        {
+            if (args.Length > 0 && args[0] == "console")
+            {
+                var argsList = args.ToList();
+                argsList.RemoveAt(0);
+                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet>(argsList)
+                    .MapResult(
+                    (InitRoles opts) => RunInitRolesAndReturnExitCode(opts),
+                    (AddRole opts) => RunAddRoleAndReturnExitCode(opts),
+                    (ConsolidateWallet opts) => RunConsolidateAndReturnExitCode(opts),
+                    errs => 1);
+            }
+
+            BuildWebHost(args).Run();
+            return 0;
+        }
+
+        public static ServiceProvider GetServiceProvider()
         {
             var builder = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -30,16 +91,7 @@ namespace viafront3
             var startup = new Startup(configuration);
             var sc = new ServiceCollection();
             startup.ConfigureServices(sc);
-            var serviceProvider = sc.BuildServiceProvider();
-
-            if (args.Length > 1 && args[1] == "initroles")
-                Utils.CreateRoles(serviceProvider).Wait();
-            else if (args.Length > 3 && args[1] == "addrole")
-                Utils.GiveUserRole(serviceProvider, args[2], args[3]).Wait();
-            else if (args.Length > 3 && args[1] == "consolidate_wallet")
-                Utils.ConsolidateWallet(serviceProvider, args[2], args[3]).Wait();
-            else
-                Console.WriteLine("ERROR: no matching command");
+            return sc.BuildServiceProvider();
         }
 
         public static IWebHost BuildWebHost(string[] args) =>
