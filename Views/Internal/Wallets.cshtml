@@ -1,0 +1,47 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model WalletsViewModel
+@{
+    ViewData["Title"] = "Wallets";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Wallets
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Asset
+                        </th>
+                        <th>
+                            Total Funds
+                        </th>
+                        <th>
+                            Consolidated Funds
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var key in Model.Balances.Keys)
+                        {
+                            <tr>
+                                <td>
+                                    @key
+                                </td>
+                                <td>
+                                    @Model.Balances[key].Total
+                                </td>
+                                <td>
+                                    @Model.Balances[key].Consolidated
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Numerics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -27,15 +28,18 @@ namespace viafront3.Controllers
     {
         private readonly IWebsocketTokens _websocketTokens;
         private readonly ILogger _logger;
+        private readonly WalletSettings _walletSettings;
         private readonly IWalletProvider _walletProvider;
 
         public InternalController(UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
             IOptions<ExchangeSettings> settings,
+            IOptions<WalletSettings> walletSettings,
             IWalletProvider walletProvider,
             IWebsocketTokens websocketTokens,
             ILogger<InternalController> logger) : base(userManager, context, settings)
         {
+            _walletSettings = walletSettings.Value;
             _walletProvider = walletProvider;
             _websocketTokens = websocketTokens;
             _logger = logger;
@@ -44,6 +48,38 @@ namespace viafront3.Controllers
         public IActionResult Index()
         {
             return View(BaseViewModel());
+        }
+
+        public IActionResult Wallets()
+        {
+            var user = GetUser(required: true).Result;
+
+            var balances = new Dictionary<string, WalletBalance>();
+            foreach (var asset in _settings.Assets.Keys)
+            {
+                try
+                {
+                    var wallet = _walletProvider.Get(asset);
+                    var tags = wallet.GetTags();
+                    var balance = new WalletBalance{ Total = 0, Consolidated = 0};
+                    foreach (var tag in tags)
+                        balance.Total += wallet.GetBalance(tag);
+                    balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
+                    balances[asset] = balance;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError("Could not obtain wallet for asset '{0}'", asset);
+                }
+            }
+
+            var model = new WalletsViewModel
+            {
+                User = user,
+                AssetSettings = _settings.Assets,
+                Balances = balances,
+            };
+            return View(model);
         }
 
         public IActionResult Users()
