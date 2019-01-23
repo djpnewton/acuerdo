@@ -20,10 +20,16 @@
         system: yes
         state: present
 
-    - name: copy viafront
-      synchronize:
-        src: '{{ playbook_dir | dirname }}/'
-        dest: /opt/viafront
+    - name: copy viafront3.zip
+      copy:
+        src: ../viafront3.zip
+        dest: /opt/viafront3.zip
+
+    - name: extract viafront3.zip
+      shell: unzip -o /opt/viafront3.zip -d /opt/viafront
+
+    - name: extract submodule zip files
+      shell: cd /opt/viafront; unzip -o '*.zip'
 
     - name: set viafront files owner
       file:
@@ -81,7 +87,9 @@
         - npm
 
     - name: install bower
-      shell: npm install bower
+      shell: cd /opt/viafront; npm install bower
+      become: yes
+      become_user: viafront
 
     - name: dotnet install packages and do EF migrations
       shell: cd /opt/viafront; dotnet restore; dotnet ef database update

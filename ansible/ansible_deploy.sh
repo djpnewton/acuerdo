@@ -56,6 +56,9 @@ then
     TESTNET=true
 fi 
 
+# create archive
+(cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
+
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
 echo "   - TESTNET: $TESTNET"
@@ -65,6 +68,7 @@ echo "   - DEPLOY_HOST: $DEPLOY_HOST"
 echo "   - DEPLOY_USER: $DEPLOY_USER"
 echo "   - BACKEND_HOST: $BACKEND_HOST"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
+echo "   - CODE ARCHIVE: viafront3.zip"
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
