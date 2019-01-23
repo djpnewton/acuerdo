@@ -17,25 +17,34 @@
                         <th>
                             Asset
                         </th>
-                        <th>
+                        <th class="pad-decimals">
                             Total Funds
                         </th>
-                        <th>
+                        <th class="pad-decimals">
                             Consolidated Funds
                         </th>
                     </tr>
                     <tbody>@{
-                        foreach (var key in Model.Balances.Keys)
+                        foreach (var item in Model.Balances)
                         {
+                            var total = item.Value.Wallet.AmountToString(item.Value.Total);
+                            total = ViewUtils.FormatStrDec(total, Model.AssetSettings[item.Key].Decimals);
+                            var consolidated = item.Value.Wallet.AmountToString(item.Value.Consolidated);
+                            consolidated = ViewUtils.FormatStrDec(consolidated, Model.AssetSettings[item.Key].Decimals);
+
                             <tr>
                                 <td>
-                                    @key
+                                    @item.Key
                                 </td>
                                 <td>
-                                    @Model.Balances[key].Total
+                                    <span class="pad-decimals-data">
+                                        @total
+                                    </span>
                                 </td>
                                 <td>
-                                    @Model.Balances[key].Consolidated
+                                    <span class="pad-decimals-data">
+                                        @consolidated
+                                    </span>
                                 </td>
                             </tr>
                         }
@@ -45,3 +54,8 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

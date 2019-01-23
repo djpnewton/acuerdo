@@ -64,7 +64,9 @@ namespace viafront3.Controllers
                     var balance = new WalletBalance{ Total = 0, Consolidated = 0};
                     foreach (var tag in tags)
                         balance.Total += wallet.GetBalance(tag);
+                    wallet.GetTransactions(_walletSettings.ConsolidatedFundsTag); // this is currently required to update the wallet -> TODO: need to change xchwallet to be more explicit about what updates the wallet
                     balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
+                    balance.Wallet = wallet;
                     balances[asset] = balance;
                 }
                 catch (Exception ex)
@@ -77,7 +79,7 @@ namespace viafront3.Controllers
             {
                 User = user,
                 AssetSettings = _settings.Assets,
-                Balances = balances,
+                Balances = balances
             };
             return View(model);
         }

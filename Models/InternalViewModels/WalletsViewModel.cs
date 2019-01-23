@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Numerics;
+using xchwallet;
 
 namespace viafront3.Models.InternalViewModels
 {
@@ -11,6 +12,7 @@ namespace viafront3.Models.InternalViewModels
     {
         public BigInteger Total;
         public BigInteger Consolidated;
+        public IWallet Wallet;
     }
 
     public class WalletsViewModel : BaseViewModel
