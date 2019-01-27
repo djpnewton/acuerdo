@@ -11,7 +11,6 @@ namespace viafront3.Services
     public interface IWalletProvider
     {
         IWallet Get(string asset);
-        void Save(IWallet wallet, string asset);
         string ConsolidatedFundsTag();
         CommonAssetSettings CommonAssetSettings(string asset);
         //TODO: add more assets
@@ -37,14 +36,14 @@ namespace viafront3.Services
 
             IWallet wallet = null;
             if (asset == "WAVES")
-                wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, _walletSettings.WavesAssetSettings.WalletFile,
+                wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, WalletContext.CreateSqliteWalletContext(_walletSettings.WavesDbFile),
                     _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
             else if (asset == "BTC")
             {
                 var network = NBitcoin.Network.TestNet;
                 if (_walletSettings.Mainnet)
                     network = NBitcoin.Network.Main;
-                wallet = new BtcWallet(_logger, _walletSettings.BtcSeedHex, _walletSettings.BtcAssetSettings.WalletFile,
+                wallet = new BtcWallet(_logger, _walletSettings.BtcSeedHex, WalletContext.CreateSqliteWalletContext(_walletSettings.BtcDbFile),
                     network, new Uri(_walletSettings.NbxplorerUrl));
             }
 
@@ -55,16 +54,6 @@ namespace viafront3.Services
             }
 
             throw new Exception(string.Format("Wallet '{0}' not supported", asset));
-        }
-
-        public void Save(IWallet wallet, string asset)
-        {
-            if (asset == "WAVES")
-                wallet.Save(_walletSettings.WavesAssetSettings.WalletFile);
-            else if (asset == "BTC")
-                wallet.Save(_walletSettings.BtcAssetSettings.WalletFile); 
-            else
-                throw new Exception(string.Format("Wallet '{0}' not supported", asset));
         }
 
         public string ConsolidatedFundsTag()

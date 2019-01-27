@@ -68,8 +68,8 @@ namespace viafront3
             Console.WriteLine(res);
             foreach (var txid in txids)
                 Console.WriteLine(txid);
-            Console.WriteLine("Writing to '{0}'..", assetSettings.WalletFile);
-            wallet.Save(assetSettings.WalletFile);
+            Console.WriteLine("Saving wallet..");
+            wallet.Save();
             return res;
         }
 

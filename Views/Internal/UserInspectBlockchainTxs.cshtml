@@ -39,25 +39,25 @@
                 {
                     <tr>
                         <td>
-                            @ViewUtils.FormatUnixTime(item.Date)
+                            @ViewUtils.FormatUnixTime(item.ChainTx.Date)
                         </td>
                         <td>
-                            @item.Id
+                            @item.ChainTx.TxId
                         </td>
                         <td>
-                            <span class="truncate">@item.From</span>
+                            <span class="truncate">@item.ChainTx.From</span>
                         </td>
                         <td>
-                            @item.To
+                            @item.ChainTx.To
                         </td>
                         <td>
                             <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
                                 Model.AssetSettings[Model.Asset].Decimals)
                             </span>
                         </td>
                         <td>
-                            @item.WalletDetails.Id
+                            @item.WalletId
                         </td>
                     </tr>
                 }
@@ -101,25 +101,25 @@
                 {
                     <tr>
                         <td>
-                            @ViewUtils.FormatUnixTime(item.Date)
+                            @ViewUtils.FormatUnixTime(item.ChainTx.Date)
                         </td>
                         <td>
-                            @item.Id
+                            @item.ChainTx.TxId
                         </td>
                         <td>
-                            <span class="truncate">@item.From</span>
+                            <span class="truncate">@item.ChainTx.From</span>
                         </td>
                         <td>
-                            @item.To
+                            @item.ChainTx.To
                         </td>
                         <td>
                             <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
                                 Model.AssetSettings[Model.Asset].Decimals)
                             </span>
                         </td>
                         <td>
-                            @item.WalletDetails.Id
+                            @item.WalletId
                         </td>
                     </tr>
                 }

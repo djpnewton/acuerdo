@@ -76,13 +76,13 @@ namespace viafront3.Controllers
 
             var wallet = _walletProvider.Get(asset);
             var addrs = wallet.GetAddresses(user.Id);
-            IAddress addr = null;
+            WalletAddr addr = null;
             if (addrs.Any())
                 addr = addrs.First();
             else
             {
                 addr = wallet.NewAddress(user.Id);
-                _walletProvider.Save(wallet, asset);
+                wallet.Save();
             }
 
             var model = new DepositViewModel
@@ -100,37 +100,42 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            // get wallet transactions
+            // get wallet address
             var wallet = _walletProvider.Get(asset);
             var addrs = wallet.GetAddresses(user.Id);
-            IAddress addr = null;
+            WalletAddr addr = null;
             if (addrs.Any())
                 addr = addrs.First();
             else
                 addr = wallet.NewAddress(user.Id);
+
+            // update wallet from blockchain
+            wallet.UpdateFromBlockchain();
+
+            // get wallet transactions
             var txs = wallet.GetAddrTransactions(addr.Address)
                 .Where(t => t.Direction == WalletDirection.Incomming);;
             var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address)
                 .Where(t => t.Direction == WalletDirection.Incomming);;
             BigInteger newDeposits = 0;
             foreach (var tx in unackedTxs)
-                newDeposits += tx.Amount;
+                newDeposits += tx.ChainTx.Amount;
             var newDepositsHuman = wallet.AmountToString(newDeposits);
 
             // ack txs and save wallet
             wallet.AcknowledgeTransactions(user.Id, unackedTxs);
-            _walletProvider.Save(wallet, asset);
+            wallet.Save();
 
             // register new deposits with the exchange backend
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             foreach (var tx in unackedTxs)
             {
-                var amount = wallet.AmountToString(tx.Amount);
+                var amount = wallet.AmountToString(tx.ChainTx.Amount);
                 var source = new Dictionary<string, object>();
-                source["txid"] = tx.Id;
+                source["txid"] = tx.ChainTx.Id;
                 var businessId = wallet.GetNextTxWalletId(user.Id);
-                wallet.SetTxWalletId(user.Id, tx.Id, businessId);
-                _walletProvider.Save(wallet, asset);
+                wallet.SetTxWalletId(user.Id, tx.ChainTx.TxId, businessId);
+                wallet.Save();
                 via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             } 
 
@@ -248,7 +253,7 @@ namespace viafront3.Controllers
                     this.FlashSuccess(string.Format("{0} {1} withdrawn to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
                 wallet.SetTxWalletId(consolidatedFundsTag, txids, businessId);
                 wallet.SetTagOnBehalfOf(consolidatedFundsTag, txids, user.Id);
-                _walletProvider.Save(wallet, model.Asset);
+                wallet.Save();
 
                 return View(model);
             }

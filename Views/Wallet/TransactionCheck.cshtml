@@ -34,14 +34,14 @@
                 {
                     <tr>
                         <td>
-                            @item.Id
+                            @item.ChainTx.TxId
                         </td>
                         <td>
-                            @item.From
+                            @item.ChainTx.From
                         </td>
                         <td>
                             <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
                                 Model.AssetSettings[Model.Asset].Decimals)
                             </span>
                         </td>

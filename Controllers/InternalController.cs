@@ -63,7 +63,7 @@ namespace viafront3.Controllers
                     var tags = wallet.GetTags();
                     var balance = new WalletBalance{ Total = 0, Consolidated = 0};
                     foreach (var tag in tags)
-                        balance.Total += wallet.GetBalance(tag);
+                        balance.Total += wallet.GetBalance(tag.Tag);
                     wallet.GetTransactions(_walletSettings.ConsolidatedFundsTag); // this is currently required to update the wallet -> TODO: need to change xchwallet to be more explicit about what updates the wallet
                     balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
                     balance.Wallet = wallet;
@@ -143,7 +143,7 @@ namespace viafront3.Controllers
             var txsIn = wallet.GetTransactions(user.Id)
                 .Where(t => t.Direction == WalletDirection.Incomming);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.WalletDetails.TagOnBehalfOf == user.Id);
+                .Where(t => t.TagOnBehalfOf == user.Id);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel

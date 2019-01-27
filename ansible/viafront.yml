@@ -91,8 +91,13 @@
       become: yes
       become_user: viafront
 
-    - name: dotnet install packages and do EF migrations
-      shell: cd /opt/viafront; dotnet restore; dotnet ef database update
+    - name: dotnet restore packages 
+      shell: cd /opt/viafront; dotnet restore;
+      become: yes
+      become_user: viafront
+
+    - name: EF migrations
+      shell: cd /opt/viafront; dotnet ef database update
       become: yes
       become_user: viafront
 
@@ -100,6 +105,14 @@
       shell: cd /opt/viafront; dotnet run console initroles
       become: yes
       become_user: viafront
+
+    - name: init db for wallets
+      shell: cd /opt/viafront; export DB_TYPE=sqlite; export CONNECTION_STRING="Data Source={{item}}"; dotnet ef database update --project xchwallet/xchwallet/xchwallet.csproj --context WalletContext
+      become: yes
+      become_user: viafront
+      with_items:
+        - waves_wallet.db
+        - btc_wallet.db
 
     - name: stop viafront service
       service: 

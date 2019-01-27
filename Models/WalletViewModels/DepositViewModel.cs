@@ -19,13 +19,13 @@ namespace viafront3.Models.WalletViewModels
     {
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public IWallet Wallet { get; set; }
-        public IEnumerable<ITransaction> TransactionsIncomming { get; set; }
-        public IEnumerable<ITransaction> TransactionsOutgoing { get; set; }
+        public IEnumerable<WalletTx> TransactionsIncomming { get; set; }
+        public IEnumerable<WalletTx> TransactionsOutgoing { get; set; }
     }
 
     public class TransactionCheckViewModel : UserTransactionsViewModel
     {
-        public IEnumerable<ITransaction> NewTransactionsIncomming { get; set; }
+        public IEnumerable<WalletTx> NewTransactionsIncomming { get; set; }
         public BigInteger NewDeposits { get; set; }
         public string NewDepositsHuman { get; set; }
     }
