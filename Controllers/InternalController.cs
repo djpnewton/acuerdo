@@ -140,10 +140,10 @@ namespace viafront3.Controllers
 
             // get wallet transactions
             var wallet = _walletProvider.Get(asset);
-            var txsIn = wallet.GetTransactions(user.Id)
+            var txsIn = wallet.GetTransactions(id)
                 .Where(t => t.Direction == WalletDirection.Incomming);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.TagOnBehalfOf == user.Id);
+                .Where(t => t.TagOnBehalfOf == id);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel
