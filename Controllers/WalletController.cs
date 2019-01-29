@@ -132,7 +132,7 @@ namespace viafront3.Controllers
             {
                 var amount = wallet.AmountToString(tx.ChainTx.Amount);
                 var source = new Dictionary<string, object>();
-                source["txid"] = tx.ChainTx.Id;
+                source["txid"] = tx.ChainTx.TxId;
                 var businessId = wallet.GetNextTxWalletId(user.Id);
                 wallet.SetTxWalletId(user.Id, tx.ChainTx.TxId, businessId);
                 wallet.Save();
