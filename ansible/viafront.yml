@@ -80,6 +80,12 @@
         src: templates/viafront.service
         dest: /etc/systemd/system/viafront.service
 
+    - name: stop viafront service
+      service: 
+        name: viafront
+        state: stopped
+        enabled: no
+
     - name: install npm & node
       action: apt pkg={{item}} state=installed
       with_items:
@@ -113,12 +119,6 @@
       with_items:
         - waves_wallet.db
         - btc_wallet.db
-
-    - name: stop viafront service
-      service: 
-        name: viafront
-        state: stopped
-        enabled: no
 
     - name: start viafront service
       service: 

@@ -23,7 +23,6 @@
         - { rule: 'limit', port: '{{ ssh_port | default("22") }}', proto: 'tcp' }
         - { rule: 'allow', port: '80', proto: 'tcp' }
         - { rule: 'allow', port: '443', proto: 'tcp' }
-        - { rule: 'allow', port: '5000', proto: 'tcp' } # temporary until we have nginx
       notify:
         - restart ufw
 
