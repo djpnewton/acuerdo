@@ -61,11 +61,9 @@ namespace viafront3
     {
         public bool Mainnet { get; set; } = false;
         public string ConsolidatedFundsTag { get; set; } = "Consolidate";
-        public string WavesSeedHex { get; set; } = "0123456789";
         public string WavesNodeUrl { get; set; } = "http://localhost:6869";
         public string WavesDbFile { get; set; } = "waves_wallet.db";
         public CommonAssetSettings WavesAssetSettings { get; set; } = new CommonAssetSettings{ FeeUnit = 100000, FeeMax = 100000 * 10 };
-        public string BtcSeedHex { get; set; } = "0123456789";
         public string NbxplorerUrl { get; set; } = "http://localhost:24444";
         public string BtcDbFile { get; set; } = "btc_wallet.db";
         public CommonAssetSettings BtcAssetSettings { get; set; } = new CommonAssetSettings{ FeeUnit = 10, FeeMax = 10 * 1000 };

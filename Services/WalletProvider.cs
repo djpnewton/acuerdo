@@ -36,14 +36,14 @@ namespace viafront3.Services
 
             IWallet wallet = null;
             if (asset == "WAVES")
-                wallet = new WavWallet(_logger, _walletSettings.WavesSeedHex, WalletContext.CreateSqliteWalletContext(_walletSettings.WavesDbFile),
+                wallet = new WavWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.WavesDbFile),
                     _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
             else if (asset == "BTC")
             {
                 var network = NBitcoin.Network.TestNet;
                 if (_walletSettings.Mainnet)
                     network = NBitcoin.Network.Main;
-                wallet = new BtcWallet(_logger, _walletSettings.BtcSeedHex, WalletContext.CreateSqliteWalletContext(_walletSettings.BtcDbFile),
+                wallet = new BtcWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.BtcDbFile),
                     network, new Uri(_walletSettings.NbxplorerUrl));
             }
 
