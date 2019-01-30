@@ -35,25 +35,31 @@ namespace viafront3.Services
                 return _wallets[asset];
 
             IWallet wallet = null;
-            if (asset == "WAVES")
-                wallet = new WavWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.WavesDbFile),
-                    _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
-            else if (asset == "BTC")
+            switch (asset)
             {
-                var network = NBitcoin.Network.TestNet;
-                if (_walletSettings.Mainnet)
-                    network = NBitcoin.Network.Main;
-                wallet = new BtcWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.BtcDbFile),
-                    network, new Uri(_walletSettings.NbxplorerUrl));
+                case "WAVES":
+                    wallet = new WavWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.WavesDbFile),
+                        _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+                    break;
+                case "ZAP":
+                    wallet = new ZapWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.ZapDbFile),
+                        _walletSettings.Mainnet, new Uri(_walletSettings.WavesNodeUrl));
+                    break;
+                case "BTC":
+                {
+                    var network = NBitcoin.Network.TestNet;
+                    if (_walletSettings.Mainnet)
+                        network = NBitcoin.Network.Main;
+                    wallet = new BtcWallet(_logger, WalletContext.CreateSqliteWalletContext(_walletSettings.BtcDbFile),
+                        network, new Uri(_walletSettings.NbxplorerUrl));
+                    break;
+                }
+                default:
+                    throw new Exception(string.Format("Wallet '{0}' not supported", asset));
             }
 
-            if (wallet != null)
-            {
-                _wallets[asset] = wallet;
-                return wallet;
-            }
-
-            throw new Exception(string.Format("Wallet '{0}' not supported", asset));
+            _wallets[asset] = wallet;
+            return wallet;
         }
 
         public string ConsolidatedFundsTag()
@@ -63,12 +69,17 @@ namespace viafront3.Services
 
         public CommonAssetSettings CommonAssetSettings(string asset)
         {
-            if (asset == "WAVES")
-                return _walletSettings.WavesAssetSettings;
-            else if (asset == "BTC")
-                return _walletSettings.BtcAssetSettings;
-            else
-                throw new Exception(string.Format("Wallet '{0}' not supported", asset));
+            switch (asset)
+            {
+                case "WAVES":
+                    return _walletSettings.WavesAssetSettings;
+                case "ZAP":
+                    return _walletSettings.ZapAssetSettings;
+                case "BTC":
+                    return _walletSettings.BtcAssetSettings;
+                default:
+                    throw new Exception(string.Format("Wallet '{0}' not supported", asset));
+            }
         }
     }
 }

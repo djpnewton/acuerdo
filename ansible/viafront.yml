@@ -118,6 +118,7 @@
       become_user: viafront
       with_items:
         - waves_wallet.db
+        - zap_wallet.db
         - btc_wallet.db
 
     - name: start viafront service
