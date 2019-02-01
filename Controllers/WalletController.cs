@@ -74,7 +74,10 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            var wallet = _walletProvider.Get(asset);
+            if (_walletProvider.IsFiat(asset))
+                return RedirectToAction("DepositFiat", new {asset=asset});
+
+            var wallet = _walletProvider.GetChain(asset);
             var addrs = wallet.GetAddresses(user.Id);
             WalletAddr addr = null;
             if (addrs.Any())
@@ -101,7 +104,7 @@ namespace viafront3.Controllers
             var user = await GetUser(required: true);
 
             // get wallet address
-            var wallet = _walletProvider.Get(asset);
+            var wallet = _walletProvider.GetChain(asset);
             var addrs = wallet.GetAddresses(user.Id);
             WalletAddr addr = null;
             if (addrs.Any())
@@ -156,6 +159,67 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> DepositFiat(string asset)
+        {
+            var user = await GetUser(required: true);
+
+            var model = new DepositFiatViewModel
+            {
+                User = user,
+                Asset = asset,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DepositFiat(DepositFiatViewModel model)
+        {
+            var user = await GetUser(required: true);
+
+            var wallet = _walletProvider.GetFiat(model.Asset);
+            var amount = wallet.StringToAmount(model.Amount.ToString());
+            if (amount <= 0)
+            {
+                this.FlashError("Amount must be greater then 0");
+                return RedirectToAction("DepositFiat", new {asset=model.Asset});
+            }
+            var decimals = _settings.Assets[model.Asset].Decimals;
+            if (GetDecimalPlaces(model.Amount) > decimals)
+            {
+                this.FlashError($"Amount must have a maximum of {decimals} digits after the decimal place");
+                return RedirectToAction("DepositFiat", new {asset=model.Asset});
+            }
+            var tx = wallet.RegisterPendingDeposit(user.Id, amount);
+            model.PendingTx = tx;
+            model.Account = wallet.GetAccount();
+            wallet.Save();
+
+            return View("DepositFiatCreated", model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> FiatTransactionView(string asset)
+        {
+            var user = await GetUser(required: true);
+
+            // get wallet address
+            var wallet = _walletProvider.GetFiat(asset);
+            var txs = wallet.GetTransactions(user.Id);
+           
+            var model = new FiatTransactionsViewModel
+            {
+                User = user,
+                Asset = asset,
+                AssetSettings = _settings.Assets,
+                Wallet = wallet,
+                Transactions = txs,
+            };
+
+            return View(model);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Withdrawals()
         {
             var user = await GetUser(required: true);
@@ -199,7 +263,7 @@ namespace viafront3.Controllers
 
             if (ModelState.IsValid)
             {
-                var wallet = _walletProvider.Get(model.Asset);
+                var wallet = _walletProvider.GetChain(model.Asset);
 
                 // validate amount
                 var amountInt = wallet.StringToAmount(model.Amount.ToString());

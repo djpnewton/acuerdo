@@ -29,4 +29,20 @@ namespace viafront3.Models.WalletViewModels
         public BigInteger NewDeposits { get; set; }
         public string NewDepositsHuman { get; set; }
     }
+
+    public class DepositFiatViewModel : BaseViewModel
+    {
+        public string Asset { get; set; }
+        public decimal Amount { get; set; } 
+        public FiatWalletTx PendingTx { get; set; }
+        public BankAccount Account { get; set; }
+    }
+
+    public class FiatTransactionsViewModel : BaseViewModel
+    {
+        public string Asset { get; set; }
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+        public IFiatWallet Wallet { get; set; }
+        public IEnumerable<FiatWalletTx> Transactions { get; set; }
+    }
 }

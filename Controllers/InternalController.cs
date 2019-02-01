@@ -59,7 +59,7 @@ namespace viafront3.Controllers
             {
                 try
                 {
-                    var wallet = _walletProvider.Get(asset);
+                    var wallet = _walletProvider.GetChain(asset);
                     var tags = wallet.GetTags();
                     var balance = new WalletBalance{ Total = 0, Consolidated = 0};
                     foreach (var tag in tags)
@@ -139,7 +139,7 @@ namespace viafront3.Controllers
             var user = GetUser(required: true).Result;
 
             // get wallet transactions
-            var wallet = _walletProvider.Get(asset);
+            var wallet = _walletProvider.GetChain(asset);
             var txsIn = wallet.GetTransactions(id)
                 .Where(t => t.Direction == WalletDirection.Incomming);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())

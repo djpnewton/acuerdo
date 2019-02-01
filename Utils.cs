@@ -49,7 +49,7 @@ namespace viafront3
 
             asset = asset.ToUpper();
             var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
-            var wallet = walletProvider.Get(asset);
+            var wallet = walletProvider.GetChain(asset);
             var assetSettings = walletProvider.ChainAssetSettings(asset);
 
             var userIds = new List<string>();

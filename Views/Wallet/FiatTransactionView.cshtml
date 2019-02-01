@@ -1,0 +1,59 @@
+﻿@using viafront3.Models.WalletViewModels
+@using viafront3.Views.Wallet
+@using viafront3.Views
+@using xchwallet;
+@model FiatTransactionsViewModel
+@{
+    ViewData["Title"] = "Transaction View";
+    ViewData.AddActivePage(WalletNavPages.Deposits);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">@Model.Asset Transactions</div>
+            <div class="panel-body">
+                <table class="table table-bordered table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Deposit Code
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                        <th>
+                            Completed
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.Transactions)
+                        {
+                            var completed = item.BankTx != null && item.BankTx.Amount == item.Amount;
+                            var completedStr = completed ? "yes" : "no";
+                            <tr>
+                                <td>
+                                    @item.DepositCode
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                                        Model.AssetSettings[Model.Asset].Decimals)
+                                    </span>
+                                </td>
+                                <td>
+                                    @completedStr
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div> 
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

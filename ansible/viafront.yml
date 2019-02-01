@@ -118,7 +118,7 @@
       become: yes
       become_user: viafront
 
-    - name: init db for wallets
+    - name: init db for blockchain wallets
       shell: cd /opt/viafront; export DB_TYPE=sqlite; export CONNECTION_STRING="Data Source={{item}}"; dotnet ef database update --project xchwallet/xchwallet/xchwallet.csproj --context WalletContext
       become: yes
       become_user: viafront
@@ -126,6 +126,13 @@
         - waves_wallet.db
         - zap_wallet.db
         - btc_wallet.db
+
+    - name: init db for fiat wallets
+      shell: cd /opt/viafront; export DB_TYPE=sqlite; export CONNECTION_STRING="Data Source={{item}}"; dotnet ef database update --project xchwallet/xchwallet/xchwallet.csproj --context FiatWalletContext
+      become: yes
+      become_user: viafront
+      with_items:
+        - nzd_wallet.db
 
     - name: start viafront service
       service: 
