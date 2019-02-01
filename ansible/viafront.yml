@@ -66,13 +66,19 @@
     - name: set waves node url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("WavesNodeUrl": "http:\/\/)localhost(:6869")'
+        regexp: '("NodeUrl": "http:\/\/)localhost(:6869")'
+        replace: '\1{{blockchain_host}}\2'
+
+    - name: set zap node url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("NodeUrl": "http:\/\/)localhost(:6869")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: set nbxexplorer url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NbxplorerUrl": "http:\/\/)localhost(:24444")'
+        regexp: '("NodeUrl": "http:\/\/)localhost(:24444")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: copy viafront.service

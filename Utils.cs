@@ -50,7 +50,7 @@ namespace viafront3
             asset = asset.ToUpper();
             var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
             var wallet = walletProvider.Get(asset);
-            var assetSettings = walletProvider.CommonAssetSettings(asset);
+            var assetSettings = walletProvider.ChainAssetSettings(asset);
 
             var userIds = new List<string>();
             Console.WriteLine("Consolidating asset '{0}' to tag '{1}'", asset, walletProvider.ConsolidatedFundsTag());

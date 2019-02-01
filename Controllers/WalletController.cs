@@ -240,7 +240,7 @@ namespace viafront3.Controllers
                 
                 // send funds and save wallet
                 IEnumerable<string> txids = null;
-                var assetSettings = _walletProvider.CommonAssetSettings(model.Asset);
+                var assetSettings = _walletProvider.ChainAssetSettings(model.Asset);
                 var res = wallet.Spend(consolidatedFundsTag, consolidatedFundsTag,
                     model.WithdrawalAddress, amountInt, assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
                 if (res != WalletError.Success)

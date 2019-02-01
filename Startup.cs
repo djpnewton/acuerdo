@@ -51,8 +51,9 @@ namespace viafront3
         public string MakerFeeRate { get; set; } = "0.01";
     }
 
-    public class CommonAssetSettings
+    public class ChainAssetSettings
     {
+        public string NodeUrl { get; set; }
         public long FeeUnit { get; set; }
         public long FeeMax { get; set; }
     }
@@ -61,14 +62,9 @@ namespace viafront3
     {
         public bool Mainnet { get; set; } = false;
         public string ConsolidatedFundsTag { get; set; } = "Consolidate";
-        public string WavesNodeUrl { get; set; } = "http://localhost:6869";
-        public string WavesDbFile { get; set; } = "waves_wallet.db";
-        public CommonAssetSettings WavesAssetSettings { get; set; } = new CommonAssetSettings{ FeeUnit = 100000, FeeMax = 100000 * 10 };
-        public string ZapDbFile { get; set; } = "zap_wallet.db";
-        public CommonAssetSettings ZapAssetSettings { get; set; } = new CommonAssetSettings{ FeeUnit = 1, FeeMax = 1 * 10 };
-        public string NbxplorerUrl { get; set; } = "http://localhost:24444";
-        public string BtcDbFile { get; set; } = "btc_wallet.db";
-        public CommonAssetSettings BtcAssetSettings { get; set; } = new CommonAssetSettings{ FeeUnit = 10, FeeMax = 10 * 1000 };
+        public Dictionary<string, string> DbFiles { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, ChainAssetSettings> ChainAssetSettings { get; set; } = new Dictionary<string, ChainAssetSettings>();
+        public Dictionary<string, xchwallet.BankAccount> BankAccounts { get; set; } = new Dictionary<string, xchwallet.BankAccount>();
     }
 
     public class Startup
