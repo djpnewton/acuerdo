@@ -1,0 +1,25 @@
+﻿@using viafront3.Models.WalletViewModels
+@using viafront3.Views.Wallet
+@using viafront3.Views
+@model WithdrawFiatViewModel
+@{
+    ViewData["Title"] = "Pending Withdrawal Created";
+    ViewData.AddActivePage(WalletNavPages.Withdrawals);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">@Model.Asset Withdrawal</div>
+            <div class="panel-body">
+                <ul>
+                    <li>Bank Account: @Model.PendingTx.AccountNumber</li>
+                    <li>Deposit Code: @Model.PendingTx.DepositCode</li>
+                    <li>Amount: @Model.Amount @Model.Asset</li>
+                </ul>
+            </div>
+        </div> 
+    </div>
+</div>
+

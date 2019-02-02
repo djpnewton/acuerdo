@@ -16,4 +16,13 @@ namespace viafront3.Models.WalletViewModels
         public string WithdrawalAddress { get; set; }
         public decimal Amount { get; set; }
     }
+
+    public class WithdrawFiatViewModel : BaseViewModel
+    {
+        public string Asset { get; set; }
+        public string BalanceAvailable { get; set; }
+        public string WithdrawalAccount { get; set; }
+        public decimal Amount { get; set; }
+        public FiatWalletTx PendingTx { get; set; }
+    }
 }

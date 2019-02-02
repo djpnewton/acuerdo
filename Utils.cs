@@ -77,6 +77,26 @@ namespace viafront3
             return res;
         }
 
+        public static void ProcessFiatDeposit(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
+        {
+            asset = asset.ToUpper();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var wallet = walletProvider.GetFiat(asset);
+            var amountInt = wallet.StringToAmount(amount.ToString());
+            wallet.UpdateDeposit(depositCode, date, amountInt, bankMetadata);
+            wallet.Save();
+        }
+
+        public static void ProcessFiatWithdrawal(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
+        {
+            asset = asset.ToUpper();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var wallet = walletProvider.GetFiat(asset);
+            var amountInt = wallet.StringToAmount(amount.ToString());
+            wallet.UpdateWithdrawal(depositCode, date, amountInt, bankMetadata);
+            wallet.Save();
+        }
+
         public static string CreateToken(int chars = 16)
         {
             const string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -89,6 +109,20 @@ namespace viafront3
                     .Select(i => ALPHABET[tokenBytes[i] % ALPHABET.Length])
                     .ToArray();
             return new String(token);
+        }
+
+        public static int GetDecimalPlaces(decimal n)
+        {
+            n = Math.Abs(n); //make sure it is positive.
+            n -= (int)n;     //remove the integer part of the number.
+            var decimalPlaces = 0;
+            while (n > 0)
+            {
+                decimalPlaces++;
+                n *= 10;
+                n -= (int)n;
+            }
+            return decimalPlaces;
         }
     }
 }

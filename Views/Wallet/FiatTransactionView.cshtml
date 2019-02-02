@@ -10,12 +10,18 @@
 
 <h4>@ViewData["Title"]</h4>
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-md-10">
         <div class="panel panel-default">
             <div class="panel-heading">@Model.Asset Transactions</div>
             <div class="panel-body">
                 <table class="table table-bordered table-responsive table-hover">
                     <tr>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            Type
+                        </th>
                         <th>
                             Deposit Code
                         </th>
@@ -31,7 +37,15 @@
                         {
                             var completed = item.BankTx != null && item.BankTx.Amount == item.Amount;
                             var completedStr = completed ? "yes" : "no";
+                            var typeStr = item.Direction == WalletDirection.Incomming ? "deposit" : "withdrawal";
+                            var accountStr = item.Direction == WalletDirection.Incomming ? "" : item.AccountNumber;
                             <tr>
+                                <td>
+                                    @item.Date
+                                </td>
+                                <td>
+                                    @typeStr
+                                </td>
                                 <td>
                                     @item.DepositCode
                                 </td>
@@ -43,6 +57,9 @@
                                 </td>
                                 <td>
                                     @completedStr
+                                </td>
+                                <td>
+                                    @accountStr
                                 </td>
                             </tr>
                         }

@@ -173,6 +173,7 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DepositFiat(DepositFiatViewModel model)
         {
             var user = await GetUser(required: true);
@@ -182,13 +183,13 @@ namespace viafront3.Controllers
             if (amount <= 0)
             {
                 this.FlashError("Amount must be greater then 0");
-                return RedirectToAction("DepositFiat", new {asset=model.Asset});
+                return View(model);
             }
             var decimals = _settings.Assets[model.Asset].Decimals;
-            if (GetDecimalPlaces(model.Amount) > decimals)
+            if (Utils.GetDecimalPlaces(model.Amount) > decimals)
             {
                 this.FlashError($"Amount must have a maximum of {decimals} digits after the decimal place");
-                return RedirectToAction("DepositFiat", new {asset=model.Asset});
+                return View(model);
             }
             var tx = wallet.RegisterPendingDeposit(user.Id, amount);
             model.PendingTx = tx;
@@ -235,6 +236,9 @@ namespace viafront3.Controllers
         public async Task<IActionResult> Withdraw(string asset)
         {
             var user = await GetUser(required: true);
+
+            if (_walletProvider.IsFiat(asset))
+                return RedirectToAction("WithdrawFiat", new {asset=asset});
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
@@ -324,6 +328,64 @@ namespace viafront3.Controllers
 
             // If we got this far, something failed, redisplay form
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> WithdrawFiat(string asset)
+        {
+            var user = await GetUser(required: true);
+
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, asset);
+
+            var model = new WithdrawFiatViewModel
+            {
+                User = user,
+                Asset = asset,
+                BalanceAvailable = balance.Available,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> WithdrawFiat(WithdrawFiatViewModel model)
+        {
+            var user = await GetUser(required: true);
+
+            var wallet = _walletProvider.GetFiat(model.Asset);
+            var amountInt = wallet.StringToAmount(model.Amount.ToString());
+            if (amountInt <= 0)
+            {
+                this.FlashError("Amount must be greater then 0");
+                return View(model);
+            }
+            var decimals = _settings.Assets[model.Asset].Decimals;
+            if (Utils.GetDecimalPlaces(model.Amount) > decimals)
+            {
+                this.FlashError($"Amount must have a maximum of {decimals} digits after the decimal place");
+                return View(model);
+            }
+
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+            // validate amount
+            var availableInt = wallet.StringToAmount(balance.Available);
+            if (amountInt > availableInt)
+            {
+                this.FlashError("Amount must be less then or equal to available balance");
+                return View(model);
+            }
+
+            var account = new BankAccount{ AccountNumber = model.WithdrawalAccount };
+            var tx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
+            model.PendingTx = tx;
+            wallet.Save();
+
+            return View("WithdrawalFiatCreated", model);
         }
     }
 }

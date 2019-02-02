@@ -43,6 +43,36 @@ namespace viafront3
             public IEnumerable<string> Emails { get; set; }
         }
 
+        [Verb("process_fiat_deposit", HelpText = "Process a fiat deposit")]
+        class ProcessFiatDeposit
+        { 
+            [Option('a', "asset", Required = true, HelpText = "Asset")]
+            public string Asset { get; set; }
+            [Option('d', "depositcode", Required = true, HelpText = "The deposit code")]
+            public string DepositCode { get; set; }
+            [Option('D', "date", Required = true, HelpText = "The date of the deposit")]
+            public long Date { get; set ;}
+            [Option('A', "amount", Required = true, HelpText = "The *decimal* amount")]
+            public decimal Amount { get; set; }
+            [Option('b', "bankmetadata", Required = true, HelpText = "The metadata from the bank")]
+            public string BankMetadata { get; set; }
+        }
+
+        [Verb("process_fiat_withdrawal", HelpText = "Process a fiat withdrawal")]
+        class ProcessFiatWithdrawal
+        { 
+            [Option('a', "asset", Required = true, HelpText = "Asset")]
+            public string Asset { get; set; }
+            [Option('d', "depositcode", Required = true,  HelpText = "The deposit code")]
+            public string DepositCode { get; set; }
+            [Option('D', "date", Required = true, HelpText = "The date of the deposit")]
+            public long Date { get; set ;}
+            [Option('A', "amount", Required = true,  HelpText = "The *decimal* amount")]
+            public decimal Amount { get; set; }
+            [Option('b', "bankmetadata", Required = true, HelpText = "The metadata from the bank")]
+            public string BankMetadata { get; set; }
+        }
+
         static int RunInitRolesAndReturnExitCode(InitRoles opts)
         {
             var sp = GetServiceProvider();
@@ -64,17 +94,33 @@ namespace viafront3
             return 0;
         }
 
+        static int RunProcessFiatDepositAndReturnExitCode(ProcessFiatDeposit opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata);
+            return 0;
+        }
+
+        static int RunProcessFiatWithdrawalAndReturnExitCode(ProcessFiatWithdrawal opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata);
+            return 0;
+        }
+
         public static int Main(string[] args)
         {
             if (args.Length > 0 && args[0] == "console")
             {
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
-                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet>(argsList)
+                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal>(argsList)
                     .MapResult(
                     (InitRoles opts) => RunInitRolesAndReturnExitCode(opts),
                     (AddRole opts) => RunAddRoleAndReturnExitCode(opts),
                     (ConsolidateWallet opts) => RunConsolidateAndReturnExitCode(opts),
+                    (ProcessFiatDeposit opts) => RunProcessFiatDepositAndReturnExitCode(opts),
+                    (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawalAndReturnExitCode(opts),
                     errs => 1);
             }
 
