@@ -13,7 +13,7 @@
             <li>
                 <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!
                     <environment include="Development">
-                        @if (Model.User != null && Model.User.Exchange != null)
+                        @if (Model != null && Model.User != null && Model.User.Exchange != null)
                         {
                             <span>(Exchange Id: @Model.User.Exchange.Id)</span>
                         }
