@@ -14,6 +14,7 @@
             <div class="panel-heading">@Model.Asset Deposit Address</div>
             <div class="panel-body">
                 @Model.DepositAddress
+                <div id="qrCode"></div>
             </div>
             <div class="panel-footer">
                 <a asp-action="TransactionCheck" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress">Check for transactions</a>
@@ -22,3 +23,14 @@
     </div>
 </div>
 
+@section Scripts {
+    <script type="text/javascript" src="~/lib/qrcode.js/qrcode.js"></script>
+    <script type="text/javascript">
+        new QRCode(document.getElementById("qrCode"),
+            {
+                text: "@Model.DepositAddress",
+                width: 150,
+                height: 150
+            });
+    </script>
+}
