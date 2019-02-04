@@ -84,13 +84,13 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Blockchain Txs
+                Wallet Txs
             </div>
             <div class="panel-body">
                 <ul class="nav nav-pills nav-stacked">
                     @foreach (var item in settings.Assets)
                     {
-                        <li><a asp-action="UserInspectBlockchainTxs" asp-route-id="@Model.UserInspect.Id" asp-route-asset="@item.Key">@item.Key</a></li>
+                        <li><a asp-action="UserInspectWalletTxs" asp-route-id="@Model.UserInspect.Id" asp-route-asset="@item.Key">@item.Key</a></li>
                     }
                 </ul>
             </div>

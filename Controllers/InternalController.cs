@@ -134,9 +134,12 @@ namespace viafront3.Controllers
             return View(TradeViewModel.Construct(user, userInspect, market, _settings));
         }
 
-        public IActionResult UserInspectBlockchainTxs(string id, string asset)
+        public IActionResult UserInspectWalletTxs(string id, string asset)
         {
             var user = GetUser(required: true).Result;
+
+            if (_walletProvider.IsFiat(asset))
+                return RedirectToAction("UserInspectFiatWalletTxs", new {id=id, asset=asset});
 
             // get wallet transactions
             var wallet = _walletProvider.GetChain(asset);
@@ -155,6 +158,26 @@ namespace viafront3.Controllers
                 Wallet = wallet,
                 TransactionsIncomming = txsIn,
                 TransactionsOutgoing = txsOutOnBehalf
+            };
+            return View(model);
+        }
+
+        public IActionResult UserInspectFiatWalletTxs(string id, string asset)
+        {
+            var user = GetUser(required: true).Result;
+
+            // get wallet transactions
+            var wallet = _walletProvider.GetFiat(asset);
+            var txs = wallet.GetTransactions(id);
+
+            ViewData["userid"] = id;
+            var model = new FiatTransactionsViewModel
+            {
+                User = user,
+                Asset = asset,
+                AssetSettings = _settings.Assets,
+                Wallet = wallet,
+                Transactions = txs,
             };
             return View(model);
         }
