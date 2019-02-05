@@ -97,14 +97,14 @@ namespace viafront3
         static int RunProcessFiatDepositAndReturnExitCode(ProcessFiatDeposit opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata);
+            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
             return 0;
         }
 
         static int RunProcessFiatWithdrawalAndReturnExitCode(ProcessFiatWithdrawal opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata);
+            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
             return 0;
         }
 

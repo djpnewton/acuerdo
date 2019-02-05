@@ -11,7 +11,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using viafront3.Models;
 using viafront3.Services;
+using viafront3.Data;
 using xchwallet;
+using via_jsonrpc;
 
 namespace viafront3
 {
@@ -77,24 +79,61 @@ namespace viafront3
             return res;
         }
 
-        public static void ProcessFiatDeposit(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
+        static async Task ProcessFiat(IServiceProvider serviceProvider, bool isDeposit, string asset, string depositCode, long date, decimal amount, string bankMetadata)
         {
+            // deposit code to int
+            var depositCodeInt = long.Parse(depositCode);
+
+            // convert amount to int
             asset = asset.ToUpper();
             var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
             var wallet = walletProvider.GetFiat(asset);
             var amountInt = wallet.StringToAmount(amount.ToString());
-            wallet.UpdateDeposit(depositCode, date, amountInt, bankMetadata);
+
+            // process deposit 
+            FiatWalletTx tx;
+            if (isDeposit)
+                tx = wallet.UpdateDeposit(depositCode, date, amountInt, bankMetadata);
+            else
+                tx = wallet.UpdateWithdrawal(depositCode, date, amountInt, bankMetadata);
+
+            // get user
+            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var user = await userManager.FindByIdAsync(tx.Tag.Tag);
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            user.EnsureExchangePresent(context);
+
+            // test backend connection (get user balance)
+            var settings = serviceProvider.GetRequiredService<IOptions<ExchangeSettings>>();
+            var via = new ViaJsonRpc(settings.Value.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var balance = via.BalanceQuery(user.Exchange.Id, asset);
+            Console.WriteLine($"Before - available {asset} balance: {balance.Available}");
+
+            // save wallet
             wallet.Save();
+            Console.WriteLine($"Saved {asset} wallet");
+
+            // register new deposits with the exchange backend
+            var source = new Dictionary<string, object>();
+            source["bankMetadata"] = bankMetadata;
+            var amountStr = amount.ToString();
+            if (!isDeposit)
+                amountStr = (-amount).ToString();
+            via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", depositCodeInt, amountStr, source);
+            Console.WriteLine($"Updated exchange backend");
+
+            balance = via.BalanceQuery(user.Exchange.Id, asset);
+            Console.WriteLine($"After - available {asset} balance: {balance.Available}");
         }
 
-        public static void ProcessFiatWithdrawal(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
+        public static async Task ProcessFiatDeposit(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
         {
-            asset = asset.ToUpper();
-            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
-            var wallet = walletProvider.GetFiat(asset);
-            var amountInt = wallet.StringToAmount(amount.ToString());
-            wallet.UpdateWithdrawal(depositCode, date, amountInt, bankMetadata);
-            wallet.Save();
+            await ProcessFiat(serviceProvider, true, asset, depositCode, date, amount, bankMetadata);
+        }
+
+        public static async Task ProcessFiatWithdrawal(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
+        {
+            await ProcessFiat(serviceProvider, false, asset, depositCode, date, amount, bankMetadata);
         }
 
         public static string CreateToken(int chars = 16)
