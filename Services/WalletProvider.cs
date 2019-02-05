@@ -67,13 +67,8 @@ namespace viafront3.Services
                     wallet = new ZapWallet(_logger, db, _walletSettings.Mainnet, new Uri(cas.NodeUrl));
                     break;
                 case "BTC":
-                {
-                    var network = NBitcoin.Network.TestNet;
-                    if (_walletSettings.Mainnet)
-                        network = NBitcoin.Network.Main;
-                    wallet = new BtcWallet(_logger, db, network, new Uri(cas.NodeUrl));
+                    wallet = new BtcWallet(_logger, db, _walletSettings.Mainnet, new Uri(cas.NodeUrl));
                     break;
-                }
                 default:
                     throw new Exception($"Wallet '{asset}' not supported");
             }

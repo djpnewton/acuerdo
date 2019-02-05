@@ -71,7 +71,7 @@ namespace viafront3.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Could not obtain wallet for asset '{0}'", asset);
+                    _logger.LogError(ex, "Could not obtain wallet for asset '{0}'", asset);
                 }
             }
 
