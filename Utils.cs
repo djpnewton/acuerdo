@@ -67,8 +67,11 @@ namespace viafront3
 
             Console.WriteLine("Updating txs from blockchain..");
             wallet.UpdateFromBlockchain();
+            Console.WriteLine("Saving wallet..");
+            wallet.Save();
             Console.WriteLine();
 
+            Console.WriteLine("Creating consolidations txs..");
             IEnumerable<string> txids;
             var res = wallet.Consolidate(userIds, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
             Console.WriteLine(res);
