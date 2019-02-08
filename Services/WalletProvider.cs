@@ -57,7 +57,7 @@ namespace viafront3.Services
             if (_walletSettings.ChainAssetSettings.ContainsKey(asset))
                 cas = _walletSettings.ChainAssetSettings[asset];
             IWallet wallet = null;
-            var db = WalletContext.CreateSqliteWalletContext<WalletContext>(dbFile);
+            var db = WalletContext.CreateSqliteWalletContext<WalletContext>(dbFile, false);
             switch (asset)
             {
                 case "WAVES":
@@ -91,7 +91,7 @@ namespace viafront3.Services
             BankAccount account = null;
             if (_walletSettings.BankAccounts.ContainsKey(asset))
                 account = _walletSettings.BankAccounts[asset];
-            var wallet = new FiatWallet(_logger, WalletContext.CreateSqliteWalletContext<FiatWalletContext>(dbFile), asset, account);
+            var wallet = new FiatWallet(_logger, WalletContext.CreateSqliteWalletContext<FiatWalletContext>(dbFile, false), asset, account);
             _fiatWallets[asset] = wallet;
             return wallet;
         } 
