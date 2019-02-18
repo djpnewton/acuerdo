@@ -73,38 +73,54 @@ namespace viafront3
             public string BankMetadata { get; set; }
         }
 
-        static int RunInitRolesAndReturnExitCode(InitRoles opts)
+        [Verb("process_chain_withdrawal", HelpText = "Process a blockchain withdrawal")]
+        class ProcessChainWithdrawal
+        { 
+            [Option('a', "asset", Required = true, HelpText = "Asset")]
+            public string Asset { get; set; }
+            [Option('s', "spendcode", Required = true,  HelpText = "The spend code")]
+            public string SpendCode { get; set; }
+        }
+
+        static int RunInitRoles(InitRoles opts)
         {
             var sp = GetServiceProvider();
             Utils.CreateRoles(sp).Wait();
             return 0;
         }
 
-        static int RunAddRoleAndReturnExitCode(AddRole opts)
+        static int RunAddRole(AddRole opts)
         {
             var sp = GetServiceProvider();
             Utils.GiveUserRole(sp, opts.Email, opts.Role).Wait();
             return 0;
         }
 
-        static int RunConsolidateAndReturnExitCode(ConsolidateWallet opts)
+        static int RunConsolidate(ConsolidateWallet opts)
         {
             var sp = GetServiceProvider();
             Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails).Wait();
             return 0;
         }
 
-        static int RunProcessFiatDepositAndReturnExitCode(ProcessFiatDeposit opts)
+        static int RunProcessFiatDeposit(ProcessFiatDeposit opts)
         {
             var sp = GetServiceProvider();
             Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
             return 0;
         }
 
-        static int RunProcessFiatWithdrawalAndReturnExitCode(ProcessFiatWithdrawal opts)
+        static int RunProcessFiatWithdrawal(ProcessFiatWithdrawal opts)
         {
             var sp = GetServiceProvider();
             Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
+            return 0;
+        }
+
+        static int RunProcessChainWithdrawal(ProcessChainWithdrawal opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ProcessChainWithdrawal(sp, opts.Asset, opts.SpendCode);
             return 0;
         }
 
@@ -114,13 +130,14 @@ namespace viafront3
             {
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
-                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal>(argsList)
+                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal>(argsList)
                     .MapResult(
-                    (InitRoles opts) => RunInitRolesAndReturnExitCode(opts),
-                    (AddRole opts) => RunAddRoleAndReturnExitCode(opts),
-                    (ConsolidateWallet opts) => RunConsolidateAndReturnExitCode(opts),
-                    (ProcessFiatDeposit opts) => RunProcessFiatDepositAndReturnExitCode(opts),
-                    (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawalAndReturnExitCode(opts),
+                    (InitRoles opts) => RunInitRoles(opts),
+                    (AddRole opts) => RunAddRole(opts),
+                    (ConsolidateWallet opts) => RunConsolidate(opts),
+                    (ProcessFiatDeposit opts) => RunProcessFiatDeposit(opts),
+                    (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawal(opts),
+                    (ProcessChainWithdrawal opts) => RunProcessChainWithdrawal(opts),
                     errs => 1);
             }
 

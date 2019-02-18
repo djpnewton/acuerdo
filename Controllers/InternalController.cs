@@ -84,6 +84,24 @@ namespace viafront3.Controllers
             return View(model);
         }
 
+        public IActionResult WalletPendingSpends(string asset)
+        {
+            var user = GetUser(required: true).Result;
+
+            var wallet = _walletProvider.GetChain(asset);
+            var spends = wallet.PendingSpendsGet();
+
+            var model = new WalletPendingSpendsViewModel
+            {
+                User = user,
+                Wallet = wallet,
+                Asset = asset,
+                AssetSettings = _settings.Assets[asset],
+                PendingSpends = spends
+            };
+            return View(model);
+        }
+
         public IActionResult Users()
         {
             var user = GetUser(required: true).Result;
@@ -146,7 +164,7 @@ namespace viafront3.Controllers
             var txsIn = wallet.GetTransactions(id)
                 .Where(t => t.Direction == WalletDirection.Incomming);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.TagOnBehalfOf == id);
+                .Where(t => t.Meta.TagOnBehalfOf == id);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel

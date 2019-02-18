@@ -20,4 +20,12 @@ namespace viafront3.Models.InternalViewModels
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public Dictionary<string, WalletBalance> Balances { get; set; }
     }
+
+    public class WalletPendingSpendsViewModel : BaseViewModel
+    {
+        public IWallet Wallet { get; set; }
+        public string Asset { get; set; }
+        public AssetSettings AssetSettings { get; set; }
+        public IEnumerable<WalletPendingSpend> PendingSpends { get; set; }
+    }
 }

@@ -54,6 +54,13 @@ namespace viafront3
             var wallet = walletProvider.GetChain(asset);
             var assetSettings = walletProvider.ChainAssetSettings(asset);
 
+            // ensure consolidate tag exists
+            if (!wallet.HasTag(walletProvider.ConsolidatedFundsTag()))
+            {
+                wallet.NewTag(walletProvider.ConsolidatedFundsTag());
+                wallet.Save();
+            }
+
             var userIds = new List<string>();
             Console.WriteLine("Consolidating asset '{0}' to tag '{1}'", asset, walletProvider.ConsolidatedFundsTag());
             foreach (var email in userEmails)
@@ -137,6 +144,25 @@ namespace viafront3
         public static async Task ProcessFiatWithdrawal(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
         {
             await ProcessFiat(serviceProvider, false, asset, depositCode, date, amount, bankMetadata);
+        }
+
+        public static void ProcessChainWithdrawal(IServiceProvider serviceProvider, string asset, string spendCode)
+        {
+            // get wallet
+            asset = asset.ToUpper();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var wallet = walletProvider.GetChain(asset);
+            var assetSettings = walletProvider.ChainAssetSettings(asset);
+
+            // process withdrawal
+            WalletTx wtx;
+            Console.WriteLine($"Actioning pending spend: {spendCode}, asset: {asset}");
+            var err = wallet.PendingSpendAction(spendCode, assetSettings.FeeMax, assetSettings.FeeUnit, out wtx);
+            Console.WriteLine($"Result: {err}");
+
+            // save wallet
+            wallet.Save();
+            Console.WriteLine($"Saved {asset} wallet");
         }
 
         public static string CreateToken(int chars = 16)

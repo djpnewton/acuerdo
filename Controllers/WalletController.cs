@@ -84,6 +84,11 @@ namespace viafront3.Controllers
                 addr = addrs.First();
             else
             {
+                if (!wallet.HasTag(user.Id))
+                {
+                    wallet.NewTag(user.Id);
+                    wallet.Save();
+                }
                 addr = wallet.NewAddress(user.Id);
                 wallet.Save();
             }
@@ -116,10 +121,16 @@ namespace viafront3.Controllers
             wallet.UpdateFromBlockchain();
 
             // get wallet transactions
-            var txs = wallet.GetAddrTransactions(addr.Address)
-                .Where(t => t.Direction == WalletDirection.Incomming);;
-            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address)
-                .Where(t => t.Direction == WalletDirection.Incomming);;
+            var txs = wallet.GetAddrTransactions(addr.Address);
+            if (txs != null)
+                txs = txs.Where(t => t.Direction == WalletDirection.Incomming);
+            else
+                txs = new List<WalletTx>();
+            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
+            if (unackedTxs != null)
+                unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming);
+            else
+                unackedTxs = new List<WalletTx>();
             BigInteger newDeposits = 0;
             foreach (var tx in unackedTxs)
                 newDeposits += tx.ChainTx.Amount;
@@ -136,9 +147,7 @@ namespace viafront3.Controllers
                 var amount = wallet.AmountToString(tx.ChainTx.Amount);
                 var source = new Dictionary<string, object>();
                 source["txid"] = tx.ChainTx.TxId;
-                var businessId = wallet.GetNextTxWalletId(user.Id);
-                wallet.SetTxWalletId(user.Id, tx.ChainTx.TxId, businessId);
-                wallet.Save();
+                var businessId = tx.Meta.Id;
                 via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             } 
 
@@ -291,7 +300,18 @@ namespace viafront3.Controllers
                 }
 
                 var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
-                var businessId = wallet.GetNextTxWalletId(consolidatedFundsTag);
+
+                // ensure tag exists
+                if (!wallet.HasTag(consolidatedFundsTag))
+                {
+                    wallet.NewTag(consolidatedFundsTag);
+                    wallet.Save();
+                }
+
+                // register withdrawal with wallet
+                var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
+                    model.WithdrawalAddress, amountInt, user.Id);
+                var businessId = spend.Meta.Id;
 
                 // register withdrawal with the exchange backend
                 var negativeAmount = -model.Amount;
@@ -306,27 +326,39 @@ namespace viafront3.Controllers
                     throw;
                 }
                 
-                // send funds and save wallet
-                IEnumerable<string> txids = null;
-                var assetSettings = _walletProvider.ChainAssetSettings(model.Asset);
-                var res = wallet.Spend(consolidatedFundsTag, consolidatedFundsTag,
-                    model.WithdrawalAddress, amountInt, assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
-                if (res != WalletError.Success)
-                {
-                    _logger.LogError("Failed to withdraw funds (wallet error: {0}, asset: {1}, address: {2}, amount: {3}, businessId: {4}",
-                        res, model.Asset, model.WithdrawalAddress, amountInt, businessId);
-                    this.FlashError(string.Format("Failed to withdraw funds ({0})", res));
-                }
-                else
-                    this.FlashSuccess(string.Format("{0} {1} withdrawn to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
-                wallet.SetTxWalletId(consolidatedFundsTag, txids, businessId);
-                wallet.SetTagOnBehalfOf(consolidatedFundsTag, txids, user.Id);
+                // save wallet
                 wallet.Save();
+                this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
 
                 return View(model);
             }
 
             // If we got this far, something failed, redisplay form
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> WithdrawalHistory(string asset)
+        {
+            var user = await GetUser(required: true);
+
+            var wallet = _walletProvider.GetChain(asset);
+
+            var spends = wallet.PendingSpendsGet(_walletProvider.ConsolidatedFundsTag(), new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error } )
+                .Where(s => s.Meta.TagOnBehalfOf == user.Id);
+            var outgoingTxs = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
+                .Where(t => t.Meta.TagOnBehalfOf == user.Id);
+
+            var model = new WithdrawalHistoryViewModel
+            {
+                User = user,
+                Wallet = wallet,
+                Asset = asset,
+                AssetSettings = _settings.Assets[asset],
+                PendingWithdrawals = spends,
+                OutgoingTransactions = outgoingTxs
+            };
+
             return View(model);
         }
 

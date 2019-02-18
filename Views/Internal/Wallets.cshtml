@@ -23,6 +23,9 @@
                         <th class="pad-decimals">
                             Consolidated Funds
                         </th>
+                        <th>
+                            Pending Spends
+                        </th>
                     </tr>
                     <tbody>@{
                         foreach (var item in Model.Balances)
@@ -45,6 +48,9 @@
                                     <span class="pad-decimals-data">
                                         @consolidated
                                     </span>
+                                </td>
+                                <td>
+                                    <a asp-action="WalletPendingSpends" asp-route-asset="@item.Key">view list</a>
                                 </td>
                             </tr>
                         }

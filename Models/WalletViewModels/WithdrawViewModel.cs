@@ -17,6 +17,15 @@ namespace viafront3.Models.WalletViewModels
         public decimal Amount { get; set; }
     }
 
+    public class WithdrawalHistoryViewModel : BaseViewModel
+    {
+        public IWallet Wallet { get; set; }
+        public string Asset { get; set; }
+        public AssetSettings AssetSettings { get; set; }
+        public IEnumerable<WalletPendingSpend> PendingWithdrawals { get; set; }
+        public IEnumerable<WalletTx> OutgoingTransactions { get; set; }
+    }
+
     public class WithdrawFiatViewModel : BaseViewModel
     {
         public string Asset { get; set; }

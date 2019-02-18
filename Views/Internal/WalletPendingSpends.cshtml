@@ -1,0 +1,77 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model WalletPendingSpendsViewModel
+@{
+    ViewData["Title"] = "Wallet Pending Spends";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Pending Spends - @Model.Asset
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            Spend Code
+                        </th>
+                        <th>
+                            Tag
+                        </th>
+                        <th>
+                            Tag on behalf of
+                        </th>
+                        <th>
+                            State
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.PendingSpends)
+                        {
+                            var amount = Model.Wallet.AmountToString(item.Amount);
+                            amount = ViewUtils.FormatStrDec(amount, Model.AssetSettings.Decimals);
+
+                            <tr>
+                                <td>
+                                    @ViewUtils.FormatUnixTime(@item.Date)
+                                </td>
+                                <td>
+                                    @item.SpendCode
+                                </td>
+                                <td>
+                                    @item.Tag.Tag
+                                </td>
+                                <td>
+                                    <a asp-action="UserInspect" asp-route-id="@item.Meta.TagOnBehalfOf">
+                                        @item.Meta.TagOnBehalfOf
+                                    </a>
+                                </td>
+                                <td>
+                                    @item.State
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                        @amount
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}
