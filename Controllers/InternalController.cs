@@ -60,11 +60,13 @@ namespace viafront3.Controllers
                 try
                 {
                     var wallet = _walletProvider.GetChain(asset);
+                    wallet.UpdateFromBlockchain(); // get updated data
+                    wallet.Save();
+
                     var tags = wallet.GetTags();
                     var balance = new WalletBalance{ Total = 0, Consolidated = 0};
                     foreach (var tag in tags)
                         balance.Total += wallet.GetBalance(tag.Tag);
-                    wallet.GetTransactions(_walletSettings.ConsolidatedFundsTag); // this is currently required to update the wallet -> TODO: need to change xchwallet to be more explicit about what updates the wallet
                     balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
                     balance.Wallet = wallet;
                     balances[asset] = balance;
