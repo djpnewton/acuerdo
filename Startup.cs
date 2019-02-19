@@ -56,6 +56,7 @@ namespace viafront3
         public string NodeUrl { get; set; }
         public long FeeUnit { get; set; }
         public long FeeMax { get; set; }
+        public int MinConf { get; set; }
     }
 
     public class WalletSettings

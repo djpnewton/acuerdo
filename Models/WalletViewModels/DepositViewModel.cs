@@ -17,7 +17,7 @@ namespace viafront3.Models.WalletViewModels
 
     public class UserTransactionsViewModel : DepositViewModel
     {
-        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+        public AssetSettings AssetSettings { get; set; }
         public IWallet Wallet { get; set; }
         public IEnumerable<WalletTx> TransactionsIncomming { get; set; }
         public IEnumerable<WalletTx> TransactionsOutgoing { get; set; }
@@ -25,6 +25,7 @@ namespace viafront3.Models.WalletViewModels
 
     public class TransactionCheckViewModel : UserTransactionsViewModel
     {
+        public ChainAssetSettings ChainAssetSettings { get; set; }
         public IEnumerable<WalletTx> NewTransactionsIncomming { get; set; }
         public BigInteger NewDeposits { get; set; }
         public string NewDepositsHuman { get; set; }

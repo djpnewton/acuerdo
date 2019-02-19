@@ -174,7 +174,7 @@ namespace viafront3.Controllers
                 User = user,
                 Asset = asset,
                 DepositAddress = null,
-                AssetSettings = _settings.Assets,
+                AssetSettings = _settings.Assets[asset],
                 Wallet = wallet,
                 TransactionsIncomming = txsIn,
                 TransactionsOutgoing = txsOutOnBehalf

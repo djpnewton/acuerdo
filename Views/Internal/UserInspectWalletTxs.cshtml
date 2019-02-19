@@ -53,7 +53,7 @@
                         <td>
                             <span class="pad-decimals-data">
                             @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings[Model.Asset].Decimals)
+                                Model.AssetSettings.Decimals)
                             </span>
                         </td>
                         <td>
@@ -115,7 +115,7 @@
                         <td>
                             <span class="pad-decimals-data">
                             @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings[Model.Asset].Decimals)
+                                Model.AssetSettings.Decimals)
                             </span>
                         </td>
                         <td>

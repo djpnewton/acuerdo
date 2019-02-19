@@ -119,8 +119,10 @@ namespace viafront3.Controllers
 
             // update wallet from blockchain
             wallet.UpdateFromBlockchain();
+            wallet.Save();
 
             // get wallet transactions
+            var chainAssetSettings = _walletProvider.ChainAssetSettings(asset);
             var txs = wallet.GetAddrTransactions(addr.Address);
             if (txs != null)
                 txs = txs.Where(t => t.Direction == WalletDirection.Incomming);
@@ -128,7 +130,7 @@ namespace viafront3.Controllers
                 txs = new List<WalletTx>();
             var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
             if (unackedTxs != null)
-                unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming);
+                unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming && t.ChainTx.Confirmations >= chainAssetSettings.MinConf);
             else
                 unackedTxs = new List<WalletTx>();
             BigInteger newDeposits = 0;
@@ -137,12 +139,17 @@ namespace viafront3.Controllers
             var newDepositsHuman = wallet.AmountToString(newDeposits);
 
             // ack txs and save wallet
-            wallet.AcknowledgeTransactions(user.Id, unackedTxs);
-            wallet.Save();
+            IEnumerable<WalletTx> justAckedTxs = unackedTxs;
+            if (unackedTxs.Count() > 0)
+            {
+                justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
+                wallet.AcknowledgeTransactions(user.Id, unackedTxs);
+                wallet.Save();
+            };
 
             // register new deposits with the exchange backend
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            foreach (var tx in unackedTxs)
+            foreach (var tx in justAckedTxs)
             {
                 var amount = wallet.AmountToString(tx.ChainTx.Amount);
                 var source = new Dictionary<string, object>();
@@ -155,11 +162,12 @@ namespace viafront3.Controllers
             {
                 User = user,
                 Asset = asset,
-                AssetSettings = _settings.Assets,
+                AssetSettings = _settings.Assets[asset],
+                ChainAssetSettings = chainAssetSettings,
                 DepositAddress = addr.Address,
                 Wallet = wallet,
                 TransactionsIncomming = txs,
-                NewTransactionsIncomming = unackedTxs,
+                NewTransactionsIncomming = justAckedTxs,
                 NewDeposits = newDeposits,
                 NewDepositsHuman = newDepositsHuman,
             };

@@ -28,6 +28,9 @@
                 <th class="pad-decimals">
                     Amount
                 </th>
+                <th>
+                    Confirmations
+                </th>
             </tr>
             <tbody>@{
                 foreach (var item in Model.TransactionsIncomming)
@@ -42,8 +45,11 @@
                         <td>
                             <span class="pad-decimals-data">
                             @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings[Model.Asset].Decimals)
+                                Model.AssetSettings.Decimals)
                             </span>
+                        </td>
+                        <td>
+                            @(item.ChainTx.Confirmations >= Model.ChainAssetSettings.MinConf ? "confirmed" : item.ChainTx.Confirmations.ToString())
                         </td>
                     </tr>
                 }
