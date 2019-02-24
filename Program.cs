@@ -39,8 +39,10 @@ namespace viafront3
         { 
             [Option('a', "asset", Required = true, HelpText = "Asset")]
             public string Asset { get; set; }
-            [Option('e', "emails", Required = true, Separator = ',',  HelpText = "List of user emails (separated by commas)")]
+            [Option('e', "emails", Default = null, Separator = ',',  HelpText = "List of user emails (separated by commas) to consolidate from")]
             public IEnumerable<string> Emails { get; set; }
+            [Option('A', "all", Default = false, HelpText = "Consolidate from all users")]
+            public bool All { get; set; }
         }
 
         [Verb("process_fiat_deposit", HelpText = "Process a fiat deposit")]
@@ -99,7 +101,7 @@ namespace viafront3
         static int RunConsolidate(ConsolidateWallet opts)
         {
             var sp = GetServiceProvider();
-            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails).Wait();
+            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails, opts.All).Wait();
             return 0;
         }
 

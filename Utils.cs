@@ -42,48 +42,72 @@ namespace viafront3
                 await userManager.AddToRoleAsync(user, adminRole.Name);
         }
 
-        public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, IEnumerable<string> userEmails)
+        public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, IEnumerable<string> userEmails, bool allUsers)
         {
+            // check for conflicting options
+            if (userEmails.Count() > 0 && allUsers)
+            {
+                Console.WriteLine("ERROR: use either a list of emails *OR* the all users flag");
+                return WalletError.Cancelled;
+            }
+            // create our logger
             var factory = new LoggerFactory().AddConsole(LogLevel.Debug);
             var _logger = factory.CreateLogger("main");
-
+            // get the user manager
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
+            // get the wallet
             asset = asset.ToUpper();
             var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
             var wallet = walletProvider.GetChain(asset);
             var assetSettings = walletProvider.ChainAssetSettings(asset);
-
             // ensure consolidate tag exists
             if (!wallet.HasTag(walletProvider.ConsolidatedFundsTag()))
             {
                 wallet.NewTag(walletProvider.ConsolidatedFundsTag());
                 wallet.Save();
             }
-
+            // get user ids list
             var userIds = new List<string>();
             Console.WriteLine("Consolidating asset '{0}' to tag '{1}'", asset, walletProvider.ConsolidatedFundsTag());
-            foreach (var email in userEmails)
+            if (allUsers)
             {
-                var emailTrimmed = email.Trim();
-                var user = await userManager.FindByEmailAsync(emailTrimmed);
-                Console.WriteLine("  from user: {0} - {1}", emailTrimmed, user.Id);
-                userIds.Add(user.Id);
+                Console.WriteLine("  from all users");
+                foreach (var user in userManager.Users)
+                    userIds.Add(user.Id);
             }
+            else
+                foreach (var email in userEmails)
+                {
+                    var emailTrimmed = email.Trim();
+                    var user = await userManager.FindByEmailAsync(emailTrimmed);
+                    if (user != null)
+                    {
+                        Console.WriteLine("  from user: {0} - {1}", emailTrimmed, user.Id);
+                        userIds.Add(user.Id);
+                    }
+                }
             Console.WriteLine();
-
+            // update wallet from the blockchain
             Console.WriteLine("Updating txs from blockchain..");
             wallet.UpdateFromBlockchain();
             Console.WriteLine("Saving wallet..");
             wallet.Save();
             Console.WriteLine();
-
+            // Get amount that will be consolidated
+            var minConfs = assetSettings.MinConf;
+            var balance = wallet.GetBalance(userIds, minConfs);
+            Console.WriteLine($"Users available balance: {balance} ({wallet.AmountToString(balance)} {wallet.Type()}, {minConfs} Confirmations)");
+            Console.WriteLine("Do you want to continue? (y/N)");
+            string input = Console.ReadLine();
+            if (input.Count() < 1 || input[0] != 'y')
+                return WalletError.Cancelled;
+            // Create and broadcast transactions
             Console.WriteLine("Creating consolidations txs..");
-            IEnumerable<string> txids;
-            var res = wallet.Consolidate(userIds, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out txids);
+            IEnumerable<WalletTx> wtxs;
+            var res = wallet.Consolidate(userIds, walletProvider.ConsolidatedFundsTag(), assetSettings.FeeMax, assetSettings.FeeUnit, out wtxs, minConfs);
             Console.WriteLine(res);
-            foreach (var txid in txids)
-                Console.WriteLine(txid);
+            foreach (var tx in wtxs)
+                Console.WriteLine(tx.ChainTx.TxId);
             Console.WriteLine("Saving wallet..");
             wallet.Save();
             return res;
