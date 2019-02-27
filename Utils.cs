@@ -189,6 +189,20 @@ namespace viafront3
             Console.WriteLine($"Saved {asset} wallet");
         }
 
+        public static void ShowPendingChainWithdrawals(IServiceProvider serviceProvider, string asset)
+        {
+            // get wallet
+            asset = asset.ToUpper();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var wallet = walletProvider.GetChain(asset);
+            var assetSettings = walletProvider.ChainAssetSettings(asset);
+
+            // show pending spends
+            var spends = wallet.PendingSpendsGet(null, new PendingSpendState[]{ PendingSpendState.Pending, PendingSpendState.Error });
+            foreach (var spend in spends)
+                Console.WriteLine($"SpendCode: {spend.SpendCode}, Date: {spend.Date}, Amount: {spend.Amount}, To: {spend.To}, State: {spend.State}");
+        }
+
         public static string CreateToken(int chars = 16)
         {
             const string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

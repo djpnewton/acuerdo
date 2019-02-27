@@ -84,6 +84,13 @@ namespace viafront3
             public string SpendCode { get; set; }
         }
 
+        [Verb("show_pending_chain_withdrawals", HelpText = "Show pending blockchain withdrawals")]
+        class ShowPendingChainWithdrawals
+        { 
+            [Option('a', "asset", Required = true, HelpText = "Asset")]
+            public string Asset { get; set; }
+        }
+
         static int RunInitRoles(InitRoles opts)
         {
             var sp = GetServiceProvider();
@@ -126,13 +133,20 @@ namespace viafront3
             return 0;
         }
 
+        static int RunShowPendingChainWithdrawals(ShowPendingChainWithdrawals opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ShowPendingChainWithdrawals(sp, opts.Asset);
+            return 0;
+        }
+
         public static int Main(string[] args)
         {
             if (args.Length > 0 && args[0] == "console")
             {
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
-                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal>(argsList)
+                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals>(argsList)
                     .MapResult(
                     (InitRoles opts) => RunInitRoles(opts),
                     (AddRole opts) => RunAddRole(opts),
@@ -140,6 +154,7 @@ namespace viafront3
                     (ProcessFiatDeposit opts) => RunProcessFiatDeposit(opts),
                     (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawal(opts),
                     (ProcessChainWithdrawal opts) => RunProcessChainWithdrawal(opts),
+                    (ShowPendingChainWithdrawals opts) => RunShowPendingChainWithdrawals(opts),
                     errs => 1);
             }
 
