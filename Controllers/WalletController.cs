@@ -208,6 +208,11 @@ namespace viafront3.Controllers
                 this.FlashError($"Amount must have a maximum of {decimals} digits after the decimal place");
                 return View(model);
             }
+            if (!wallet.HasTag(user.Id))
+            {
+                wallet.NewTag(user.Id);
+                wallet.Save();
+            }
             var tx = wallet.RegisterPendingDeposit(user.Id, amount);
             model.PendingTx = tx;
             model.Account = wallet.GetAccount();
