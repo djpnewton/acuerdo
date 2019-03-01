@@ -8,17 +8,24 @@ using xchwallet;
 
 namespace viafront3.Models.InternalViewModels
 {
-    public class WalletBalance
+    public class ChainWalletBalance
     {
         public BigInteger Total;
         public BigInteger Consolidated;
         public IWallet Wallet;
     }
 
+    public class FiatWalletBalance
+    {
+        public long Total;
+        public IFiatWallet Wallet;
+    }
+
     public class WalletsViewModel : BaseViewModel
     {
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
-        public Dictionary<string, WalletBalance> Balances { get; set; }
+        public Dictionary<string, ChainWalletBalance> ChainBalances { get; set; }
+        public Dictionary<string, FiatWalletBalance> FiatBalances { get; set; }
     }
 
     public class WalletPendingSpendsViewModel : BaseViewModel
@@ -27,5 +34,13 @@ namespace viafront3.Models.InternalViewModels
         public string Asset { get; set; }
         public AssetSettings AssetSettings { get; set; }
         public IEnumerable<WalletPendingSpend> PendingSpends { get; set; }
+    }
+
+    public class FiatWalletPendingTxsViewModel : BaseViewModel
+    {
+        public IFiatWallet Wallet { get; set; }
+        public string Asset { get; set; }
+        public AssetSettings AssetSettings { get; set; }
+        public IEnumerable<FiatWalletTx> PendingTxs { get; set; }
     }
 }

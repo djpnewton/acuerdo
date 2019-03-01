@@ -9,7 +9,7 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Wallets
+                Blockchain Wallets
             </div>
             <div class="panel-body">
                 <table class="table table-condensed table-responsive table-hover">
@@ -28,7 +28,7 @@
                         </th>
                     </tr>
                     <tbody>@{
-                        foreach (var item in Model.Balances)
+                        foreach (var item in Model.ChainBalances)
                         {
                             var total = item.Value.Wallet.AmountToString(item.Value.Total);
                             total = ViewUtils.FormatStrDec(total, Model.AssetSettings[item.Key].Decimals);
@@ -51,6 +51,52 @@
                                 </td>
                                 <td>
                                     <a asp-action="WalletPendingSpends" asp-route-asset="@item.Key">view list</a>
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Fiat Wallets
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Asset
+                        </th>
+                        <th class="pad-decimals">
+                            Total Funds
+                        </th>
+                        <th>
+                            Pending Deposits/Withdrawals
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.FiatBalances)
+                        {
+                            var total = item.Value.Wallet.AmountToString(item.Value.Total);
+                            total = ViewUtils.FormatStrDec(total, Model.AssetSettings[item.Key].Decimals);
+
+                            <tr>
+                                <td>
+                                    @item.Key
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                        @total
+                                    </span>
+                                </td>
+                                <td>
+                                    <a asp-action="FiatWalletPendingTxs" asp-route-asset="@item.Key">view list</a>
                                 </td>
                             </tr>
                         }

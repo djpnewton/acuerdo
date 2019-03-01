@@ -1,0 +1,69 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model FiatWalletPendingTxsViewModel
+@{
+    ViewData["Title"] = "Fiat Wallet Pending Spends";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Pending Txs - @Model.Asset
+            </div>
+            <div class="panel-body">
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            Deposit Code
+                        </th>
+                        <th>
+                            Direction
+                        </th>
+                        <th>
+                            Tag
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                    </tr>
+                    <tbody>@{
+                        foreach (var item in Model.PendingTxs)
+                        {
+                            var amount = Model.Wallet.AmountToString(item.Amount);
+                            amount = ViewUtils.FormatStrDec(amount, Model.AssetSettings.Decimals);
+
+                            <tr>
+                                <td>
+                                    @ViewUtils.FormatUnixTime(@item.Date)
+                                </td>
+                                <td>
+                                    @item.DepositCode
+                                </td>
+                                <td>
+                                    @item.Direction
+                                </td>
+                                <td>
+                                    @item.Tag.Tag
+                                </td>
+                                <td>
+                                    <span class="pad-decimals-data">
+                                        @amount
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    }</tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

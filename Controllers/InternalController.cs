@@ -54,26 +54,47 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
 
-            var balances = new Dictionary<string, WalletBalance>();
+            var chainBalances = new Dictionary<string, ChainWalletBalance>();
+            var fiatBalances = new Dictionary<string, FiatWalletBalance>();
             foreach (var asset in _settings.Assets.Keys)
             {
                 try
                 {
-                    var wallet = _walletProvider.GetChain(asset);
-                    wallet.UpdateFromBlockchain(); // get updated data
-                    wallet.Save();
+                    if (_walletProvider.IsChain(asset))
+                    {
+                        var wallet = _walletProvider.GetChain(asset);
+                        wallet.UpdateFromBlockchain(); // get updated data
+                        wallet.Save();
 
-                    var tags = wallet.GetTags();
-                    var balance = new WalletBalance{ Total = 0, Consolidated = 0};
-                    foreach (var tag in tags)
-                        balance.Total += wallet.GetBalance(tag.Tag);
-                    balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
-                    balance.Wallet = wallet;
-                    balances[asset] = balance;
+                        var tags = wallet.GetTags();
+                        var balance = new ChainWalletBalance{ Total = 0, Consolidated = 0};
+                        foreach (var tag in tags)
+                            balance.Total += wallet.GetBalance(tag.Tag);
+                        balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
+                        balance.Wallet = wallet;
+                        chainBalances[asset] = balance;
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Could not obtain wallet for asset '{0}'", asset);
+                    _logger.LogError(ex, "Could not obtain blockchain wallet for asset '{0}'", asset);
+                }
+                try
+                {
+                    if (_walletProvider.IsFiat(asset))
+                    {
+                        var wallet = _walletProvider.GetFiat(asset);
+                        var tags = wallet.GetTags();
+                        var balance = new FiatWalletBalance{ Total = 0 };
+                        foreach (var tag in tags)
+                            balance.Total += wallet.GetBalance(tag.Tag);
+                        balance.Wallet = wallet;
+                        fiatBalances[asset] = balance;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Could not obtain fiat wallet for asset '{0}'", asset);
                 }
             }
 
@@ -81,7 +102,8 @@ namespace viafront3.Controllers
             {
                 User = user,
                 AssetSettings = _settings.Assets,
-                Balances = balances
+                ChainBalances = chainBalances,
+                FiatBalances = fiatBalances
             };
             return View(model);
         }
@@ -100,6 +122,24 @@ namespace viafront3.Controllers
                 Asset = asset,
                 AssetSettings = _settings.Assets[asset],
                 PendingSpends = spends
+            };
+            return View(model);
+        }
+
+        public IActionResult FiatWalletPendingTxs(string asset)
+        {
+            var user = GetUser(required: true).Result;
+
+            var wallet = _walletProvider.GetFiat(asset);
+            var pendingTxs = wallet.GetTransactions().Where(t => t.BankTx == null);
+
+            var model = new FiatWalletPendingTxsViewModel
+            {
+                User = user,
+                Wallet = wallet,
+                Asset = asset,
+                AssetSettings = _settings.Assets[asset],
+                PendingTxs = pendingTxs
             };
             return View(model);
         }
