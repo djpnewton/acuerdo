@@ -45,6 +45,9 @@
                 var greyedSpan = '<span class="greyed-digits">' + '0'.repeat(parts.fracDigitsCount - fracSigDigits.length) + '</span>';
                 var html = hiddenSpan + parts.intDigits + '.' + fracSigDigits + greyedSpan;
                 span.html(html);
+            } else {
+                var html = hiddenSpan + parts.intDigits + '.' + fracSigDigits;
+                span.html(html);
             }
         });
     });
