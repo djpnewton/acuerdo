@@ -1,0 +1,15 @@
+myhostname = {{ domain_name }}
+myorigin = {{ domain_name }}
+smtpd_banner = $myhostname
+smtpd_relay_restrictions = permit_mynetworks, reject_unauth_destination
+
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
+
+mydestination = $myhostname, localhost.localdomain, localhost
+
+relayhost =
+mynetworks = 127.0.0.0/8
+mailbox_size_limit = 0
+recipient_delimiter = +
+inet_interfaces = loopback-only

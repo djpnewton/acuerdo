@@ -1,0 +1,37 @@
+---
+- name: postfix
+  hosts: all
+  become: yes
+  become_user: root
+
+  vars:
+    domain_name: "{{ deploy_host }}"
+  tasks:
+
+    - name: Set Postfix option type as internet site
+      debconf: name=postfix question="postfix/main_mailer_type" value="'Internet Site'" vtype="string"
+
+    - name: Set Postfix option hostname
+      debconf: name=postifx question="postfix/mailname" value="{{domain_name}}" vtype="string"
+
+    - name: Install Postfix
+      apt: package={{ item }} state=present
+      with_items:
+        - postfix
+        - mailutils
+
+    - name: Copy postfix config
+      template: src=templates/main.cf.j2 dest=/etc/postfix/main.cf
+
+    - name: Copy aliases config
+      template: src=templates/aliases.j2 dest=/etc/aliases
+
+    - name: rebuild aliases
+      shell: newaliases
+      notify:
+        - restart postfix
+
+  handlers:
+
+    - name: restart postfix
+      service: name=postfix state=restarted

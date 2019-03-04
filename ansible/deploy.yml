@@ -17,11 +17,13 @@
       apt: 
         name: aptitude
         state: present
+      when: full_deploy
 
     - name: Upgrade to latest debian packages
       apt:
         upgrade: yes
         update_cache: yes   
+      when: full_deploy
 
     - name: Install Required Packages
       action: apt pkg={{item}} state=installed
@@ -32,19 +34,25 @@
         - parted
         - e2fsprogs
         - unzip
+      when: full_deploy
 
     # https://github.com/ansible/ansible/issues/23914      
     - name: resize partition
       shell: 'echo yes | parted ---pretend-input-tty /dev/vda resizepart 1 Yes 100% 2>&1 > /dev/null || true'
-      when: vagrant == "true"
+      when: vagrant
       ignore_errors: yes
 
     - name: resize filesystem
       shell: 'resize2fs /dev/vda1'
-      when: vagrant == "true"
+      when: vagrant
       ignore_errors: yes
 
 - include: firewall.yml
+  when: full_deploy
+- include: postfix.yml
+  when: full_deploy
 - include: nginx.yml
+  when: full_deploy
 - include: dotnetcore.yml
+  when: full_deploy
 - include: viafront.yml

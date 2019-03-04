@@ -6,6 +6,12 @@
 # mac turds
 .DS_Store
 
+# sqlite dbs
+*.db
+
+# zipped submodules
+*.zip
+
 # cs binaries
 bin/
 obj/

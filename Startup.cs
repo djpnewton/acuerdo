@@ -68,6 +68,12 @@ namespace viafront3
         public Dictionary<string, xchwallet.BankAccount> BankAccounts { get; set; } = new Dictionary<string, xchwallet.BankAccount>();
     }
 
+    public class EmailSenderSettings
+    {
+        public string SmtpHost { get; set; }
+        public string From { get; set; }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -83,11 +89,15 @@ namespace viafront3
             // Add ExchangeSettings so it can be injected in controllers
             services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
             services.Configure<WalletSettings>(options => Configuration.GetSection("Wallet").Bind(options));
+            services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
 
-            services.AddIdentity<ApplicationUser, IdentityRole>()
+            services.AddIdentity<ApplicationUser, IdentityRole>(config =>
+                {
+                    config.SignIn.RequireConfirmedEmail = true;
+                })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 

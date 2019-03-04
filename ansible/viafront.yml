@@ -81,6 +81,12 @@
         regexp: '("NodeUrl": "http:\/\/)localhost(:24444")'
         replace: '\1{{blockchain_host}}\2'
 
+    - name: set from email
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("From": ")admin@viafront3.com(")'
+        replace: '\1{{admin_email}}\2'
+
     - name: copy viafront.service
       template:
         src: templates/viafront.service
