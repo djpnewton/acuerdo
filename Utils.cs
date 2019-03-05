@@ -19,11 +19,14 @@ namespace viafront3
 {
     public static class Utils
     {
+        public const string AdminRole = "admin";
+        public const string EmailConfirmedRole = "emailconfirmed";
+
         public static async Task CreateRoles(IServiceProvider serviceProvider)
         {
             // create roles if they dont exist
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            string[] roleNames = { "admin" };
+            string[] roleNames = { AdminRole, EmailConfirmedRole };
             foreach (var roleName in roleNames)
             {
                 var roleExist = await roleManager.RoleExistsAsync(roleName);
@@ -35,11 +38,11 @@ namespace viafront3
         public static async Task GiveUserRole(IServiceProvider serviceProvider, string email, string role)
         {
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var adminRole = await roleManager.FindByNameAsync(role);
+            var _role = await roleManager.FindByNameAsync(role);
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByEmailAsync(email);
-            if (!await userManager.IsInRoleAsync(user, adminRole.Name))
-                await userManager.AddToRoleAsync(user, adminRole.Name);
+            if (!await userManager.IsInRoleAsync(user, _role.Name))
+                await userManager.AddToRoleAsync(user, _role.Name);
         }
 
         public static async Task<WalletError> ConsolidateWallet(IServiceProvider serviceProvider, string asset, IEnumerable<string> userEmails, bool allUsers)

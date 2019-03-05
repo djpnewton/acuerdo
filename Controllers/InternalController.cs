@@ -22,7 +22,7 @@ using xchwallet;
 
 namespace viafront3.Controllers
 {
-    [Authorize(Roles = "admin")]
+    [Authorize(Roles = Utils.AdminRole)]
     [Route("[controller]/[action]")]
     public class InternalController : BaseSettingsController
     {

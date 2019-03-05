@@ -20,7 +20,7 @@ using xchwallet;
 
 namespace viafront3.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = Utils.EmailConfirmedRole)]
     [Route("[controller]/[action]")]
     public class WalletController : BaseSettingsController
     {

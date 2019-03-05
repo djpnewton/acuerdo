@@ -30,9 +30,10 @@ namespace viafront3.Services
             smtp.Host = smtpHost;
             // create mail
             var mail = new MailMessage();
-            mail.From = new System.Net.Mail.MailAddress("from");
+            mail.From = new System.Net.Mail.MailAddress(from);
             mail.To.Add(new MailAddress(email));
-            //mail.IsBodyHtml = true;
+            mail.Subject = subject;
+            mail.IsBodyHtml = true;
             mail.Body = message;
             // send mail
             smtp.Send(mail);

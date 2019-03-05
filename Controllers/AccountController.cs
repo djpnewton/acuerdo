@@ -23,6 +23,7 @@ namespace viafront3.Controllers
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger _logger;
 
         public AccountController(
@@ -31,10 +32,12 @@ namespace viafront3.Controllers
             ApplicationDbContext context,
             IEmailSender emailSender,
             ILogger<AccountController> logger,
-            IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
+            IOptions<ExchangeSettings> settings,
+            RoleManager<IdentityRole> roleManager) : base(userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _roleManager = roleManager;
             _logger = logger;
         }
 
@@ -63,14 +66,6 @@ namespace viafront3.Controllers
             if (ModelState.IsValid)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user != null)
-                {
-                    if (!await _userManager.IsEmailConfirmedAsync(user))
-                    {
-                        ModelState.AddModelError(string.Empty, "You must have a confirmed email to log in.");
-                        return View(model);
-                    }
-                }
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
@@ -247,8 +242,7 @@ namespace viafront3.Controllers
                     var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
                     await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
 
-                    // dont sign in as we need the user to validate their email first
-                    //await _signInManager.SignInAsync(user, isPersistent: false);
+                    await _signInManager.SignInAsync(user, isPersistent: false);
                     _logger.LogInformation("User created a new account with password.");
 
                     if (user.EnsureExchangePresent(_context))
@@ -370,6 +364,13 @@ namespace viafront3.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{userId}'.");
             }
             var result = await _userManager.ConfirmEmailAsync(user, code);
+            if (result.Succeeded)
+            {
+                var role = await _roleManager.FindByNameAsync(Utils.EmailConfirmedRole);
+                if (!await _userManager.IsInRoleAsync(user, role.Name))
+                    await _userManager.AddToRoleAsync(user, role.Name);
+            }
+
             return View(result.Succeeded ? "ConfirmEmail" : "Error", BaseViewModel());
         }
 
