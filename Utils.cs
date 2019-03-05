@@ -150,6 +150,11 @@ namespace viafront3
             wallet.Save();
             Console.WriteLine($"Saved {asset} wallet");
 
+            // send email
+            var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+            if (isDeposit)
+                await emailSender.SendEmailFiatDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.Amount), tx.DepositCode);
+
             // register new deposits with the exchange backend
             var source = new Dictionary<string, object>();
             source["bankMetadata"] = bankMetadata;

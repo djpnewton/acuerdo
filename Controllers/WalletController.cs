@@ -26,16 +26,19 @@ namespace viafront3.Controllers
     {
         private readonly ILogger _logger;
         private readonly IWalletProvider _walletProvider;
+        private readonly IEmailSender _emailSender;
 
         public WalletController(
           UserManager<ApplicationUser> userManager,
           ILogger<ManageController> logger,
           ApplicationDbContext context,
           IOptions<ExchangeSettings> settings,
-          IWalletProvider walletProvider) : base(userManager, context, settings)
+          IWalletProvider walletProvider,
+          IEmailSender emailSender) : base(userManager, context, settings)
         {
             _logger = logger;
             _walletProvider = walletProvider;
+            _emailSender = emailSender;
         }
 
         [HttpGet]
@@ -123,11 +126,20 @@ namespace viafront3.Controllers
 
             // get wallet transactions
             var chainAssetSettings = _walletProvider.ChainAssetSettings(asset);
+            var newlySeenTxs = 0;
             var txs = wallet.GetAddrTransactions(addr.Address);
             if (txs != null)
                 txs = txs.Where(t => t.Direction == WalletDirection.Incomming);
             else
                 txs = new List<WalletTx>();
+            foreach (var tx in txs)
+                // send email: deposit detected
+                if (tx.Meta.Note != "seen")
+                {
+                    wallet.SetNote(tx, "seen");
+                    newlySeenTxs += 1;
+                    await _emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+                }
             var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
             if (unackedTxs != null)
                 unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming && t.ChainTx.Confirmations >= chainAssetSettings.MinConf);
@@ -135,7 +147,11 @@ namespace viafront3.Controllers
                 unackedTxs = new List<WalletTx>();
             BigInteger newDeposits = 0;
             foreach (var tx in unackedTxs)
+            {
                 newDeposits += tx.ChainTx.Amount;
+                // send email: deposit confirmed
+                await _emailSender.SendEmailChainDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+            }
             var newDepositsHuman = wallet.AmountToString(newDeposits);
 
             // ack txs and save wallet
@@ -145,7 +161,9 @@ namespace viafront3.Controllers
                 justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
                 wallet.AcknowledgeTransactions(user.Id, unackedTxs);
                 wallet.Save();
-            };
+            }
+            else if (newlySeenTxs > 0)
+                wallet.Save();
 
             // register new deposits with the exchange backend
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -217,6 +235,8 @@ namespace viafront3.Controllers
             model.PendingTx = tx;
             model.Account = wallet.GetAccount();
             wallet.Save();
+            // send email: deposit created
+            await _emailSender.SendEmailFiatDepositCreatedAsync(user.Email, model.Asset, wallet.AmountToString(tx.Amount), tx.DepositCode, wallet.GetAccount());
 
             return View("DepositFiatCreated", model);
         }

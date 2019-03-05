@@ -12,6 +12,9 @@
 # zipped submodules
 *.zip
 
+# ansible leftovers
+*.retry
+
 # cs binaries
 bin/
 obj/
