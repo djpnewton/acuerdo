@@ -27,6 +27,18 @@ namespace viafront3.Services
                 $"A blockchain deposit has confirmed, {amount} {asset} ({txid})");
         }
 
+        public static Task SendEmailChainWithdrawalCreatedAsync(this IEmailSender emailSender, string email, string asset, string amount)
+        {
+            return emailSender.SendEmailAsync(email, "Withdrawal Created",
+                $"A new blockchain withdrawal created, {amount} {asset}");
+        }
+
+        public static Task SendEmailChainWithdrawalConfirmedAsync(this IEmailSender emailSender, string email, string asset, string amount, string txid)
+        {
+            return emailSender.SendEmailAsync(email, "Withdrawal Confirmed",
+                $"A blockchain deposit has confirmed, {amount} {asset} ({txid})");
+        }
+
         public static Task SendEmailFiatDepositCreatedAsync(this IEmailSender emailSender, string email, string asset, string amount, string depositCode, xchwallet.BankAccount account)
         {
             return emailSender.SendEmailAsync(email, "Deposit Create",
@@ -37,6 +49,18 @@ namespace viafront3.Services
         {
             return emailSender.SendEmailAsync(email, "Deposit Confirmed",
                 $"A fiat deposit has confirmed, {amount} {asset}<br/><br/>Deposit Code: {depositCode}<br/>");
+        }
+
+        public static Task SendEmailFiatWithdrawalCreatedAsync(this IEmailSender emailSender, string email, string asset, string amount, string depositCode)
+        {
+            return emailSender.SendEmailAsync(email, "Withdrawal Create",
+                $"A new fiat withdrawal created, {amount} {asset}");
+        }
+
+        public static Task SendEmailFiatWithdrawalConfirmedAsync(this IEmailSender emailSender, string email, string asset, string amount, string depositCode)
+        {
+            return emailSender.SendEmailAsync(email, "Withdrawal Confirmed",
+                $"A fiat withdrawal has confirmed, {amount} {asset}");
         }
     }
 }

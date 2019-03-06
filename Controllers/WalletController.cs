@@ -133,9 +133,9 @@ namespace viafront3.Controllers
             else
                 txs = new List<WalletTx>();
             foreach (var tx in txs)
-                // send email: deposit detected
                 if (tx.Meta.Note != "seen")
                 {
+                    // send email: deposit detected
                     wallet.SetNote(tx, "seen");
                     newlySeenTxs += 1;
                     await _emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
@@ -235,6 +235,7 @@ namespace viafront3.Controllers
             model.PendingTx = tx;
             model.Account = wallet.GetAccount();
             wallet.Save();
+
             // send email: deposit created
             await _emailSender.SendEmailFiatDepositCreatedAsync(user.Email, model.Asset, wallet.AmountToString(tx.Amount), tx.DepositCode, wallet.GetAccount());
 
@@ -363,6 +364,9 @@ namespace viafront3.Controllers
                 wallet.Save();
                 this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
 
+                // send email: withdrawal created
+                await _emailSender.SendEmailChainWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString());
+
                 return View(model);
             }
 
@@ -449,6 +453,9 @@ namespace viafront3.Controllers
             var tx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
             model.PendingTx = tx;
             wallet.Save();
+
+            // send email: withdrawal created
+            await _emailSender.SendEmailFiatWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString(), tx.DepositCode);
 
             return View("WithdrawalFiatCreated", model);
         }

@@ -133,6 +133,7 @@ namespace viafront3
                 tx = wallet.UpdateDeposit(depositCode, date, amountInt, bankMetadata);
             else
                 tx = wallet.UpdateWithdrawal(depositCode, date, amountInt, bankMetadata);
+            System.Diagnostics.Debug.Assert(tx != null);
 
             // get user
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -150,11 +151,6 @@ namespace viafront3
             wallet.Save();
             Console.WriteLine($"Saved {asset} wallet");
 
-            // send email
-            var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-            if (isDeposit)
-                await emailSender.SendEmailFiatDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.Amount), tx.DepositCode);
-
             // register new deposits with the exchange backend
             var source = new Dictionary<string, object>();
             source["bankMetadata"] = bankMetadata;
@@ -166,6 +162,14 @@ namespace viafront3
 
             balance = via.BalanceQuery(user.Exchange.Id, asset);
             Console.WriteLine($"After - available {asset} balance: {balance.Available}");
+
+            // send email
+            var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+            if (isDeposit)
+                await emailSender.SendEmailFiatDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.Amount), tx.DepositCode);
+            else
+                await emailSender.SendEmailFiatWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.Amount), tx.DepositCode);
+            Console.WriteLine($"Sent email to {user.Email}");
         }
 
         public static async Task ProcessFiatDeposit(IServiceProvider serviceProvider, string asset, string depositCode, long date, decimal amount, string bankMetadata)
@@ -195,6 +199,21 @@ namespace viafront3
             // save wallet
             wallet.Save();
             Console.WriteLine($"Saved {asset} wallet");
+
+            if (err == WalletError.Success)
+            {
+                // get user
+                var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var task = userManager.FindByIdAsync(wtx.Meta.TagOnBehalfOf);
+                task.Wait();
+                var user = task.Result;
+                System.Diagnostics.Debug.Assert(user != null);
+
+                // send email
+                var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+                emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.ChainTx.Amount), wtx.ChainTx.TxId).Wait();
+                Console.WriteLine($"Sent email to {user.Email}");
+            }
         }
 
         public static void ShowPendingChainWithdrawals(IServiceProvider serviceProvider, string asset)
