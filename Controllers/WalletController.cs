@@ -449,9 +449,19 @@ namespace viafront3.Controllers
                 return View(model);
             }
 
+            // create pending withdrawal
             var account = new BankAccount{ AccountNumber = model.WithdrawalAccount };
             var tx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
             model.PendingTx = tx;
+
+            // register new withdrawal with the exchange backend
+            var source = new Dictionary<string, object>();
+            var amountStr = (-model.Amount).ToString();
+            var depositCodeInt = long.Parse(tx.DepositCode);
+            via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", depositCodeInt, amountStr, source);
+            Console.WriteLine($"Updated exchange backend");
+
+            // save wallet (after we have posted the withdrawal to the backend)
             wallet.Save();
 
             // send email: withdrawal created
