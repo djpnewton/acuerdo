@@ -335,35 +335,38 @@ namespace viafront3.Controllers
 
                 var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
 
-                // ensure tag exists
-                if (!wallet.HasTag(consolidatedFundsTag))
+                using (var transaction = wallet.BeginTransaction())
                 {
-                    wallet.NewTag(consolidatedFundsTag);
+                    // ensure tag exists
+                    if (!wallet.HasTag(consolidatedFundsTag))
+                    {
+                        wallet.NewTag(consolidatedFundsTag);
+                        wallet.Save();
+                    }
+
+                    // register withdrawal with wallet
+                    var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
+                        model.WithdrawalAddress, amountInt, user.Id);
                     wallet.Save();
+                    var businessId = spend.Meta.Id;
+
+                    // register withdrawal with the exchange backend
+                    var negativeAmount = -model.Amount;
+                    try
+                    {
+                        via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", businessId, negativeAmount.ToString(), null);
+                    }
+                    catch (System.Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
+                            user.Exchange.Id, model.Asset, businessId, negativeAmount);
+                        throw;
+                    }
+
+                    transaction.Commit();
                 }
 
-                // register withdrawal with wallet
-                var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
-                    model.WithdrawalAddress, amountInt, user.Id);
-                var businessId = spend.Meta.Id;
-
-                // register withdrawal with the exchange backend
-                var negativeAmount = -model.Amount;
-                try
-                {
-                    via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", businessId, negativeAmount.ToString(), null);
-                }
-                catch (System.Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
-                        user.Exchange.Id, model.Asset, businessId, negativeAmount);
-                    throw;
-                }
-                
-                // save wallet
-                wallet.Save();
                 this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
-
                 // send email: withdrawal created
                 await _emailSender.SendEmailChainWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString());
 
