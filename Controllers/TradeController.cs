@@ -60,12 +60,37 @@ namespace viafront3.Controllers
 
         Tuple<bool, IActionResult> ValidateOrderParams(TradeViewModel model, bool marketOrder=false)
         {
+            // check market exists
             if (model.Market == null || !_settings.Markets.ContainsKey(model.Market))
                 return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Index", model.Market, "Market does not exist"));
-            if (model.Amount == null || float.Parse(model.Amount) <= 0)
-                return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, "Amount <= 0"));
-            if (!marketOrder && (model.Price == null || float.Parse(model.Price) <= 0))
-                return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, "Price <= 0"));
+            // check amount exists
+            if (model.Amount == null)
+                return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, "Amount not present"));
+            // initialize amount vars for further validation
+            var amount = decimal.Parse(model.Amount);
+            var amountInterval = decimal.Parse(_settings.Markets[model.Market].AmountInterval);
+            // check amount is greater then amountInterval
+            if (amount <= amountInterval)
+                return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Amount is less then {amountInterval}"));
+            // check amonut is a multiple of the amount interval
+            if ((amount / amountInterval) % 1 != 0)
+                return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Amount is not a multiple of {amountInterval}"));
+            if (!marketOrder)
+            {
+                // check price exists
+                if (model.Price == null)
+                    return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, "Price not present"));
+                // initialize price vars for further validation
+                var price = decimal.Parse(model.Price);
+                var priceInterval = decimal.Parse(_settings.Markets[model.Market].PriceInterval);
+                // check price is greater then priceInterval
+                if (price <= priceInterval)
+                    return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Price is less then {priceInterval}"));
+                // check price is a multiple of the price interval
+                if ((price / priceInterval) % 1 != 0)
+                    return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Price is not a multiple of {priceInterval}"));
+            }
+
             return new Tuple<bool, IActionResult>(true, null);
         }
 
@@ -96,6 +121,7 @@ namespace viafront3.Controllers
             var user = await GetUser(required: true);
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            //via.OrderDepthQuery(model.Market, )
             var order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", bid_amount_money: false);
             this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
             return RedirectToAction("Trade", new { market = model.Market });

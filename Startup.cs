@@ -35,6 +35,8 @@ namespace viafront3
         public string AmountUnit { get; set; }
         public int PriceDecimals { get; set; }
         public int AmountDecimals { get; set; }
+        public string PriceInterval { get; set; }
+        public string AmountInterval { get; set; }
     }
 
     public class ExchangeSettings
@@ -46,7 +48,6 @@ namespace viafront3
         public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;
-        public string OrderBookInterval { get; set; } = "2";
         public string TakerFeeRate { get; set; } = "0.02";
         public string MakerFeeRate { get; set; } = "0.01";
     }

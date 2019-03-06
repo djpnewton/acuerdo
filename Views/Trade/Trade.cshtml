@@ -27,14 +27,14 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="form-limit-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit)</label>
+                        <label for="form-limit-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
                             <input class="form-control" type="number" id="form-limit-amount" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
                             <span asp-validation-for="Amount" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="form-limit-price" class="col-2 col-form-label">Price (@Model.Settings.PriceUnit)</label>
+                        <label for="form-limit-price" class="col-2 col-form-label">Price (@Model.Settings.PriceUnit, min @Model.Settings.PriceInterval)</label>
                         <div class="col-10">
                             <input class="form-control" type="number" id="form-limit-price" asp-for="Price" data-val="true" data-val-number="The Price field is not a valid number." data-val-required="The Price field is required.">
                             <span asp-validation-for="Price" class="text-danger"></span>
@@ -63,7 +63,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit)</label>
+                        <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
                             <input class="form-control" type="number" id="form-market-amount" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
                             <span asp-validation-for="Amount" class="text-danger"></span>

@@ -32,7 +32,7 @@ namespace viafront3.Controllers
             Debug.Assert(market != null);
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var orderDepth = via.OrderDepthQuery(market, _settings.OrderBookLimit, _settings.OrderBookInterval);
+            var orderDepth = via.OrderDepthQuery(market, _settings.OrderBookLimit, _settings.Markets[market].PriceInterval);
 
             var model = new OrderbookViewModel
             {
