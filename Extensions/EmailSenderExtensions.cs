@@ -62,5 +62,17 @@ namespace viafront3.Services
             return emailSender.SendEmailAsync(email, "Withdrawal Confirmed",
                 $"A fiat withdrawal has confirmed, {amount} {asset}");
         }
+
+        public static Task SendEmailLimitOrderCreatedAsync(this IEmailSender emailSender, string email, string market, string side, string amount, string amountUnit, string price, string priceUnit)
+        {
+            return emailSender.SendEmailAsync(email, "Limit Order Created",
+                $"Limit Order Created ({market} - {side}, Amount: {amount} {amountUnit}, Price: {price} {priceUnit})");
+        }
+
+        public static Task SendEmailMarketOrderCreatedAsync(this IEmailSender emailSender, string email, string market, string side, string amount, string amountUnit)
+        {
+            return emailSender.SendEmailAsync(email, "Market Order Created",
+                $"Market Order Created ({market} - {side}, Amount: {amount} {amountUnit})");
+        }
     }
 }

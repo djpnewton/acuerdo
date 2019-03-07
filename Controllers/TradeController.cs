@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
 using viafront3.Models.TradeViewModels;
+using viafront3.Services;
 using viafront3.Data;
 using via_jsonrpc;
 
@@ -16,11 +17,15 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class TradeController : BaseSettingsController
     {
+        private readonly IEmailSender _emailSender;
+
         public TradeController(
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
+          IOptions<ExchangeSettings> settings,
+          IEmailSender emailSender) : base(userManager, context, settings)
         {
+            _emailSender = emailSender;
         }
 
         public IActionResult Index()
@@ -106,7 +111,11 @@ namespace viafront3.Controllers
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, model.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
-            this.FlashSuccess(string.Format("Limit Order Created ({0} - {1}, Amount: {2}, Price: {3})", order.market, order.side, order.amount, order.price));
+            // send email: order created
+            var amountUnit = _settings.Markets[model.Market].AmountUnit;
+            var priceUnit = _settings.Markets[model.Market].PriceUnit;
+            await _emailSender.SendEmailLimitOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, amountUnit, order.price, priceUnit);
+            this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
             return RedirectToAction("Trade", new { market = model.Market });
         }
 
@@ -127,7 +136,10 @@ namespace viafront3.Controllers
                 order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
             else
                 order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
-            this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
+            // send email: order created
+            var amountUnit = _settings.Markets[model.Market].AmountUnit;
+            await _emailSender.SendEmailMarketOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, amountUnit);
+            this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
             return RedirectToAction("Trade", new { market = model.Market });
         }
 
