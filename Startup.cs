@@ -50,6 +50,7 @@ namespace viafront3
         public int OrderBookLimit { get; set; } = 99;
         public string TakerFeeRate { get; set; } = "0.02";
         public string MakerFeeRate { get; set; } = "0.01";
+        public bool MarketOrderBidAmountMoney { get; set; } = false;
     }
 
     public class ChainAssetSettings

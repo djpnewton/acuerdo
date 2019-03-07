@@ -122,7 +122,11 @@ namespace viafront3.Controllers
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             //via.OrderDepthQuery(model.Market, )
-            var order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", bid_amount_money: false);
+            Order order;
+            if (_settings.MarketOrderBidAmountMoney)
+                order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
+            else
+                order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
             this.FlashSuccess(string.Format("Market Order Created ({0} - {1}, Amount: {2})", order.market, order.side, order.amount));
             return RedirectToAction("Trade", new { market = model.Market });
         }
