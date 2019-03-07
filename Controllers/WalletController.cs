@@ -124,57 +124,9 @@ namespace viafront3.Controllers
             wallet.UpdateFromBlockchain();
             wallet.Save();
 
-            // get wallet transactions
             var chainAssetSettings = _walletProvider.ChainAssetSettings(asset);
-            var newlySeenTxs = 0;
-            var txs = wallet.GetAddrTransactions(addr.Address);
-            if (txs != null)
-                txs = txs.Where(t => t.Direction == WalletDirection.Incomming);
-            else
-                txs = new List<WalletTx>();
-            foreach (var tx in txs)
-                if (tx.Meta.Note != "seen")
-                {
-                    // send email: deposit detected
-                    wallet.SetNote(tx, "seen");
-                    newlySeenTxs += 1;
-                    await _emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
-                }
-            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
-            if (unackedTxs != null)
-                unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming && t.ChainTx.Confirmations >= chainAssetSettings.MinConf);
-            else
-                unackedTxs = new List<WalletTx>();
-            BigInteger newDeposits = 0;
-            foreach (var tx in unackedTxs)
-            {
-                newDeposits += tx.ChainTx.Amount;
-                // send email: deposit confirmed
-                await _emailSender.SendEmailChainDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
-            }
-            var newDepositsHuman = wallet.AmountToString(newDeposits);
-
-            // ack txs and save wallet
-            IEnumerable<WalletTx> justAckedTxs = unackedTxs;
-            if (unackedTxs.Count() > 0)
-            {
-                justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
-                wallet.AcknowledgeTransactions(user.Id, unackedTxs);
-                wallet.Save();
-            }
-            else if (newlySeenTxs > 0)
-                wallet.Save();
-
-            // register new deposits with the exchange backend
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            foreach (var tx in justAckedTxs)
-            {
-                var amount = wallet.AmountToString(tx.ChainTx.Amount);
-                var source = new Dictionary<string, object>();
-                source["txid"] = tx.ChainTx.TxId;
-                var businessId = tx.Meta.Id;
-                via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
-            } 
+            var addrTxs = await Utils.CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(_emailSender, _settings, asset, wallet, chainAssetSettings, user, addr);
+            var newDepositsHuman = wallet.AmountToString(addrTxs.NewDeposits);
 
             var model = new TransactionCheckViewModel
             {
@@ -184,9 +136,9 @@ namespace viafront3.Controllers
                 ChainAssetSettings = chainAssetSettings,
                 DepositAddress = addr.Address,
                 Wallet = wallet,
-                TransactionsIncomming = txs,
-                NewTransactionsIncomming = justAckedTxs,
-                NewDeposits = newDeposits,
+                TransactionsIncomming = addrTxs.IncommingTxs,
+                NewTransactionsIncomming = addrTxs.JustAckedTxs,
+                NewDeposits = addrTxs.NewDeposits,
                 NewDepositsHuman = newDepositsHuman,
             };
 

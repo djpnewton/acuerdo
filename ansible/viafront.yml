@@ -152,14 +152,14 @@
         env: yes
         value: /bin/bash
 
-    - name: copy the zapd_balance.sh using the template module
+    - name: copy the deposit and withdrawal script
       template:
-        src: templates/process_withdrawals.sh
-        dest: /opt/viafront/process_withdrawals.sh
+        src: templates/process_deposits_and_withdrawals.sh
+        dest: /opt/viafront/process_deposits_and_withdrawals.sh
         mode: 0755
 
-    - name: run the withdrawal script
+    - name: run the deposit and withdrawal script
       cron:
-        name: viafront withdrawal script
+        name: viafront deposits and withdrawal script
         minute: "*/10"
-        job: /opt/viafront/process_withdrawals.sh
+        job: /opt/viafront/process_deposits_and_withdrawals.sh

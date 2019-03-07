@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Numerics;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -228,6 +229,111 @@ namespace viafront3
             var spends = wallet.PendingSpendsGet(null, new PendingSpendState[]{ PendingSpendState.Pending, PendingSpendState.Error });
             foreach (var spend in spends)
                 Console.WriteLine($"SpendCode: {spend.SpendCode}, Date: {spend.Date}, Amount: {spend.Amount}, To: {spend.To}, State: {spend.State}");
+        }
+
+        public struct AddressIncommingTxs
+        {
+            public IEnumerable<WalletTx> IncommingTxs;
+            public List<WalletTx> NewlySeenTxs;
+            public IEnumerable<WalletTx> JustAckedTxs;
+            public BigInteger NewDeposits;
+        }
+
+        public static async Task<AddressIncommingTxs> CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(IEmailSender emailSender, ExchangeSettings settings, string asset, IWallet wallet, ChainAssetSettings chainAssetSettings, ApplicationUser user, WalletAddr addr)
+        {
+            // create and test backend connection
+            var via = new ViaJsonRpc(settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            via.BalanceQuery(1);
+
+            // get wallet transactions
+            var newlySeenTxs = new List<WalletTx>();
+            var incommingTxs = wallet.GetAddrTransactions(addr.Address);
+            if (incommingTxs != null)
+                incommingTxs = incommingTxs.Where(t => t.Direction == WalletDirection.Incomming);
+            else
+                incommingTxs = new List<WalletTx>();
+            foreach (var tx in incommingTxs)
+                if (tx.Meta.Note != "seen")
+                {
+                    // send email: deposit detected
+                    wallet.SetNote(tx, "seen");
+                    newlySeenTxs.Add(tx);
+                    await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+                }
+            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
+            if (unackedTxs != null)
+                unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming && t.ChainTx.Confirmations >= chainAssetSettings.MinConf);
+            else
+                unackedTxs = new List<WalletTx>();
+            BigInteger newDeposits = 0;
+            foreach (var tx in unackedTxs)
+            {
+                newDeposits += tx.ChainTx.Amount;
+                // send email: deposit confirmed
+                await emailSender.SendEmailChainDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+            }
+
+            // ack txs and save wallet
+            IEnumerable<WalletTx> justAckedTxs = unackedTxs;
+            if (unackedTxs.Any())
+            {
+                justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
+                wallet.AcknowledgeTransactions(user.Id, unackedTxs);
+                wallet.Save();
+            }
+            else if (newlySeenTxs.Any())
+                wallet.Save();
+
+            // register new deposits with the exchange backend
+            foreach (var tx in justAckedTxs)
+            {
+                var amount = wallet.AmountToString(tx.ChainTx.Amount);
+                var source = new Dictionary<string, object>();
+                source["txid"] = tx.ChainTx.TxId;
+                var businessId = tx.Meta.Id;
+                via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
+            }
+
+            return new AddressIncommingTxs { IncommingTxs=incommingTxs, NewlySeenTxs=newlySeenTxs, JustAckedTxs=justAckedTxs, NewDeposits=newDeposits };
+        }
+
+        public static void CheckChainDeposits(IServiceProvider serviceProvider, string asset)
+        {
+            // get exchange settings
+            var settings = serviceProvider.GetRequiredService<IOptions<ExchangeSettings>>().Value;
+
+            // get wallet
+            asset = asset.ToUpper();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var wallet = walletProvider.GetChain(asset);
+            var assetSettings = walletProvider.ChainAssetSettings(asset);
+
+            // update wallet
+            wallet.UpdateFromBlockchain();
+            wallet.Save();
+
+            // get the user manager & email sender
+            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+
+            // update for each user
+            foreach (var user in userManager.Users)
+            {
+                var addrs = wallet.GetAddresses(user.Id);
+                if (addrs != null && addrs.Any())
+                {
+                    user.EnsureExchangePresent(context);
+                    var addr = addrs.First();
+                    var task = CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr);
+                    task.Wait();
+                    var addrTxs = task.Result;
+                    foreach (var tx in addrTxs.NewlySeenTxs)
+                        Console.WriteLine($"{user.Email}: new tx: {tx}");
+                    foreach (var tx in addrTxs.JustAckedTxs)
+                        Console.WriteLine($"{user.Email}: confirmed tx: {tx}");
+                }
+            }
         }
 
         public static string CreateToken(int chars = 16)
