@@ -1,12 +1,12 @@
 [Unit]
-Description=viafront
+Description=viafront order emails
 After=network.target
 
 [Service]
 User=viafront
 Group=viafront
 
-ExecStart=/bin/bash -c "cd /opt/viafront; {{dotnet_run_env}};  dotnet bin/Debug/netcoreapp2.1/viafront3.dll --urls http://localhost:5000"
+ExecStart=/bin/bash -c "cd /opt/viafront; {{dotnet_run_env}};  dotnet bin/Debug/netcoreapp2.1/viafront3.dll console kafka_order_updates"
 
 Restart=always
 PrivateTmp=true

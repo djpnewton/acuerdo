@@ -63,6 +63,12 @@
         regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.2(:8090")'
         replace: '\1{{backend_host}}\2'
 
+    - name: set kafka host
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("KafkaHost": ")127\.0\.0\.1(:9092")'
+        replace: '\1{{backend_host}}\2'
+
     - name: set waves node url
       replace:
         path: /opt/viafront/appsettings.json
@@ -98,6 +104,17 @@
         state: stopped
         enabled: no
 
+    - name: copy viafront_order_emails.service
+      template:
+        src: templates/viafront_order_emails.service
+        dest: /etc/systemd/system/viafront_order_emails.service
+
+    - name: stop viafront_order_emails service
+      service: 
+        name: viafront_order_emails
+        state: stopped
+        enabled: no
+
     - name: install npm & node
       action: apt pkg={{item}} state=installed
       with_items:
@@ -111,6 +128,11 @@
 
     - name: dotnet restore packages 
       shell: cd /opt/viafront; dotnet restore;
+      become: yes
+      become_user: viafront
+
+    - name: dotnet build
+      shell: cd /opt/viafront; dotnet build;
       become: yes
       become_user: viafront
 
@@ -143,6 +165,12 @@
     - name: start viafront service
       service: 
         name: viafront
+        state: started
+        enabled: yes
+
+    - name: start viafront_order_emails service
+      service: 
+        name: viafront_order_emails
         state: started
         enabled: yes
 

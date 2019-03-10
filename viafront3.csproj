@@ -13,10 +13,12 @@
 
   <ItemGroup>
     <PackageReference Include="BuildBundlerMinifier" Version="2.6.362" />
+    <PackageReference Include="Confluent.Kafka" Version="1.0.0-beta3" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.1.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="2.2.0" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="MySqlConnector" Version="0.47.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="2.1.4" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="1.1.0" />
     <PackageReference Include="commandlineparser" Version="2.4.3" />

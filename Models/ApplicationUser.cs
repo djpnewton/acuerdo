@@ -62,6 +62,14 @@ namespace viafront3.Models
             }
             return false;
         }
+
+        public static ApplicationUser GetUserFromExchangeId(ApplicationDbContext context, UserManager<ApplicationUser> userManager, int exchangeId)
+        {
+            var exch = context.Exchange.SingleOrDefault(e => e.Id == exchangeId);
+            if (exch != null)
+                return userManager.Users.SingleOrDefault(u => u.Id == exch.ApplicationUserId);
+            return null;
+        }
     }
 
     public class Exchange

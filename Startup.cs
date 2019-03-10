@@ -45,6 +45,7 @@ namespace viafront3
         public string AccessHttpUrl { get; set; } = "http://localhost:8080";
         public string AccessWsUrl { get; set; } = "ws://localhost:8090";
         public string AccessWsIp { get; set; } = "127.0.0.1";
+        public string KafkaHost { get; set; } = "127.0.0.1:9092";
         public Dictionary<string, AssetSettings> Assets { get; set; } = new Dictionary<string, AssetSettings>();
         public Dictionary<string, MarketSettings> Markets { get; set; } = new Dictionary<string, MarketSettings>();
         public int OrderBookLimit { get; set; } = 99;

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
 using viafront3.Models.TradeViewModels;
-using viafront3.Services;
 using viafront3.Data;
 using via_jsonrpc;
 
@@ -17,16 +16,11 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class TradeController : BaseSettingsController
     {
-        private readonly IEmailSender _emailSender;
-
         public TradeController(
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings,
-          IEmailSender emailSender) : base(userManager, context, settings)
-        {
-            _emailSender = emailSender;
-        }
+          IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
+        { }
 
         public IActionResult Index()
         {
@@ -75,7 +69,7 @@ namespace viafront3.Controllers
             var amount = decimal.Parse(model.Amount);
             var amountInterval = decimal.Parse(_settings.Markets[model.Market].AmountInterval);
             // check amount is greater then amountInterval
-            if (amount <= amountInterval)
+            if (amount < amountInterval)
                 return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Amount is less then {amountInterval}"));
             // check amonut is a multiple of the amount interval
             if ((amount / amountInterval) % 1 != 0)
@@ -89,7 +83,7 @@ namespace viafront3.Controllers
                 var price = decimal.Parse(model.Price);
                 var priceInterval = decimal.Parse(_settings.Markets[model.Market].PriceInterval);
                 // check price is greater then priceInterval
-                if (price <= priceInterval)
+                if (price < priceInterval)
                     return new Tuple<bool, IActionResult>(false, FlashErrorAndRedirect("Trade", model.Market, $"Price is less then {priceInterval}"));
                 // check price is a multiple of the price interval
                 if ((price / priceInterval) % 1 != 0)
@@ -114,7 +108,6 @@ namespace viafront3.Controllers
             // send email: order created
             var amountUnit = _settings.Markets[model.Market].AmountUnit;
             var priceUnit = _settings.Markets[model.Market].PriceUnit;
-            await _emailSender.SendEmailLimitOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, amountUnit, order.price, priceUnit);
             this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
             return RedirectToAction("Trade", new { market = model.Market });
         }
@@ -138,7 +131,6 @@ namespace viafront3.Controllers
                 order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
             // send email: order created
             var amountUnit = _settings.Markets[model.Market].AmountUnit;
-            await _emailSender.SendEmailMarketOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, amountUnit);
             this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
             return RedirectToAction("Trade", new { market = model.Market });
         }

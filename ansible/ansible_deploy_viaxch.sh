@@ -41,6 +41,7 @@ VAGRANT=false
 # set deploy variables for production
 DEPLOY_HOST=backend.bronze.exchange
 FRONTEND_HOST=internal.bronze.exchange
+KAFKA_ADVERTISED_LISTENER=backend-internal.bronze.exchange
 DEPLOY_USER=root
 TESTNET=
 # set deploy variables for test
@@ -48,6 +49,7 @@ if [[ ( $DEPLOY_TYPE == "test" ) ]]
 then 
     DEPLOY_HOST=backend.test.bronze.exchange
     FRONTEND_HOST=test-internal.bronze.exchange
+    KAFKA_ADVERTISED_LISTENER=backend-internal.test.bronze.exchange
     DEPLOY_USER=root
     TESTNET=true
 fi 
@@ -94,6 +96,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST mysql_host=$MYSQL_HOST redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST mysql_host=$MYSQL_HOST redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi

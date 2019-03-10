@@ -37,6 +37,24 @@
             }
         },
         {
+            "name": ".NET Core Launch (kafka order updates)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceRoot}/bin/Debug/netcoreapp2.1/viafront3.dll",
+            "args": ["console", "kafka_order_updates"],
+            "cwd": "${workspaceRoot}",
+            "stopAtEntry": false,
+            "internalConsoleOptions": "openOnSessionStart",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceRoot}/Views"
+            }
+        },
+        {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
