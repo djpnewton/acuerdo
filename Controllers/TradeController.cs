@@ -102,14 +102,26 @@ namespace viafront3.Controllers
                 return result.Item2;
 
             var user = await GetUser(required: true);
-            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, model.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
-            // send email: order created
-            var amountUnit = _settings.Markets[model.Market].AmountUnit;
-            var priceUnit = _settings.Markets[model.Market].PriceUnit;
-            this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
-            return RedirectToAction("Trade", new { market = model.Market });
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, model.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
+                // send email: order created
+                var amountUnit = _settings.Markets[model.Market].AmountUnit;
+                var priceUnit = _settings.Markets[model.Market].PriceUnit;
+                this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
+                return RedirectToAction("Trade", new { market = model.Market });
+            }
+            catch (ViaJsonException ex)
+            {
+                if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
+                {
+                    this.FlashSuccess($"Limit Order Failed (balance too small)");
+                    return RedirectToAction("Trade", new { market = model.Market });
+                }
+                throw;
+            }
         }
 
         [ValidateAntiForgeryToken]
@@ -121,18 +133,34 @@ namespace viafront3.Controllers
                 return result.Item2;
 
             var user = await GetUser(required: true);
-            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            //via.OrderDepthQuery(model.Market, )
-            Order order;
-            if (_settings.MarketOrderBidAmountMoney)
-                order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
-            else
-                order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
-            // send email: order created
-            var amountUnit = _settings.Markets[model.Market].AmountUnit;
-            this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
-            return RedirectToAction("Trade", new { market = model.Market });
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                Order order;
+                if (_settings.MarketOrderBidAmountMoney)
+                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
+                else
+                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, model.Side, model.Amount, _settings.TakerFeeRate, "viafront");
+                // send email: order created
+                var amountUnit = _settings.Markets[model.Market].AmountUnit;
+                this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
+                return RedirectToAction("Trade", new { market = model.Market });
+            }
+            catch (ViaJsonException ex)
+            {
+                if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
+                {
+                    this.FlashSuccess($"Market Order Failed (balance too small)");
+                    return RedirectToAction("Trade", new { market = model.Market });
+                }
+                if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
+                {
+                    this.FlashSuccess($"Market Order Failed (insufficient market depth)");
+                    return RedirectToAction("Trade", new { market = model.Market });
+                }
+                throw;
+            }
         }
 
         [ValidateAntiForgeryToken]
