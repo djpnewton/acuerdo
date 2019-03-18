@@ -34,9 +34,6 @@ namespace viafront3.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            if (user.EnsureExchangePresent(_context))
-                _context.SaveChanges();
-
             return user;
         }
 

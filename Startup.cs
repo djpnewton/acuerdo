@@ -95,7 +95,8 @@ namespace viafront3
             services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseMySql(Configuration.GetConnectionString("DefaultConnection")));
+                options.UseLazyLoadingProxies()
+                       .UseMySql(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()

@@ -12,24 +12,7 @@ namespace viafront3.Models
     // Add profile data for application users by adding properties to the ApplicationUser class
     public class ApplicationUser : IdentityUser
     {
-        public Exchange Exchange{ get; set; }
-
-        public void LoadExchange(ApplicationDbContext context)
-        {
-            context.Entry(this).Reference(u => u.Exchange).Load();
-        }
-
-        public bool EnsureExchangePresent(ApplicationDbContext context)
-        {
-            LoadExchange(context);
-            if (Exchange == null)
-            {
-                var exch = new Exchange{ ApplicationUserId=Id };
-                context.Add(exch);
-                return true;
-            }
-            return false;
-        }
+        public virtual Exchange Exchange{ get; set; }
 
         public bool EnsureBackendTablesPresent(ILogger logger, MySqlSettings settings)
         {

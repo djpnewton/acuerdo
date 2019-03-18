@@ -245,8 +245,6 @@ namespace viafront3.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     _logger.LogInformation("User created a new account with password.");
 
-                    if (user.EnsureExchangePresent(_context))
-                        _context.SaveChanges();
                     if (!user.EnsureBackendTablesPresent(_logger, _settings.MySql))
                         _logger.LogError("Failed to ensure backend tables present");
 

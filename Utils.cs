@@ -140,7 +140,6 @@ namespace viafront3
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             var user = await userManager.FindByIdAsync(tx.Tag.Tag);
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            user.EnsureExchangePresent(context);
 
             // test backend connection (get user balance)
             var settings = serviceProvider.GetRequiredService<IOptions<ExchangeSettings>>();
@@ -323,7 +322,6 @@ namespace viafront3
                 var addrs = wallet.GetAddresses(user.Id);
                 if (addrs != null && addrs.Any())
                 {
-                    user.EnsureExchangePresent(context);
                     var addr = addrs.First();
                     var task = CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr);
                     task.Wait();

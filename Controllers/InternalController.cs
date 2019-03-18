@@ -169,7 +169,6 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
             var userInspect = _userManager.FindByIdAsync(id).Result;
-            userInspect.EnsureExchangePresent(_context);
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balances = via.BalanceQuery(userInspect.Exchange.Id);
@@ -188,7 +187,6 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
             var userInspect = _userManager.FindByIdAsync(id).Result;
-            userInspect.EnsureExchangePresent(_context);
 
             ViewData["userid"] = id;
             return View(TradeViewModel.Construct(user, userInspect, market, _settings));
@@ -246,7 +244,6 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
             var userInspect = _userManager.FindByIdAsync(id).Result;
-            userInspect.EnsureExchangePresent(_context);
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
@@ -267,7 +264,6 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
             var userInspect = _userManager.FindByIdAsync(userid).Result;
-            userInspect.EnsureExchangePresent(_context);
 
             ViewData["userid"] = userid;
             return View(OrdersPendingViewModel.Construct(user, userInspect, market, _settings, offset, limit));
@@ -277,7 +273,6 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
             var userInspect = _userManager.FindByIdAsync(userid).Result;
-            userInspect.EnsureExchangePresent(_context);
 
             ViewData["userid"] = userid;
             return View(OrdersCompletedViewModel.Construct(user, userInspect, market, OrderSide.Bid, _settings, offset, limit));
@@ -287,8 +282,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
             var userInspect = _userManager.FindByIdAsync(userid).Result;
-            userInspect.EnsureExchangePresent(_context);
-
+            
             ViewData["userid"] = userid;
             return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
