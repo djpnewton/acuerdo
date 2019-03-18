@@ -105,7 +105,7 @@ namespace viafront3.Services
                 return emailSender.SendEmailAsync(email, "Market Order Cancelled",
                     $"Market Order Cancelled ({market} - {side}, Amount: {amount} {amountUnit}");
             else
-                return emailSender.SendEmailAsync(email, "Limit Order Completed",
+                return emailSender.SendEmailAsync(email, "Market Order Completed",
                     $"Market Order Completed ({market} - {side}, Amount: {amount} {amountUnit}");
         }
     }
