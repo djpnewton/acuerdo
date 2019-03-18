@@ -83,7 +83,7 @@
                         <input type="hidden" asp-for="Market" value="@market"/>
                         <input type="hidden" asp-for="OrderId" value="@item.id"/>
                         <button type="button" class="btn btn-warning btn-xs form-cancel-button"
-                        data-toggle="modal" data-target="#confirm-submit">Cancel</button>
+                        data-toggle="modal" data-target="#confirm-cancel-submit">Cancel</button>
                     </form>
                 </td>
                 }
@@ -116,7 +116,7 @@
     }
 }
 
-<div class="modal fade" id="confirm-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirm-cancel-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">

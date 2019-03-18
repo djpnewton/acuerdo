@@ -15,7 +15,7 @@
                 Limit Order
             </div>
             <div class="panel-body">
-                <form asp-controller="Trade" asp-action="LimitOrder" method="post">
+                <form asp-controller="Trade" asp-action="LimitOrder" method="post" id="limit-order-form">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Market" value="@Model.Market"/>
@@ -29,18 +29,18 @@
                     <div class="form-group">
                         <label for="form-limit-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" type="number" id="form-limit-amount" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
+                            <input class="form-control" type="number" id="form-limit-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
                             <span asp-validation-for="Amount" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="form-limit-price" class="col-2 col-form-label">Price (@Model.Settings.PriceUnit, min @Model.Settings.PriceInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" type="number" id="form-limit-price" asp-for="Price" data-val="true" data-val-number="The Price field is not a valid number." data-val-required="The Price field is required.">
+                            <input class="form-control" type="number" id="form-limit-price" x-unit="@Model.Settings.PriceUnit" asp-for="Price" data-val="true" data-val-number="The Price field is not a valid number." data-val-required="The Price field is required.">
                             <span asp-validation-for="Price" class="text-danger"></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button type="button" class="btn btn-default form-create-button">Submit</button>
                 </form>
             </div>
         </div>
@@ -51,7 +51,7 @@
                 Market Order
             </div>
             <div class="panel-body">
-                <form asp-controller="Trade" asp-action="MarketOrder" method="post">
+                <form asp-controller="Trade" asp-action="MarketOrder" method="post" id="market-order-form">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     @Html.AntiForgeryToken()
                     <input type="hidden" asp-for="Market" value="@Model.Market"/>
@@ -65,11 +65,11 @@
                     <div class="form-group">
                         <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" type="number" id="form-market-amount" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
+                            <input class="form-control" type="number" id="form-market-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Amount" data-val="true" data-val-number="The Amount field is not a valid number." data-val-required="The Amount field is required.">
                             <span asp-validation-for="Amount" class="text-danger"></span>
                         </div>
                     </div>
-                    <button type="submit" class="btn btn-default">Submit</button>
+                    <button type="button" class="btn btn-default form-create-button">Submit</button>
                 </form>
             </div>
         </div>
@@ -131,8 +131,31 @@
     </div>
 </div>
 
+<div class="modal fade" id="confirm-order-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Order Creation
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to create the following order?
+                </p>
+                <p id="modal-order-create-p">
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-creation" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+    @await Html.PartialAsync("_OrderCreationScriptPartial")
     @await Html.PartialAsync("_OrderCancellationScriptPartial")
 }

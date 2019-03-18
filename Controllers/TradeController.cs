@@ -117,7 +117,7 @@ namespace viafront3.Controllers
             {
                 if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
                 {
-                    this.FlashSuccess($"Limit Order Failed (balance too small)");
+                    this.FlashError($"Limit Order Failed (balance too small)");
                     return RedirectToAction("Trade", new { market = model.Market });
                 }
                 throw;
@@ -151,12 +151,12 @@ namespace viafront3.Controllers
             {
                 if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
                 {
-                    this.FlashSuccess($"Market Order Failed (balance too small)");
+                    this.FlashError($"Market Order Failed (balance too small)");
                     return RedirectToAction("Trade", new { market = model.Market });
                 }
                 if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
                 {
-                    this.FlashSuccess($"Market Order Failed (insufficient market depth)");
+                    this.FlashError($"Market Order Failed (insufficient market depth)");
                     return RedirectToAction("Trade", new { market = model.Market });
                 }
                 throw;
