@@ -3,7 +3,7 @@
 set -e
 
 cd /opt/viafront
-bin="dotnet bin/Debug/netcoreapp2.1/viafront3.dll"
+bin="dotnet bin/Debug/netcoreapp2.2/viafront3.dll"
 log_deposits=/opt/viafront/deposits.log
 log_withdrawals=/opt/viafront/withdraws.log
 date >> $log_deposits
