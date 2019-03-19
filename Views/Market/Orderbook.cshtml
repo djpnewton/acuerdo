@@ -13,70 +13,7 @@
 <h4>@ViewData["Title"] - @Model.MarketNice</h4>
 
 <div class="row">
-    <div class="col-md-6">
-        <h4>Bid</h4>
-        <table class="table table-bordered table-responsive table-hover">
-            <tr>
-                <th class="pad-decimals">
-                    Price
-                </th>
-                <th class="pad-decimals">
-                    Amount
-                </th>
-            </tr>
-            <tbody>@{
-                foreach (var item in Model.OrderDepth.bids)
-                {
-                    <tr>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @item.ElementAt(0)
-                            </span>
-                            &nbsp;@Model.PriceUnit
-                        </td>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @item.ElementAt(1)
-                            </span>
-                            &nbsp;@Model.AmountUnit
-                        </td>
-                    </tr>
-                }
-            }</tbody>
-        </table>
-    </div>
-    <div class="col-md-6">
-        <h4>Ask</h4>
-        <table class="table table-bordered table-responsive table-hover">
-            <tr>
-                <th class="pad-decimals">
-                    Price
-                </th>
-                <th class="pad-decimals">
-                    Amount
-                </th>
-            </tr>
-            <tbody>@{
-                foreach (var item in Model.OrderDepth.asks)
-                {
-                    <tr>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @item.ElementAt(0)
-                            </span>
-                            &nbsp;@Model.PriceUnit
-                        </td>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @item.ElementAt(1)
-                            </span>
-                            &nbsp;@Model.AmountUnit
-                        </td>
-                    </tr>
-                }
-            }</tbody>
-        </table>
-    </div>
+    @Html.Partial("_OrderbookPartial", Model.OrderBook)
 </div>
 
 <div class="row">

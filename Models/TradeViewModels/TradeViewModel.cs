@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using viafront3.Models.MarketViewModels;
 using via_jsonrpc;
 
 namespace viafront3.Models.TradeViewModels
@@ -92,6 +93,8 @@ namespace viafront3.Models.TradeViewModels
 
     public class TradeViewModel : BaseTradeViewModel
     {
+        public OrderbookPartialViewModel OrderBook { get; set; }
+
         public BalancesPartialViewModel Balances { get; set; }
 
         public OrdersPendingPartialViewModel OrdersPending { get; set; }
@@ -115,6 +118,14 @@ namespace viafront3.Models.TradeViewModels
             var bidOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, 0, 10, OrderSide.Bid);
             var askOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, 0, 10, OrderSide.Ask);
 
+            var orderDepth = via.OrderDepthQuery(market, settings.OrderBookLimit, settings.Markets[market].PriceInterval);
+            var ob = new OrderbookPartialViewModel
+            {
+                AmountUnit = settings.Markets[market].AmountUnit,
+                PriceUnit = settings.Markets[market].PriceUnit,
+                OrderDepth = orderDepth
+            };
+
             var model = new TradeViewModel
             {
                 User = loggedInUser,
@@ -122,6 +133,7 @@ namespace viafront3.Models.TradeViewModels
                 MarketNice = string.Format("{0}/{1}", settings.Markets[market].AmountUnit, settings.Markets[market].PriceUnit),
                 AssetSettings = settings.Assets,
                 Settings = settings.Markets[market],
+                OrderBook = ob,
                 Balances = new BalancesPartialViewModel{Balances=balances},
                 OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
                 BidOrdersCompleted = bidOrdersCompleted,

@@ -34,14 +34,18 @@ namespace viafront3.Controllers
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var orderDepth = via.OrderDepthQuery(market, _settings.OrderBookLimit, _settings.Markets[market].PriceInterval);
 
+            var ob = new OrderbookPartialViewModel
+            {
+                AmountUnit = _settings.Markets[market].AmountUnit,
+                PriceUnit = _settings.Markets[market].PriceUnit,
+                OrderDepth = orderDepth
+            };
             var model = new OrderbookViewModel
             {
                 User = GetUser().Result,
                 Market = market,
                 MarketNice = string.Format("{0}/{1}", _settings.Markets[market].AmountUnit, _settings.Markets[market].PriceUnit),
-                AmountUnit = _settings.Markets[market].AmountUnit,
-                PriceUnit = _settings.Markets[market].PriceUnit,
-                OrderDepth = orderDepth
+                OrderBook = ob
             };
 
             return View(model);

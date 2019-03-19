@@ -13,6 +13,11 @@ namespace viafront3.Models.MarketViewModels
 
         public string MarketNice { get; set; }
 
+        public OrderbookPartialViewModel OrderBook { get; set; }
+    }
+
+    public class OrderbookPartialViewModel
+    {
         public string AmountUnit { get; set; }
 
         public string PriceUnit { get; set; }
