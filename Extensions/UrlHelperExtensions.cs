@@ -25,5 +25,23 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { userId, code },
                 protocol: scheme);
         }
+
+        public static string AccountCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
+        {
+            return urlHelper.Action(
+                action: nameof(AccountController.ConfirmAccountCreation),
+                controller: "Account",
+                values: new { token },
+                protocol: scheme);
+        }
+
+        public static string DeviceCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
+        {
+            return urlHelper.Action(
+                action: nameof(AccountController.ConfirmDeviceCreation),
+                controller: "Account",
+                values: new { token },
+                protocol: scheme);
+        }
     }
 }

@@ -108,5 +108,17 @@ namespace viafront3.Services
                 return emailSender.SendEmailAsync(email, "Market Order Completed",
                     $"Market Order Completed ({market} - {side}, Amount: {amount} {amountUnit}");
         }
+
+        public static Task SendEmailApiAccountCreationRequest(this IEmailSender emailSender, string email, string link)
+        {
+            return emailSender.SendEmailAsync(email, "Confirm your account",
+                $"Someone has requested to create an account for this email address. Only click the link if it was you who created this request.<br/>Confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
+        }
+
+        public static Task SendEmailApiDeviceCreationRequest(this IEmailSender emailSender, string email, string link)
+        {
+            return emailSender.SendEmailAsync(email, "Confirm device creation",
+                $"Someone has requested to create an device for your account. Only click the link if it was you who created this request.<br/>Confirm your new device creation by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
+        }
     }
 }

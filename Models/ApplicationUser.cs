@@ -12,7 +12,8 @@ namespace viafront3.Models
     // Add profile data for application users by adding properties to the ApplicationUser class
     public class ApplicationUser : IdentityUser
     {
-        public virtual Exchange Exchange{ get; set; }
+        public virtual Exchange Exchange { get; set; }
+        public virtual List<Device> Devices { get; set; }
 
         public bool EnsureBackendTablesPresent(ILogger logger, MySqlSettings settings)
         {
@@ -59,5 +60,39 @@ namespace viafront3.Models
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }
+    }
+
+    public class Device
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public int CreationRequestId { get; set; }
+        public string Name { get; set; }
+        public string DeviceKey { get; set; }
+        public string DeviceSecret { get; set; }
+        public long Nonce { get; set; }
+    }
+
+    public class AccountCreationRequest
+    {
+        public int Id { get; set; }
+        public long Date { get; set; }
+        public string Token { get; set; }
+        public string Secret { get; set; }
+        public bool Completed { get; set; }
+        public string RequestedEmail { get; set; }
+        public string RequestedPassword { get; set; }
+        public string RequestedDeviceName { get; set; }
+    }
+
+    public class DeviceCreationRequest
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public long Date { get; set; }
+        public string Token { get; set; }
+        public string Secret { get; set; }
+        public bool Completed { get; set; }
+        public string RequestedDeviceName { get; set; }
     }
 }

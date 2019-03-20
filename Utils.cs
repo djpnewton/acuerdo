@@ -32,7 +32,12 @@ namespace viafront3
             {
                 var roleExist = await roleManager.RoleExistsAsync(roleName);
                 if (!roleExist)
+                {
+                    Console.WriteLine($"Creating {roleName}");
                     await roleManager.CreateAsync(new IdentityRole(roleName));
+                }
+                else
+                    Console.WriteLine($"{roleName} exists");
             }
         }
 

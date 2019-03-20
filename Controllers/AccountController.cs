@@ -365,11 +365,46 @@ namespace viafront3.Controllers
             if (result.Succeeded)
             {
                 var role = await _roleManager.FindByNameAsync(Utils.EmailConfirmedRole);
+                System.Diagnostics.Debug.Assert(role != null);
                 if (!await _userManager.IsInRoleAsync(user, role.Name))
                     await _userManager.AddToRoleAsync(user, role.Name);
             }
 
             return View(result.Succeeded ? "ConfirmEmail" : "Error", BaseViewModel());
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ConfirmAccountCreation(string token)
+        {
+            if (token == null)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token);
+            if (accountReq != null)
+            {
+                accountReq.Completed = true;
+                _context.AccountCreationRequests.Update(accountReq);
+                _context.SaveChanges();
+                return View(BaseViewModel());
+            }
+            return View("Error", BaseViewModel());
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public IActionResult ConfirmDeviceCreation(string token)
+        {
+            if (token == null)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == token);
+            if (deviceReq != null)
+            {
+                deviceReq.Completed = true;
+                _context.DeviceCreationRequests.Update(deviceReq);
+                _context.SaveChanges();
+                return View(BaseViewModel());
+            }
+            return View("Error", BaseViewModel());
         }
 
         [HttpGet]
