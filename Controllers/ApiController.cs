@@ -25,6 +25,7 @@ namespace viafront3.Controllers
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger _logger;
+        private readonly ApiSettings _apiSettings;
 
         public ApiController(
             UserManager<ApplicationUser> userManager,
@@ -33,12 +34,14 @@ namespace viafront3.Controllers
             IEmailSender emailSender,
             ILogger<AccountController> logger,
             IOptions<ExchangeSettings> settings,
+            IOptions<ApiSettings> apiSettings,
             RoleManager<IdentityRole> roleManager) : base(userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _logger = logger;
+            _apiSettings = apiSettings.Value;
         }
 
         [HttpPost]
@@ -46,15 +49,15 @@ namespace viafront3.Controllers
         {
             var existingUser = await _userManager.FindByEmailAsync(req.Email);
             if (existingUser != null)
-                return Forbid(); // TODO: leaks account existence
+                return new ApiToken { Token = Utils.CreateToken() }; // reply with fake token if user already exists (so robot cant test for user emails)
             var date = DateTimeOffset.Now.ToUnixTimeSeconds();
             var token = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
-            var accountReq = new AccountCreationRequest { Date = date, Token = token, Secret = secret, Completed = false,
-                RequestedEmail = req.Email, RequestedPassword = req.Password, RequestedDeviceName = req.DeviceName };
+            var accountReq = new AccountCreationRequest { ApplicationUserId = null, Date = date, Token = token, Secret = secret, Completed = false,
+                RequestedEmail = req.Email, RequestedDeviceName = req.DeviceName };
             _context.AccountCreationRequests.Add(accountReq);
             var callbackUrl = Url.AccountCreationConfirmationLink(token, Request.Scheme);
-            await _emailSender.SendEmailApiAccountCreationRequest(req.Email, callbackUrl);
+            await _emailSender.SendEmailApiAccountCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
             _context.SaveChanges();
             return new ApiToken { Token = token };
         }
@@ -64,41 +67,31 @@ namespace viafront3.Controllers
         {
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token.Token);
             if (accountReq == null)
-                return NotFound();
+                return new ApiDevice { Completed = false }; // fake reply if token not found (so robot cant test for user emails)
             if (!accountReq.Completed)
                 return new ApiDevice { Completed = false };
-            var device = _context.Devices.SingleOrDefault(d => d.CreationRequestId == accountReq.Id);
-            if (device != null)
-                return new ApiDevice { Completed = true };
-            // create new user
-            var user = new ApplicationUser { UserName = accountReq.RequestedEmail, Email = accountReq.RequestedEmail };
-            var result = await _userManager.CreateAsync(user, accountReq.RequestedPassword);
-            if (result.Succeeded)
-            {
-                // clear password in account creation request
-                accountReq.RequestedPassword = null;
-                _context.AccountCreationRequests.Update(accountReq);
-                // create new device
-                var deviceKey = Utils.CreateToken();
-                var deviceSecret = Utils.CreateToken(32);
-                device = new Device
-                { 
-                    ApplicationUserId = user.Id,
-                    CreationRequestId = accountReq.Id,
-                    Name = accountReq.RequestedDeviceName,
-                    DeviceKey = deviceKey,
-                    DeviceSecret = deviceSecret,
-                    Nonce = 0
-                };
-                _context.Devices.Add(device);
-                // save db and return connection details
-                _context.SaveChanges();
-                return new ApiDevice { Completed = true, DeviceKey = device.DeviceKey, DeviceSecret = device.DeviceSecret };
-            }
-            var msg = "";
-            foreach (var err in result.Errors)
-                msg += err.Description + " ";
-            return BadRequest(msg);
+            var user = await _userManager.FindByEmailAsync(accountReq.RequestedEmail);
+            if (user == null)
+                return new ApiDevice { Completed = false };
+            // check expiry
+            if (accountReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
+                return BadRequest("expired");
+            // create new device
+            var deviceKey = Utils.CreateToken();
+            var deviceSecret = Utils.CreateToken(32);
+            var device = new Device
+            { 
+                ApplicationUserId = accountReq.ApplicationUserId,
+                CreationRequestId = accountReq.Id,
+                Name = accountReq.RequestedDeviceName,
+                DeviceKey = deviceKey,
+                DeviceSecret = deviceSecret,
+                Nonce = 0
+            };
+            _context.Devices.Add(device);
+            // save db and return connection details
+            _context.SaveChanges();
+            return new ApiDevice { Completed = true, DeviceKey = device.DeviceKey, DeviceSecret = device.DeviceSecret };
         }
 
         [HttpPost]
@@ -106,7 +99,7 @@ namespace viafront3.Controllers
         {
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token.Token);
             if (accountReq == null)
-                return NotFound(); // TODO: leaks account existence
+                return Ok(); // fake reply if token not found (so robot cant test for user emails)
             _context.AccountCreationRequests.Remove(accountReq);
             _context.SaveChanges();
             return Ok();
@@ -117,7 +110,7 @@ namespace viafront3.Controllers
         {
             var user = await _userManager.FindByEmailAsync(req.Email);
             if (user == null)
-                return NotFound(); // TODO: leaks account existence
+                return new ApiToken { Token = Utils.CreateToken() }; // reply with fake token if user already exists (so robot cant test for user emails)
             var date = DateTimeOffset.Now.ToUnixTimeSeconds();
             var token = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
@@ -125,7 +118,7 @@ namespace viafront3.Controllers
                 RequestedDeviceName = req.DeviceName };
             _context.DeviceCreationRequests.Add(accountReq);
             var callbackUrl = Url.DeviceCreationConfirmationLink(token, Request.Scheme);
-            await _emailSender.SendEmailApiDeviceCreationRequest(req.Email, callbackUrl);
+            await _emailSender.SendEmailApiDeviceCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
             _context.SaveChanges();
             return new ApiToken { Token = token };       
         }
@@ -141,6 +134,9 @@ namespace viafront3.Controllers
             var device = _context.Devices.SingleOrDefault(d => d.CreationRequestId == deviceReq.Id);
             if (device != null)
                 return new ApiDevice { Completed = true };
+            // check expiry
+            if (deviceReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
+                return BadRequest("expired");
             // get user
             var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
             if (user == null)

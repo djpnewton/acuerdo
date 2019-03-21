@@ -129,6 +129,8 @@ namespace viafront3.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("ApplicationUserId");
+
                     b.Property<bool>("Completed");
 
                     b.Property<long>("Date");
@@ -136,8 +138,6 @@ namespace viafront3.Data.Migrations
                     b.Property<string>("RequestedDeviceName");
 
                     b.Property<string>("RequestedEmail");
-
-                    b.Property<string>("RequestedPassword");
 
                     b.Property<string>("Secret");
 

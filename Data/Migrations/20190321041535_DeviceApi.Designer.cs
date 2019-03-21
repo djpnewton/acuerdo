@@ -9,7 +9,7 @@ using viafront3.Data;
 namespace viafront3.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20190320053446_DeviceApi")]
+    [Migration("20190321041535_DeviceApi")]
     partial class DeviceApi
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -131,6 +131,8 @@ namespace viafront3.Data.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd();
 
+                    b.Property<string>("ApplicationUserId");
+
                     b.Property<bool>("Completed");
 
                     b.Property<long>("Date");
@@ -138,8 +140,6 @@ namespace viafront3.Data.Migrations
                     b.Property<string>("RequestedDeviceName");
 
                     b.Property<string>("RequestedEmail");
-
-                    b.Property<string>("RequestedPassword");
 
                     b.Property<string>("Secret");
 

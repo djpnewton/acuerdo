@@ -382,10 +382,44 @@ namespace viafront3.Controllers
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token);
             if (accountReq != null)
             {
+                var model = new ConfirmAccountCreationViewModel { Token = token };
                 accountReq.Completed = true;
                 _context.AccountCreationRequests.Update(accountReq);
                 _context.SaveChanges();
-                return View(BaseViewModel());
+                return View(model);
+            }
+            return View("Error", BaseViewModel());
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmAccountCreation(ConfirmAccountCreationViewModel model)
+        {
+            if (model.Token == null)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == model.Token);
+            if (accountReq != null)
+            {
+                // create new user
+                var user = new ApplicationUser { UserName = accountReq.RequestedEmail, Email = accountReq.RequestedEmail };
+                var result = await _userManager.CreateAsync(user, model.Password);
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("User created a new account with api.");
+
+                    accountReq.ApplicationUserId = user.Id;
+                    accountReq.Completed = true;
+                    _context.AccountCreationRequests.Update(accountReq);
+                    _context.SaveChanges();
+
+                    this.FlashSuccess("Account created");
+                    return RedirectToAction(nameof(HomeController.Index), "Home");
+                }
+                AddErrors(result);
+
+                // If we got this far, something failed, redisplay form
+                model.User = null;
+                return View(model);
             }
             return View("Error", BaseViewModel());
         }

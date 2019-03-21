@@ -77,6 +77,11 @@ namespace viafront3
         public string From { get; set; }
     }
 
+    public class ApiSettings
+    {
+        public int CreationExpiryMinutes { get; set; }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -93,6 +98,7 @@ namespace viafront3
             services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
             services.Configure<WalletSettings>(options => Configuration.GetSection("Wallet").Bind(options));
             services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));
+            services.Configure<ApiSettings>(options => Configuration.GetSection("Api").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()

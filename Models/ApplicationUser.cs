@@ -76,12 +76,12 @@ namespace viafront3.Models
     public class AccountCreationRequest
     {
         public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
         public long Date { get; set; }
         public string Token { get; set; }
         public string Secret { get; set; }
         public bool Completed { get; set; }
         public string RequestedEmail { get; set; }
-        public string RequestedPassword { get; set; }
         public string RequestedDeviceName { get; set; }
     }
 

@@ -13,12 +13,12 @@ namespace viafront3.Data.Migrations
                 {
                     Id = table.Column<int>(nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ApplicationUserId = table.Column<string>(nullable: true),
                     Date = table.Column<long>(nullable: false),
                     Token = table.Column<string>(nullable: true),
                     Secret = table.Column<string>(nullable: true),
                     Completed = table.Column<bool>(nullable: false),
                     RequestedEmail = table.Column<string>(nullable: true),
-                    RequestedPassword = table.Column<string>(nullable: true),
                     RequestedDeviceName = table.Column<string>(nullable: true)
                 },
                 constraints: table =>

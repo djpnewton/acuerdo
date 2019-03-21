@@ -20,7 +20,6 @@ def construct_parser():
 
     parser_acct_create = subparsers.add_parser("account_create", help="Create an account")
     parser_acct_create.add_argument("email", metavar="EMAIL", type=str, help="the email")
-    parser_acct_create.add_argument("password", metavar="PASSWORD", type=str, help="the password")
     parser_acct_create.add_argument("device_name", metavar="DEVICE_NAME", type=str, help="the name for the created device")
 
     parser_acct_create_status = subparsers.add_parser("account_create_status", help="Check an account creation request")
@@ -65,7 +64,7 @@ def check_request_status(r):
 
 def account_create(args):
     print(":: calling account create..")
-    r = req("AccountCreate", {"email": args.email, "password": args.password, "deviceName": args.device_name})
+    r = req("AccountCreate", {"email": args.email, "deviceName": args.device_name})
     check_request_status(r)
     token = r.json()["token"]
     print("token: %s" % token)
