@@ -1,10 +1,33 @@
-﻿@{
+﻿@model ConfirmDeviceCreationViewModel
+@{
     ViewData["Title"] = "Confirm device creation";
 }
 
 <h2>@ViewData["Title"]</h2>
-<div>
-    <p>
-        Thank you for confirming your device.
-    </p>
+
+<div class="row">
+    <div class="col-md-4">
+        <form method="post">
+            <h4>Confirm adding device (@Model.DeviceName) to your account.</h4>
+            <hr />
+            <div class="alert alert-warning">
+                Only complete this form if you initiated the device creation request. The new device will have access to your account.
+            </div>
+            <div asp-validation-summary="All" class="text-danger"></div>
+            <input type="hidden" asp-for="Token" />
+            <input type="hidden" asp-for="DeviceName" />
+            <input type="hidden" asp-for="TwoFactorRequired" />
+            @{
+                if (Model.TwoFactorRequired)
+                {
+            <div class="form-group">
+                <label asp-for="TwoFactorCode"></label>
+                <input asp-for="TwoFactorCode" class="form-control" />
+                <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
+            </div>
+                }
+            }
+            <button type="submit" class="btn btn-default">Confirm</button>
+        </form>
+    </div>
 </div>

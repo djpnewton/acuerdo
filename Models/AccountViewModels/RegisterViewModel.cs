@@ -33,4 +33,17 @@ namespace viafront3.Models.AccountViewModels
         [Required]
         public string Token { get; set; }    
     }
+
+    public class ConfirmDeviceCreationViewModel : BaseViewModel
+    {
+        [Required]
+        public string Token { get; set; } 
+        public string DeviceName { get; set; }
+
+        public bool TwoFactorRequired { get; set; }
+        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Text)]
+        [Display(Name = "Authenticator code")]
+        public string TwoFactorCode { get; set; }
+    }
 }

@@ -10,6 +10,9 @@
         <form method="post">
             <h4>Set a password for your new account.</h4>
             <hr />
+            <div class="alert alert-warning">
+                Only complete this form if you initiated the account creation request. The device that initiated it will have access to your account.
+            </div>
             <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="Token" />
             <div class="form-group">

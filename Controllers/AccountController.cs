@@ -368,9 +368,12 @@ namespace viafront3.Controllers
                 System.Diagnostics.Debug.Assert(role != null);
                 if (!await _userManager.IsInRoleAsync(user, role.Name))
                     await _userManager.AddToRoleAsync(user, role.Name);
+
+                return View(BaseViewModel());
             }
 
-            return View(result.Succeeded ? "ConfirmEmail" : "Error", BaseViewModel());
+            this.FlashError("Invalid email code");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet]
@@ -380,15 +383,14 @@ namespace viafront3.Controllers
             if (token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token);
-            if (accountReq != null)
+            if (accountReq != null && !accountReq.Completed)
             {
                 var model = new ConfirmAccountCreationViewModel { Token = token };
-                accountReq.Completed = true;
-                _context.AccountCreationRequests.Update(accountReq);
-                _context.SaveChanges();
                 return View(model);
             }
-            return View("Error", BaseViewModel());
+
+            this.FlashError("Invalid account code");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpPost]
@@ -398,7 +400,7 @@ namespace viafront3.Controllers
             if (model.Token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == model.Token);
-            if (accountReq != null)
+            if (accountReq != null && !accountReq.Completed)
             {
                 // create new user
                 var user = new ApplicationUser { UserName = accountReq.RequestedEmail, Email = accountReq.RequestedEmail };
@@ -421,24 +423,72 @@ namespace viafront3.Controllers
                 model.User = null;
                 return View(model);
             }
-            return View("Error", BaseViewModel());
+
+            this.FlashError("Invalid account code");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ConfirmDeviceCreation(string token)
+        public async Task<IActionResult> ConfirmDeviceCreation(string token)
         {
             if (token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == token);
-            if (deviceReq != null)
+            if (deviceReq != null && !deviceReq.Completed)
             {
+                var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
+                var model = new ConfirmDeviceCreationViewModel { Token = token, DeviceName = deviceReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
+                return View(model);
+            }
+
+            this.FlashError("Invalid device code");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmDeviceCreation(ConfirmDeviceCreationViewModel model)
+        {
+            if (model.Token == null)
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == model.Token);
+            if (deviceReq != null && !deviceReq.Completed)
+            {
+                // check 2fa authentication
+                var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
+                if (user.TwoFactorEnabled)
+                {
+                    var authenticated = false;
+                    if (model.TwoFactorCode == null)
+                        model.TwoFactorCode = "";
+                    var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                    var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+                    foreach (var provider in providers)
+                        if (await _userManager.VerifyTwoFactorTokenAsync(user, provider, authenticatorCode))
+                        {
+                            authenticated = true;
+                            break;
+                        }
+                    if (!authenticated)
+                    {
+                        this.FlashError($"Invalid two factor code");
+                        return View(model);     
+                    }
+                }
+
+                _logger.LogInformation("User confrimed a new device with api.");
+
                 deviceReq.Completed = true;
                 _context.DeviceCreationRequests.Update(deviceReq);
                 _context.SaveChanges();
-                return View(BaseViewModel());
+
+                this.FlashSuccess($"Device ({model.DeviceName}) confirmed");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
             }
-            return View("Error", BaseViewModel());
+
+            this.FlashError("Invalid device code");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet]
