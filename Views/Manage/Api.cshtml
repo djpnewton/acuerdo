@@ -1,0 +1,64 @@
+﻿@model ApiViewModel
+@{
+    ViewData["Title"] = "Api";
+    ViewData.AddActivePage(ManageNavPages.Api);
+}
+
+<h4>Your API device keys</h4>
+<div class="row">
+    <div class="col-md-6">
+        <table class="table table-condensed table-responsive table-hover">
+            <tr>
+                <th>Device Name</th>
+                <th>Device Key</th>
+            </tr>
+            <tbody>@{
+                foreach (var device in Model.Devices)
+                {
+                    <tr>
+                        <td>
+                            @device.Name
+                        </td>
+                        <td>
+                            @device.DeviceKey
+                        </td>
+                        <td>
+                            <form method="post" asp-action="ApiDelete" id="delete-device-form-@device.DeviceKey" x-device-name="@device.Name">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" asp-for="DeleteDeviceKey" value="@device.DeviceKey" />
+                                <button type="button" class="btn btn-warning btn-xs form-delete-button"
+                                data-toggle="modal" data-target="#confirm-delete-submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            }</tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Device Deletion
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to delete the following device?
+                </p>
+                <p id="modal-device-delete-p"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-deletion" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_DeviceDeletionScriptPartial")
+}

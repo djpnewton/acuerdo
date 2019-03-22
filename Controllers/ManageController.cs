@@ -408,6 +408,41 @@ namespace viafront3.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Api()
+        {
+            var user = await GetUser(required: true);
+
+            var model = new ApiViewModel
+            {
+                User = user,
+                Devices = _context.Devices.Where(d => d.ApplicationUserId == user.Id).ToList(),
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApiDelete(ApiViewModel model)
+        {
+            var user = await GetUser(required: true);
+
+            if (model.DeleteDeviceKey != null)
+            {
+                var device = _context.Devices.SingleOrDefault(d => d.DeviceKey == model.DeleteDeviceKey && d.ApplicationUserId == user.Id);
+                if (device != null)
+                {
+                    _context.Devices.Remove(device);
+                    _context.SaveChanges();
+                    this.FlashSuccess($"Deleted device ({device.Name})");
+                    return RedirectToAction(nameof(Api));
+                }
+            }
+
+            this.FlashError($"Failed to delete device");
+            return RedirectToAction(nameof(Api));
+        }
+
         #region Helpers
 
         private void AddErrors(IdentityResult result)
