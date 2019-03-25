@@ -443,6 +443,28 @@ namespace viafront3.Controllers
             return RedirectToAction(nameof(Api));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ApiCreate()
+        {
+            var user = await GetUser(required: true);
+
+            var model = new ApiCreateViewModel { User = user };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ApiCreate(ApiCreateViewModel model)
+        {
+            var user = await GetUser(required: true);
+
+            var device = Utils.CreateDevice(user, -1, model.DeviceName);
+            _context.Devices.Add(device);
+            _context.SaveChanges();
+            this.FlashSuccess($"Created device ({device.Name} - Key: {device.DeviceKey} - Secret: {device.DeviceSecret})");
+            return RedirectToAction(nameof(Api));
+        }
+
         #region Helpers
 
         private void AddErrors(IdentityResult result)

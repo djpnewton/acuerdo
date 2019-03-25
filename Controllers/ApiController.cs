@@ -142,17 +142,7 @@ namespace viafront3.Controllers
             if (user == null)
                 return BadRequest();
             // create new device
-            var deviceKey = Utils.CreateToken();
-            var deviceSecret = Utils.CreateToken(32);
-            device = new Device
-            { 
-                ApplicationUserId = user.Id,
-                CreationRequestId = deviceReq.Id,
-                Name = deviceReq.RequestedDeviceName,
-                DeviceKey = deviceKey,
-                DeviceSecret = deviceSecret,
-                Nonce = 0
-            };
+            device = Utils.CreateDevice(user, deviceReq.Id, deviceReq.RequestedDeviceName);
             _context.Devices.Add(device);
             // save db and return connection details
             _context.SaveChanges();

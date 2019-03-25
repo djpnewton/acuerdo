@@ -11,4 +11,10 @@ namespace viafront3.Models.ManageViewModels
         public IList<Device> Devices { get; set; }
         public string DeleteDeviceKey { get; set; }
     }
+
+    public class ApiCreateViewModel : BaseViewModel
+    {
+        [Required]
+        public string DeviceName { get; set; } 
+    }
 }

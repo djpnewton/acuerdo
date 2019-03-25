@@ -366,5 +366,20 @@ namespace viafront3
             }
             return decimalPlaces;
         }
+
+        public static Device CreateDevice(ApplicationUser user, int deviceRequestId, string deviceName)
+        {
+            var deviceKey = Utils.CreateToken();
+            var deviceSecret = Utils.CreateToken(32);
+            return new Device
+            { 
+                ApplicationUserId = user.Id,
+                CreationRequestId = deviceRequestId,
+                Name = deviceName,
+                DeviceKey = deviceKey,
+                DeviceSecret = deviceSecret,
+                Nonce = 0
+            };
+        }
     }
 }
