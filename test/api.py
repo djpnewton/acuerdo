@@ -7,6 +7,7 @@ import time
 import hmac
 import hashlib
 import base64
+import json
 
 URL_BASE = "http://localhost:5000/api/v1/"
 
@@ -70,10 +71,25 @@ def construct_parser():
 
     return parser
 
-def req(endpoint, params=None):
+def create_sig(device_key, device_secret, message):
+    _hmac = hmac.new(device_secret.encode('latin-1'), msg=message.encode('latin-1'), digestmod=hashlib.sha256)
+    signature = _hmac.digest()
+    signature = base64.b64encode(signature).decode("utf-8")
+    return signature
+
+def req(endpoint, params=None, device_key=None, device_secret=None):
+    if device_key:
+        if not params:
+            params = {}
+        params["nonce"] = int(time.time())
+        params["key"] = device_key
     url = URL_BASE + endpoint
     if params:
-        r = requests.post(url, json=params)
+        headers = {"Content-type": "application/json"}
+        body = json.dumps(params)
+        if device_key:
+            headers["X-Signature"] = create_sig(device_key, device_secret, body)
+        r = requests.post(url, headers=headers, data=body)
     else:
         r = requests.get(url)
     return r
@@ -127,25 +143,15 @@ def device_create_cancel(args):
     check_request_status(r)
     print("ok")
 
-def create_sig(args):
-    nonce = int(time.time())
-    message = str(nonce) + args.device_key
-    _hmac = hmac.new(args.device_secret.encode('latin-1'), msg=message.encode('latin-1'), digestmod=hashlib.sha256)
-    signature = _hmac.digest()
-    signature = base64.b64encode(signature).decode("utf-8")
-    return signature, nonce
-
 def device_destroy(args):
-    signature, nonce = create_sig(args)
     print(":: calling device destroy..")
-    r = req("DeviceDestroy", {"key": args.device_key, "signature": signature, "nonce": nonce})
+    r = req("DeviceDestroy", None, args.device_key, args.device_secret)
     check_request_status(r)
     print("ok")
 
 def device_validate(args):
-    signature, nonce = create_sig(args)
     print(":: calling device validate..")
-    r = req("DeviceValidate", {"key": args.device_key, "signature": signature, "nonce": nonce})
+    r = req("DeviceValidate", None, args.device_key, args.device_secret)
     check_request_status(r)
     print("ok")
 

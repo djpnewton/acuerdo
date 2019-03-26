@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.Internal;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
@@ -182,42 +185,56 @@ namespace viafront3.Controllers
             return ret;
         }
 
-        Device AuthDevice(string key, string signature, long nonce, out string error)
+        Device AuthDevice(string key, long nonce, out string error)
         {
             error = "";
-            // find device that matches key
-            var device = _context.Devices.SingleOrDefault(d => d.DeviceKey == key);
-            if (device == null)
+            // get auth header
+            var headerValue = Request.Headers["X-Signature"];
+            if (!headerValue.Any())
             {
                 error = "authentication failed";
                 return null;
             }
-            // check signature
-            var message = nonce.ToString() + key;
-            var ourSig = HMacWithSha256(device.DeviceSecret, message);
-            if (!CompareDigest(ourSig, signature))
+            var signature = headerValue.ToString();
+            // read raw body text
+            Request.EnableRewind();
+            Request.Body.Seek(0, System.IO.SeekOrigin.Begin);
+            using (var stream = new System.IO.StreamReader(HttpContext.Request.Body))
             {
-                error = "authentication failed";
-                return null;
+                string requestBody = stream.ReadToEnd();
+                // find device that matches key
+                var device = _context.Devices.SingleOrDefault(d => d.DeviceKey == key);
+                if (device == null)
+                {
+                    error = "authentication failed";
+                    return null;
+                }
+                // check signature
+                var ourSig = HMacWithSha256(device.DeviceSecret, requestBody);
+                if (!CompareDigest(ourSig, signature))
+                {
+                    error = "authentication failed";
+                    return null;
+                }
+                // check nonce
+                if (nonce <= device.Nonce)
+                {
+                    error = "old nonce";
+                    return null;
+                }
+                // update nonce in db
+                device.Nonce = nonce;
+                _context.Devices.Update(device);
+                _context.SaveChanges();
+                return device;
             }
-            // check nonce
-            if (nonce <= device.Nonce)
-            {
-                error = "old nonce";
-                return null;
-            }
-            // update nonce in db
-            device.Nonce = nonce;
-            _context.Devices.Update(device);
-            _context.SaveChanges();
-            return device;
         }
 
         [HttpPost]
         public IActionResult DeviceDestroy([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Signature, req.Nonce, out error);
+            var device = AuthDevice(req.Key, req.Nonce, out error);
             if (device == null)
                 return BadRequest(error);
             _context.Devices.Remove(device);
@@ -229,7 +246,7 @@ namespace viafront3.Controllers
         public IActionResult DeviceValidate([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Signature, req.Nonce, out error);
+            var device = AuthDevice(req.Key, req.Nonce, out error);
             if (device == null)
                 return BadRequest(error);
             return Ok();

@@ -31,7 +31,6 @@ namespace viafront3.Models.ApiViewModels
     public class ApiAuth
     {
         public String Key { get; set; }
-        public String Signature { get; set; }
         public long Nonce { get; set; }
     }
 
