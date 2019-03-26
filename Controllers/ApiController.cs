@@ -13,6 +13,7 @@ using viafront3.Models;
 using viafront3.Models.ApiViewModels;
 using viafront3.Data;
 using viafront3.Services;
+using via_jsonrpc;
 
 namespace viafront3.Controllers
 {
@@ -232,6 +233,123 @@ namespace viafront3.Controllers
             if (device == null)
                 return BadRequest(error);
             return Ok();
+        }
+
+        [HttpGet]
+        public ActionResult<ApiMarketList> MarketList() 
+        {
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var markets = via.MarketListQuery();
+                var model = new ApiMarketList { Markets = new List<string>() };
+                foreach (var market in markets)
+                    model.Markets.Add(market.name);
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiMarketStatus> MarketStatus([FromBody] ApiMarketPeriod market) 
+        {
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var marketStatus = via.MarketStatusQuery(market.Market, market.Period ?? 86400);
+                var model = new ApiMarketStatus
+                {
+                    Period = marketStatus.period,
+                    Open = marketStatus.open,
+                    Close = marketStatus.close,
+                    High = marketStatus.high,
+                    Low = marketStatus.low,
+                    Volume = marketStatus.volume,
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiMarketDetail> MarketDetail([FromBody] ApiMarket market) 
+        {
+            try
+            {
+                if (!_settings.Markets.ContainsKey(market.Market))
+                    return BadRequest("invalid request");
+                var marketSettings = _settings.Markets[market.Market];
+                var model = new ApiMarketDetail
+                {
+                    TakerFee = _settings.TakerFeeRate,
+                    MakerFee = _settings.MakerFeeRate,
+                    MinAmount = marketSettings.AmountInterval,
+                    TradeAsset = marketSettings.AmountUnit,
+                    PriceAsset = marketSettings.PriceUnit,
+                    TradeDecimals = marketSettings.AmountDecimals,
+                    PriceDecimals = marketSettings.PriceDecimals,
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiMarketDepthResponse> MarketDepth([FromBody] ApiMarketDepth market) 
+        {
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var orderDepth = via.OrderDepthQuery(market.Market, market.Limit ?? 20, market.Merge);
+                var model = new ApiMarketDepthResponse
+                {
+                    Asks = orderDepth.asks,
+                    Bids = orderDepth.bids,
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiMarketHistoryResponse> MarketHistory([FromBody] ApiMarketHistory market) 
+        {
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var history = via.MarketHistoryQuery(market.Market, market.Limit ?? 100, 0);
+                var model = new ApiMarketHistoryResponse { Trades = new List<ApiMarketTrade>() };
+                foreach (var trade in history)
+                {
+                    model.Trades.Add(new ApiMarketTrade {
+                        Date = (int)trade.time,
+                        Price = trade.price,
+                        Amount = trade.amount,
+                        Type = trade.type,
+                    });
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
