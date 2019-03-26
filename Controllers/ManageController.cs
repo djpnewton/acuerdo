@@ -448,7 +448,7 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            var model = new ApiCreateViewModel { User = user };
+            var model = new ApiCreateViewModel { User = user, TwoFactorRequired = user.TwoFactorEnabled };
 
             return View(model);
         }
@@ -457,6 +457,28 @@ namespace viafront3.Controllers
         public async Task<IActionResult> ApiCreate(ApiCreateViewModel model)
         {
             var user = await GetUser(required: true);
+
+            // check 2fa authentication
+            if (user.TwoFactorEnabled)
+            {
+                var authenticated = false;
+                if (model.TwoFactorCode == null)
+                    model.TwoFactorCode = "";
+                var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
+                foreach (var provider in providers)
+                    if (await _userManager.VerifyTwoFactorTokenAsync(user, provider, authenticatorCode))
+                    {
+                        authenticated = true;
+                        break;
+                    }
+                if (!authenticated)
+                {
+                    this.FlashError($"Invalid two factor code");
+                    model.TwoFactorRequired = true;
+                    return View(model);     
+                }
+            }
 
             var device = Utils.CreateDevice(user, -1, model.DeviceName);
             _context.Devices.Add(device);
