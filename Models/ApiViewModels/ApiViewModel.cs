@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using via_jsonrpc;
 
 namespace viafront3.Models.ApiViewModels
 {
@@ -32,6 +33,11 @@ namespace viafront3.Models.ApiViewModels
     {
         public String Key { get; set; }
         public long Nonce { get; set; }
+    }
+
+    public class ApiAccountBalance
+    {
+        public Dictionary<string, Balance> Assets { get; set; }
     }
 
     public class ApiMarketList

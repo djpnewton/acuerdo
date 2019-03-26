@@ -19,7 +19,7 @@ def construct_parser():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    ## Account / Device
+    ## Account / Device creation
 
     parser_acct_create = subparsers.add_parser("account_create", help="Create an account")
     parser_acct_create.add_argument("email", metavar="EMAIL", type=str, help="the email")
@@ -49,6 +49,11 @@ def construct_parser():
     parser_dev_validate.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
     parser_dev_validate.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
 
+    ## Account
+
+    parser_account_balance = subparsers.add_parser("account_balance", help="Show account balance")
+    parser_account_balance.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_account_balance.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
     ## Market
 
     parser_market_list = subparsers.add_parser("market_list", help="Get the list of markets")
@@ -155,6 +160,12 @@ def device_validate(args):
     check_request_status(r)
     print("ok")
 
+def account_balance(args):
+    print(":: calling account balance..")
+    r = req("AccountBalance", None, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 def market_list(args):
     print(":: calling market list..")
     r = req("MarketList")
@@ -217,6 +228,8 @@ if __name__ == "__main__":
         function = device_destroy
     elif args.command == "device_validate":
         function = device_validate
+    elif args.command == "account_balance":
+        function = account_balance
     elif args.command == "market_list":
         function = market_list
     elif args.command == "market_status":

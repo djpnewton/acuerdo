@@ -252,6 +252,30 @@ namespace viafront3.Controllers
             return Ok();
         }
 
+        [HttpPost]
+        public ActionResult<ApiAccountBalance> AccountBalance([FromBody] ApiAuth req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var balances = via.BalanceQuery(xch.Id);
+                var model = new ApiAccountBalance { Assets = balances };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
         [HttpGet]
         public ActionResult<ApiMarketList> MarketList() 
         {
