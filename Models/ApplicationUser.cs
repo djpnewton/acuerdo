@@ -15,7 +15,18 @@ namespace viafront3.Models
         public virtual Exchange Exchange { get; set; }
         public virtual List<Device> Devices { get; set; }
 
-        public bool EnsureBackendTablesPresent(ILogger logger, MySqlSettings settings)
+        public bool EnsureExchangePresent(ApplicationDbContext context)
+        {
+            if (Exchange == null)
+            {
+                var exch = new Exchange{ ApplicationUserId=Id };
+                context.Add(exch);
+                return true;
+            }
+            return false;
+        }
+
+        public bool EnsureExchangeBackendTablesPresent(ILogger logger, MySqlSettings settings)
         {
             var conn = new MySqlConnection($"host={settings.Host};database={settings.Database};uid={settings.User};password={settings.Password};");
             try

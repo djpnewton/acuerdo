@@ -245,7 +245,9 @@ namespace viafront3.Controllers
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     _logger.LogInformation("User created a new account with password.");
 
-                    if (!user.EnsureBackendTablesPresent(_logger, _settings.MySql))
+                    if (user.EnsureExchangePresent(_context))
+                        _context.SaveChanges();
+                    if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
                         _logger.LogError("Failed to ensure backend tables present");
 
                     return RedirectToLocal(returnUrl);
@@ -332,6 +334,11 @@ namespace viafront3.Controllers
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    if (user.EnsureExchangePresent(_context))
+                        _context.SaveChanges();
+                    if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
+                        _logger.LogError("Failed to ensure backend tables present");
+
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
@@ -413,6 +420,12 @@ namespace viafront3.Controllers
                     accountReq.Completed = true;
                     _context.AccountCreationRequests.Update(accountReq);
                     _context.SaveChanges();
+
+                    if (user.EnsureExchangePresent(_context))
+                        _context.SaveChanges();
+                    if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
+                        _logger.LogError("Failed to ensure backend tables present");
+
 
                     this.FlashSuccess("Account created");
                     return RedirectToAction(nameof(HomeController.Index), "Home");
