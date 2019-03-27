@@ -68,8 +68,8 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiMarketDetail
     {
-        public string TakerFee { get; set; }
-        public string MakerFee { get; set; }
+        public string TakerFeeRate { get; set; }
+        public string MakerFeeRate { get; set; }
         public string MinAmount { get; set; }
         public string TradeAsset { get; set; }
         public string PriceAsset { get; set; }
@@ -107,5 +107,95 @@ namespace viafront3.Models.ApiViewModels
     public class ApiMarketHistoryResponse
     {
         public IList<ApiMarketTrade> Trades;
+    }
+
+    public class ApiOrderCreateMarket : ApiAuth
+    {
+        public string Market { get; set; }
+        public string Side { get; set; }
+        public string Amount { get; set; }
+    }
+
+    public class ApiOrderCreateLimit : ApiOrderCreateMarket
+    {
+        public string Price { get; set; }
+    }
+
+    public class ApiOrder
+    {
+        public int Id { get; set; }
+        public string Market { get; set; }
+        public string Type { get; set; }
+        public string Side { get; set; }
+        public string Amount { get; set; }
+        public string Price { get; set; }
+        public string Status { get; set; }
+        public int DateCreated { get; set; }
+        public int DateModified { get; set; }
+        public string AmountTraded { get; set; }
+        public string ExecutedValue { get; set; }
+        public string FeePaid { get; set; }
+        public string MakerFeeRate { get; set; }
+        public string TakerFeeRate { get; set; }
+    }
+
+    public class ApiOrders: ApiAuth
+    {
+        public string Market { get; set; }
+        public int Offset { get; set; }
+        public int Limit { get; set; }       
+    }
+
+    public class ApiOrdersResponse
+    {
+        public int Offset { get; set; }
+        public int Limit { get; set; }       
+        public IList<ApiOrder> Orders;   
+    }
+
+    public class ApiOrderPendingStatus: ApiAuth
+    {
+        public string Market { get; set; }
+        public int Id { get; set; }
+    }
+
+    public class ApiOrderExecutedStatus: ApiAuth
+    {
+        public int Id { get; set; }
+    }
+
+    public class ApiOrderCancel: ApiAuth
+    {
+        public string Market { get; set; }
+        public int Id { get; set; }
+    }
+
+    public class ApiTrade
+    {
+        public int Id { get; set; }
+        public string Market { get; set; }
+        public string Role { get; set; }
+        public string Side { get; set; }
+        public string Amount { get; set; }
+        public string Price { get; set; }
+        public string ExecutedValue { get; set; }
+        public string Fee { get; set; }
+        public string FeeAsset { get; set; }
+        public int Date { get; set; }
+        public int OrderId { get; set; }
+    }
+
+    public class ApiTrades: ApiAuth
+    {
+        public string Market { get; set; }
+        public int Offset { get; set; }
+        public int Limit { get; set; }       
+    }
+
+    public class ApiTradesResponse
+    {
+        public int Offset { get; set; }
+        public int Limit { get; set; }       
+        public IList<ApiTrade> Trades;   
     }
 }

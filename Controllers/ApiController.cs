@@ -277,6 +277,7 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
+        [HttpPost]
         public ActionResult<ApiMarketList> MarketList() 
         {
             try
@@ -323,27 +324,20 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiMarketDetail> MarketDetail([FromBody] ApiMarket market) 
         {
-            try
+            if (!_settings.Markets.ContainsKey(market.Market))
+                return BadRequest("invalid request");
+            var marketSettings = _settings.Markets[market.Market];
+            var model = new ApiMarketDetail
             {
-                if (!_settings.Markets.ContainsKey(market.Market))
-                    return BadRequest("invalid request");
-                var marketSettings = _settings.Markets[market.Market];
-                var model = new ApiMarketDetail
-                {
-                    TakerFee = _settings.TakerFeeRate,
-                    MakerFee = _settings.MakerFeeRate,
-                    MinAmount = marketSettings.AmountInterval,
-                    TradeAsset = marketSettings.AmountUnit,
-                    PriceAsset = marketSettings.PriceUnit,
-                    TradeDecimals = marketSettings.AmountDecimals,
-                    PriceDecimals = marketSettings.PriceDecimals,
-                };
-                return model;
-            }
-            catch (ViaJsonException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+                TakerFeeRate = _settings.TakerFeeRate,
+                MakerFeeRate = _settings.MakerFeeRate,
+                MinAmount = marketSettings.AmountInterval,
+                TradeAsset = marketSettings.AmountUnit,
+                PriceAsset = marketSettings.PriceUnit,
+                TradeDecimals = marketSettings.AmountDecimals,
+                PriceDecimals = marketSettings.PriceDecimals,
+            };
+            return model;
         }
 
         [HttpPost]
@@ -385,6 +379,282 @@ namespace viafront3.Controllers
                         Type = trade.type,
                     });
                 };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        ApiOrder FormatOrder(Order order)
+        {
+            var status = "not executed";
+            var dealStock = decimal.Parse(order.deal_stock, System.Globalization.NumberStyles.Any);
+            var amount = decimal.Parse(order.amount, System.Globalization.NumberStyles.Any);
+            if (dealStock > 0)
+                status = "partially executed";
+            if (dealStock == amount)
+                status = "executed";
+            var model = new ApiOrder
+            {
+                Id = order.id,
+                Market = order.market,
+                Type = order.type == OrderType.Limit ? "limit" : "market",
+                Side = order.side == OrderSide.Bid ? "buy" : "sell",
+                Amount = order.amount,
+                Price = order.price,
+                Status = status,
+                DateCreated = (int)order.ctime,
+                DateModified = (int)order.mtime,
+                AmountTraded = order.deal_stock,
+                ExecutedValue = order.deal_money,
+                FeePaid = order.deal_fee,
+                MakerFeeRate = order.maker_fee,
+                TakerFeeRate = order.taker_fee,
+            };
+            return model;        
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrder> OrderLimit([FromBody] ApiOrderCreateLimit req) 
+        {
+            var result = Utils.ValidateOrderParams(_settings, req, req.Price);
+            if (!result.Item1)
+                return BadRequest(result.Item2);
+
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var side = Utils.GetOrderSide(req.Side);
+                if (side.Item2 != null)
+                    return BadRequest(side.Item2);
+                var order = via.OrderLimitQuery(xch.Id, req.Market, side.Item1, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
+                return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrder> OrderMarket([FromBody] ApiOrderCreateMarket req) 
+        {
+            var result = Utils.ValidateOrderParams(_settings, req, null, marketOrder: true);
+            if (!result.Item1)
+                return BadRequest(result.Item2);
+
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var side = Utils.GetOrderSide(req.Side);
+                if (side.Item2 != null)
+                    return BadRequest(side.Item2);
+                Order order;
+                if (_settings.MarketOrderBidAmountMoney)
+                    order = via.OrderMarketQuery(xch.Id, req.Market, side.Item1, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
+                else
+                    order = via.OrderMarketQuery(xch.Id, req.Market, side.Item1, req.Amount, _settings.TakerFeeRate, "viafront api");
+                return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrdersResponse> OrdersPending([FromBody] ApiOrders req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var ordersPending = via.OrdersPendingQuery(xch.Id, req.Market, req.Offset, req.Limit);
+                var model = new ApiOrdersResponse { Offset = ordersPending.offset, Limit = ordersPending.limit, Orders = new List<ApiOrder>() };
+                foreach (var order in ordersPending.records)
+                    model.Orders.Add(FormatOrder(order));
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrdersResponse> OrdersExecuted([FromBody] ApiOrders req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var ordersCompleted = via.OrdersCompletedQuery(xch.Id, req.Market, 0, 0, req.Offset, req.Limit, OrderSide.Any);
+                var model = new ApiOrdersResponse { Offset = ordersCompleted.offset, Limit = ordersCompleted.limit, Orders = new List<ApiOrder>() };
+                foreach (var order in ordersCompleted.records)
+                    model.Orders.Add(FormatOrder(order));
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrder> OrderPendingStatus([FromBody] ApiOrderPendingStatus req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var order = via.OrderPendingDetails(req.Market, req.Id);
+                if (order == null)
+                    return BadRequest("invalid parameter");
+                if (order.user != xch.Id)
+                    return BadRequest("invalid parameter");
+                return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrder> OrderExecutedStatus([FromBody] ApiOrderExecutedStatus req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var order = via.OrderCompletedDetails(req.Id);
+                if (order == null)
+                    return BadRequest("invalid parameter");
+                if (order.user != xch.Id)
+                    return BadRequest("invalid parameter");
+                return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiOrder> OrderCancel([FromBody] ApiOrderCancel req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var order = via.OrderCancelQuery(xch.Id, req.Market, req.Id);
+                if (order == null)
+                    return BadRequest("invalid parameter");
+                return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        ApiTrade FormatTrade(MarketTransactionRecord trade, string market, string tradeAsset, string priceAsset)
+        {
+            var feeAsset = priceAsset;
+            if (trade.side == OrderSide.Bid)
+                feeAsset = tradeAsset;
+            var model = new ApiTrade
+            {
+                Id = trade.id,
+                Market = market,
+                Role = trade.role == 1 ? "maker" : "taker",
+                Side = trade.side == OrderSide.Bid ? "buy" : "sell",
+                Amount = trade.amount,
+                Price = trade.price,
+                ExecutedValue = trade.deal,
+                Fee = trade.fee,
+                FeeAsset = feeAsset,
+                Date = (int)trade.time,
+                OrderId = trade.deal_order_id,
+            };
+            return model;        
+        }
+
+        [HttpPost]
+        public ActionResult<ApiTradesResponse> TradesExecuted([FromBody] ApiTrades req) 
+        {
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid request");
+            var marketSettings = _settings.Markets[req.Market];
+
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest(); 
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var trades = via.MarketTransactionHistoryQuery(xch.Id, req.Market, req.Offset, req.Limit);
+                var model = new ApiTradesResponse { Offset = trades.offset, Limit = trades.limit, Trades = new List<ApiTrade>() };
+                foreach (var trade in trades.records)
+                    model.Trades.Add(FormatTrade(trade, req.Market, marketSettings.AmountUnit, marketSettings.PriceUnit));
                 return model;
             }
             catch (ViaJsonException ex)

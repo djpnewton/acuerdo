@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using viafront3.Models.MarketViewModels;
+using viafront3.Models.ApiViewModels;
 using via_jsonrpc;
 
 namespace viafront3.Models.TradeViewModels
@@ -103,11 +104,7 @@ namespace viafront3.Models.TradeViewModels
 
         public OrdersCompleted AskOrdersCompleted { get; set; }
 
-        public OrderSide Side { get; set; }
-
-        public string Amount { get; set; }
-
-        public string Price { get; set; }
+        public ApiOrderCreateLimit Order { get; set; }
 
         static public TradeViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, ExchangeSettings settings)
         {

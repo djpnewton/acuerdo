@@ -12,6 +12,7 @@ import json
 URL_BASE = "http://localhost:5000/api/v1/"
 
 EXIT_NO_COMMAND = 1
+EXIT_INVALID_SIDE = 2
 
 def construct_parser():
     # construct argument parser
@@ -74,6 +75,60 @@ def construct_parser():
     parser_market_history.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_market_history.add_argument("limit", metavar="LIMIT", type=int, nargs="?", default=20, help="the maximum records to return")
 
+    ## Trade
+    parser_order_limit = subparsers.add_parser("order_limit", help="Create a limit order")
+    parser_order_limit.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_order_limit.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_limit.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_order_limit.add_argument("side", metavar="SIDE", type=str, help="The side to trade ('buy' or 'sell'")
+    parser_order_limit.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the order")
+    parser_order_limit.add_argument("price", metavar="PRICE", type=str, help="The price of the order")
+
+    parser_order_market = subparsers.add_parser("order_market", help="Create a market order")
+    parser_order_market.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_order_market.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_market.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_order_market.add_argument("side", metavar="SIDE", type=str, help="The side to trade ('buy' or 'sell'")
+    parser_order_market.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the order")
+
+    parser_orders_pending = subparsers.add_parser("orders_pending", help="View pending orders")
+    parser_orders_pending.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_orders_pending.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_orders_pending.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_orders_pending.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
+    parser_orders_pending.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
+
+    parser_orders_executed = subparsers.add_parser("orders_executed", help="View executed orders")
+    parser_orders_executed.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_orders_executed.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_orders_executed.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_orders_executed.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
+    parser_orders_executed.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
+
+    parser_order_pending_status = subparsers.add_parser("order_pending_status", help="View order pending status")
+    parser_order_pending_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_order_pending_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_pending_status.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_order_pending_status.add_argument("id", metavar="ID", type=int, help="Order ID")
+
+    parser_order_executed_status = subparsers.add_parser("order_executed_status", help="View order executed status")
+    parser_order_executed_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_order_executed_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_executed_status.add_argument("id", metavar="ID", type=int, help="Order ID")
+
+
+    parser_order_cancel = subparsers.add_parser("order_cancel", help="Cancel order")
+    parser_order_cancel.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_order_cancel.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_cancel.add_argument("id", metavar="ID", type=int, help="Order ID")
+
+    parser_trades_executed = subparsers.add_parser("trades_executed", help="View executed trades")
+    parser_trades_executed.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_trades_executed.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_trades_executed.add_argument("market", metavar="MARKET", type=str, help="the market to query")
+    parser_trades_executed.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
+    parser_trades_executed.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
+
     return parser
 
 def create_sig(device_key, device_secret, message):
@@ -94,8 +149,10 @@ def req(endpoint, params=None, device_key=None, device_secret=None):
         body = json.dumps(params)
         if device_key:
             headers["X-Signature"] = create_sig(device_key, device_secret, body)
+        print("   POST - " + url)
         r = requests.post(url, headers=headers, data=body)
     else:
+        print("   GET - " + url)
         r = requests.get(url)
     return r
 
@@ -205,6 +262,68 @@ def market_history(args):
     check_request_status(r)
     print(r.text)
 
+def order_limit(args):
+    print(":: calling order limit..")
+    if args.side not in ("buy", "sell"):
+        print("ERROR: invalid 'side' parameter")
+        sys.exit(EXIT_INVALID_SIDE)
+    params = {"market": args.market, "side": args.side, "amount": args.amount, "price": args.price}
+    r = req("OrderLimit", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def order_market(args):
+    print(":: calling order market..")
+    if args.side not in ("buy", "sell"):
+        print("ERROR: invalid 'side' parameter")
+        sys.exit(EXIT_INVALID_SIDE)
+    params = {"market": args.market, "side": args.side, "amount": args.amount}
+    r = req("OrderMarket", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def orders_pending(args):
+    print(":: calling orders pending..")
+    params = {"market": args.market, "offset": args.offset, "limit": args.limit}
+    r = req("OrdersPending", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def orders_executed(args):
+    print(":: calling orders executed..")
+    params = {"market": args.market, "offset": args.offset, "limit": args.limit}
+    r = req("OrdersExecuted", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def order_pending_status(args):
+    print(":: calling order pending status..")
+    params = {"market": args.market, "id": args.id}
+    r = req("OrderPendingStatus", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def order_executed_status(args):
+    print(":: calling order executed status..")
+    params = {"id": args.id}
+    r = req("OrderExecutedStatus", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def order_cancel(args):
+    print(":: calling order cancel..")
+    params = {"id": args.id}
+    r = req("OrderCancel", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def trades_executed(args):
+    print(":: calling trades executed..")
+    params = {"market": args.market, "offset": args.offset, "limit": args.limit}
+    r = req("TradesExecuted", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 if __name__ == "__main__":
     # parse arguments
     parser = construct_parser()
@@ -240,6 +359,22 @@ if __name__ == "__main__":
         function = market_depth
     elif args.command == "market_history":
         function = market_history
+    elif args.command == "order_limit":
+        function = order_limit
+    elif args.command == "order_market":
+        function = order_market
+    elif args.command == "orders_pending":
+        function = orders_pending
+    elif args.command == "orders_executed":
+        function = orders_executed
+    elif args.command == "order_pending_status":
+        function = order_pending_status
+    elif args.command == "order_executed_status":
+        function = order_executed_status
+    elif args.command == "order_cancel":
+        function = order_cancel
+    elif args.command == "trades_executed":
+        function = trades_executed
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)
