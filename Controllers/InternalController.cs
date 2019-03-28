@@ -311,7 +311,7 @@ namespace viafront3.Controllers
             {
                 User = user,
                 WebsocketToken = _websocketTokens.NewToken(user.Exchange.Id),
-                WebsocketUrl = _settings.AccessWsUrl
+                WebsocketUrl = _settings.WebsocketUrl,
             };
 
             return View(model);

@@ -34,6 +34,15 @@ server {
     #    try_files $uri $uri/ =404;
     #}
 
+    # reverse proxy to accessws
+    location /ws/ {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_pass http://{{backend_host}}:8090;
+    }
+
+
     # reverse proxy to our app
     location / {
         limit_req zone=app_limit burst=20 nodelay;

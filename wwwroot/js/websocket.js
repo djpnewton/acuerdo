@@ -40,7 +40,7 @@ var ws = (function () {
             sock.onopen = function (event) {
                 log("opened ws to " + url);
                 sendMsg("server.time");
-                sendMsg("deals.subscribe", ["BTCUSD"]);
+                sendMsg("deals.subscribe", ["WAVESBTC"]);
                 if (token !== undefined) {
                     pendingCalls.push({id: callId, method: "server.auth"});
                     sendMsg("server.auth", [token, "viafront"]);

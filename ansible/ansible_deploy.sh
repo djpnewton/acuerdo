@@ -65,6 +65,7 @@ VAGRANT=
 DEPLOY_HOST=bronze.exchange
 BACKEND_HOST=backend-internal.bronze.exchange
 BLOCKCHAIN_HOST=blockchain-internal.bronze.exchange
+INTERNAL_HOST=internal.bronze.exchange
 DEPLOY_USER=root
 TESTNET=
 ADMIN_HOST=123.123.123.123
@@ -75,9 +76,12 @@ then
     DEPLOY_HOST=test.bronze.exchange
     BACKEND_HOST=backend-internal.test.bronze.exchange
     BLOCKCHAIN_HOST=blockchain-internal.test.bronze.exchange
+    INTERNAL_HOST=test-internal.bronze.exchange
     DEPLOY_USER=root
     TESTNET=true
 fi 
+INTERNAL_IP=`dig +short $INTERNAL_HOST`
+BACKEND_IP=`dig +short $BACKEND_HOST`
 
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
@@ -91,7 +95,9 @@ echo "   - ADMIN_EMAIL:     $ADMIN_EMAIL"
 echo "   - ADMIN_HOST:      $ADMIN_HOST"
 echo "   - DEPLOY_USER:     $DEPLOY_USER"
 echo "   - BACKEND_HOST:    $BACKEND_HOST"
+echo "   - BACKEND_IP:      $BACKEND_IP"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
+echo "   - INTERNAL_IP:     $INTERNAL_IP"
 echo "   - CODE ARCHIVE:    viafront3.zip"
 
 # ask user to continue
@@ -102,6 +108,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST blockchain_host=$BLOCKCHAIN_HOST full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
         deploy.yml
 fi

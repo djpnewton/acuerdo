@@ -63,6 +63,18 @@
         regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.2(:8090")'
         replace: '\1{{backend_host}}\2'
 
+    - name: set accessws ip
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("AccessWsIp": ")127\.0\.0\.1(")'
+        replace: '\1{{backend_ip}}\2'
+
+    - name: set websocket url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("WebsocketUrl": ")ws:\/\/localhost\/ws(")'
+        replace: '\1wss:\/\/{{deploy_host}}\/ws\/\2'
+
     - name: set kafka host
       replace:
         path: /opt/viafront/appsettings.json
