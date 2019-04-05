@@ -83,6 +83,26 @@ namespace viafront3
         public int CreationExpiryMinutes { get; set; }
     }
 
+    public enum WithdrawalPeriod
+    {
+        Daily,
+        Weekly,
+        Monthly,
+    }
+
+    public class KycLevel
+    {
+        public string Name { get; set; }
+        public string WithdrawalLimit { get; set; }
+    }
+
+    public class KycSettings
+    {
+        public WithdrawalPeriod WithdrawalPeriod { get; set; }
+        public string WithdrawalAsset { get; set; }
+        public List<KycLevel> Levels { get; set; }
+    }
+
     public class Startup
     {
         public Startup(IConfiguration configuration)
@@ -100,6 +120,7 @@ namespace viafront3
             services.Configure<WalletSettings>(options => Configuration.GetSection("Wallet").Bind(options));
             services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));
             services.Configure<ApiSettings>(options => Configuration.GetSection("Api").Bind(options));
+            services.Configure<KycSettings>(options => Configuration.GetSection("Kyc").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()

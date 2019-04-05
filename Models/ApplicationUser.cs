@@ -14,6 +14,8 @@ namespace viafront3.Models
     {
         public virtual Exchange Exchange { get; set; }
         public virtual List<Device> Devices { get; set; }
+        public virtual Kyc Kyc { get; set; }
+        public virtual List<Withdrawal> Withdrawals { get; set; }
 
         public bool EnsureExchangePresent(ApplicationDbContext context)
         {
@@ -65,6 +67,65 @@ namespace viafront3.Models
                 return userManager.Users.SingleOrDefault(u => u.Id == exch.ApplicationUserId);
             return null;
         }
+
+        public void UpdateKyc(ILogger logger, ApplicationDbContext context, KycSettings kyc, int level)
+        {
+            if (level >= kyc.Levels.Count())
+            {
+                logger.LogError($"Tried to set kyc level to a level that does not exist '{level}'");
+                return;
+            }
+
+            if (this.Kyc == null)
+                context.Kycs.Add(new Kyc {ApplicationUserId = this.Id, Level = level});
+            else if (this.Kyc.Level < level)
+            {
+                this.Kyc.Level = level;
+                context.Kycs.Update(this.Kyc);
+            }
+        }
+
+        public decimal WithdrawalTotalThisPeriod(KycSettings settings)
+        {
+            DateTime startDate;
+            switch (settings.WithdrawalPeriod)
+            {
+                case WithdrawalPeriod.Daily:
+                    startDate = DateTime.Today;
+                    break;
+                case WithdrawalPeriod.Weekly:
+                    startDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
+                    break;
+                case WithdrawalPeriod.Monthly:
+                    var now = DateTime.Now;
+                    startDate = new DateTime(now.Year, now.Month, 1);
+                    break;
+                default:
+                    throw new Exception("invalid withdrawal period");
+            }
+
+            var timestamp = ((DateTimeOffset)startDate).ToUnixTimeSeconds();
+            var withdrawalsThisPeriod = this.Withdrawals.Where(w => w.ApplicationUserId == this.Id && w.Date >= timestamp);
+
+            decimal total = 0;
+            foreach (var withdrawal in withdrawalsThisPeriod)
+                total += decimal.Parse(withdrawal.WithdrawalAssetEquivalent);
+            return total;
+        }
+
+        public void AddWithdrawal(ApplicationDbContext context, string asset, decimal amount, decimal withdrawalAssetEquivalent)
+        {
+            var date = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var withdrawal = new Withdrawal
+            {
+                ApplicationUserId = this.Id,
+                Date = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                Asset = asset,
+                Amount = amount.ToString(),
+                WithdrawalAssetEquivalent = withdrawalAssetEquivalent.ToString(),
+            };
+            context.Withdrawals.Add(withdrawal);
+        }
     }
 
     public class Exchange
@@ -105,5 +166,22 @@ namespace viafront3.Models
         public string Secret { get; set; }
         public bool Completed { get; set; }
         public string RequestedDeviceName { get; set; }
+    }
+
+    public class Kyc
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public int Level { get; set; }
+    }
+
+    public class Withdrawal
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public long Date { get; set; }
+        public string Asset { get; set; }
+        public string Amount { get; set; }
+        public string WithdrawalAssetEquivalent { get; set; }
     }
 }

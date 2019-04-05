@@ -25,6 +25,7 @@ namespace viafront3.Controllers
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger _logger;
+        private readonly KycSettings _kycSettings;
 
         public AccountController(
             UserManager<ApplicationUser> userManager,
@@ -33,12 +34,14 @@ namespace viafront3.Controllers
             IEmailSender emailSender,
             ILogger<AccountController> logger,
             IOptions<ExchangeSettings> settings,
-            RoleManager<IdentityRole> roleManager) : base(userManager, context, settings)
+            RoleManager<IdentityRole> roleManager,
+            IOptions<KycSettings> kycSettings) : base(userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _logger = logger;
+            _kycSettings = kycSettings.Value;
         }
 
         [TempData]
@@ -371,10 +374,22 @@ namespace viafront3.Controllers
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
+                // add email confirmed role
                 var role = await _roleManager.FindByNameAsync(Utils.EmailConfirmedRole);
                 System.Diagnostics.Debug.Assert(role != null);
                 if (!await _userManager.IsInRoleAsync(user, role.Name))
                     await _userManager.AddToRoleAsync(user, role.Name);
+
+                // grant email kyc
+                for (var i = 0; i < _kycSettings.Levels.Count(); i++)
+                {
+                    if (_kycSettings.Levels[i].Name == "Email Confirmed")
+                    {
+                        user.UpdateKyc(_logger, _context, _kycSettings, i);
+                        _context.SaveChanges();
+                        break;
+                    }
+                }
 
                 return View(BaseViewModel());
             }
@@ -425,7 +440,6 @@ namespace viafront3.Controllers
                         _context.SaveChanges();
                     if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
                         _logger.LogError("Failed to ensure backend tables present");
-
 
                     this.FlashSuccess("Account created");
                     return RedirectToAction(nameof(HomeController.Index), "Home");

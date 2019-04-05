@@ -27,6 +27,7 @@ namespace viafront3.Controllers
         private readonly ILogger _logger;
         private readonly IWalletProvider _walletProvider;
         private readonly IEmailSender _emailSender;
+        private readonly KycSettings _kycSettings;
 
         public WalletController(
           UserManager<ApplicationUser> userManager,
@@ -34,11 +35,13 @@ namespace viafront3.Controllers
           ApplicationDbContext context,
           IOptions<ExchangeSettings> settings,
           IWalletProvider walletProvider,
-          IEmailSender emailSender) : base(userManager, context, settings)
+          IEmailSender emailSender,
+          IOptions<KycSettings> kycSettings) : base(userManager, context, settings)
         {
             _logger = logger;
             _walletProvider = walletProvider;
             _emailSender = emailSender;
+            _kycSettings = kycSettings.Value;
         }
 
         [HttpGet]
@@ -249,6 +252,40 @@ namespace viafront3.Controllers
             return View(model);
         }
 
+        public decimal CalculateWithdrawalAssetEquivalent(ILogger logger, ExchangeSettings settings, KycSettings kyc, string asset, decimal amount)
+        {
+            if (asset == kyc.WithdrawalAsset)
+                return amount;
+
+            foreach (var market in settings.Markets.Keys)
+            {
+                if (market.StartsWith(asset) && market.EndsWith(kyc.WithdrawalAsset))
+                {
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    var price = via.MarketPriceQuery(market);
+                    return amount * decimal.Parse(price);
+                }
+            };
+            logger.LogError($"no price found for asset {asset}");
+            throw new Exception($"no price found for asset {asset}");
+        }
+
+        public Tuple<bool, decimal, string> ValidateWithdrawlLimit(ApplicationUser user, string asset, decimal amount)
+        {
+            var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
+            var withdrawalAssetAmount = CalculateWithdrawalAssetEquivalent(_logger, _settings, _kycSettings, asset, amount);
+            var newWithdrawalTotal = withdrawalTotalThisPeriod + withdrawalAssetAmount;
+            var kycLevel = _kycSettings.Levels[0];
+            if (user.Kyc != null && user.Kyc.Level < _kycSettings.Levels.Count)
+                kycLevel = _kycSettings.Levels[user.Kyc.Level];
+            if (decimal.Parse(kycLevel.WithdrawalLimit) <= newWithdrawalTotal)
+                return new Tuple<bool, decimal, string>(false, 0,
+                    $"Your withdrawal limit is {kycLevel.WithdrawalLimit} {_kycSettings.WithdrawalAsset} equivalent, your current withdrawal total this period ({_kycSettings.WithdrawalPeriod}) is {withdrawalTotalThisPeriod} {_kycSettings.WithdrawalAsset}");
+
+            return new Tuple<bool, decimal, string>(true, withdrawalAssetAmount, null);
+        }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Withdraw(WithdrawViewModel model)
@@ -285,6 +322,15 @@ namespace viafront3.Controllers
                     return View(model);
                 }
 
+                // validate kyc level
+                var res = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
+                var withdrawalAssetAmount = res.Item2;
+                if (!res.Item1)
+                {
+                    this.FlashError(res.Item3);
+                    return View(model);
+                }
+
                 var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
 
                 using (var transaction = wallet.BeginTransaction())
@@ -317,6 +363,10 @@ namespace viafront3.Controllers
 
                     transaction.Commit();
                 }
+
+                // register withdrawal with kyc limits
+                user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
+                _context.SaveChanges();
 
                 this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
                 // send email: withdrawal created
@@ -404,6 +454,15 @@ namespace viafront3.Controllers
                 return View(model);
             }
 
+            // validate kyc level
+            var res = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
+            var withdrawalAssetAmount = res.Item2;
+            if (!res.Item1)
+            {
+                this.FlashError(res.Item3);
+                return View(model);
+            }
+
             // create pending withdrawal
             var account = new BankAccount{ AccountNumber = model.WithdrawalAccount };
             var tx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
@@ -418,6 +477,10 @@ namespace viafront3.Controllers
 
             // save wallet (after we have posted the withdrawal to the backend)
             wallet.Save();
+
+            // register withdrawal with kyc limits
+            user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
+            _context.SaveChanges();
 
             // send email: withdrawal created
             await _emailSender.SendEmailFiatWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString(), tx.DepositCode);
