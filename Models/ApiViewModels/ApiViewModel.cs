@@ -40,6 +40,27 @@ namespace viafront3.Models.ApiViewModels
         public Dictionary<string, Balance> Assets { get; set; }
     }
 
+    public class ApiAccountKyc
+    {
+        public String Level { get; set; }
+        public String WithdrawalLimit { get; set; }
+        public String WithdrawalAsset { get; set; }
+        public String WithdrawalPeriod { get; set; }
+        public String WithdrawalTotal { get; set; }
+    }
+
+    public class ApiAccountKycRequest
+    {
+        public String Token { get; set; }
+        public String ServiceUrl { get; set; }
+        public String Status { get; set; }
+    }
+
+    public class ApiAccountKycRequestStatus : ApiAuth
+    {
+        public String Token { get; set; }
+    }
+
     public class ApiMarketList
     {
         public List<String> Markets { get; set; }

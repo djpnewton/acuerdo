@@ -16,6 +16,7 @@ namespace viafront3.Data
         public DbSet<DeviceCreationRequest> DeviceCreationRequests { get; set; }
         public DbSet<Kyc> Kycs { get; set; }
         public DbSet<Withdrawal> Withdrawals { get; set; }
+        public DbSet<KycRequest> KycRequests { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -43,6 +44,10 @@ namespace viafront3.Data
 
             builder.Entity<Kyc>()
                 .HasIndex(k => k.ApplicationUserId)
+                .IsUnique();
+
+            builder.Entity<KycRequest>()
+                .HasIndex(r => r.Token)
                 .IsUnique();
         }
     }

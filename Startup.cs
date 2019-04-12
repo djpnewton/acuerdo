@@ -98,9 +98,10 @@ namespace viafront3
 
     public class KycSettings
     {
+        public List<KycLevel> Levels { get; set; }
         public WithdrawalPeriod WithdrawalPeriod { get; set; }
         public string WithdrawalAsset { get; set; }
-        public List<KycLevel> Levels { get; set; }
+        public string KycServerUrl { get; set; }
     }
 
     public class Startup

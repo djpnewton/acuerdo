@@ -55,6 +55,20 @@ def construct_parser():
     parser_account_balance = subparsers.add_parser("account_balance", help="Show account balance")
     parser_account_balance.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
     parser_account_balance.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+
+    parser_account_kyc = subparsers.add_parser("account_kyc", help="Show account kyc")
+    parser_account_kyc.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_account_kyc.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+
+    parser_account_kyc_upgrade = subparsers.add_parser("account_kyc_upgrade", help="Request to upgrade account kyc")
+    parser_account_kyc_upgrade.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_account_kyc_upgrade.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+
+    parser_account_kyc_upgrade_status = subparsers.add_parser("account_kyc_upgrade_status", help="Get status of request to upgrade account kyc")
+    parser_account_kyc_upgrade_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_account_kyc_upgrade_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_account_kyc_upgrade_status.add_argument("token", metavar="TOKEN", type=str, help="the kyc upgrade request token")
+
     ## Market
 
     parser_market_list = subparsers.add_parser("market_list", help="Get the list of markets")
@@ -76,6 +90,7 @@ def construct_parser():
     parser_market_history.add_argument("limit", metavar="LIMIT", type=int, nargs="?", default=20, help="the maximum records to return")
 
     ## Trade
+
     parser_order_limit = subparsers.add_parser("order_limit", help="Create a limit order")
     parser_order_limit.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
     parser_order_limit.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
@@ -223,6 +238,25 @@ def account_balance(args):
     check_request_status(r)
     print(r.text)
 
+def account_kyc(args):
+    print(":: calling account kyc..")
+    r = req("AccountKyc", None, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def account_kyc_upgrade(args):
+    print(":: calling account kyc upgrade..")
+    r = req("AccountKycUpgrade", None, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
+def account_kyc_upgrade_status(args):
+    print(":: calling account kyc upgrade status..")
+    params = {"token": args.token}
+    r = req("AccountKycUpgradeStatus", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 def market_list(args):
     print(":: calling market list..")
     r = req("MarketList")
@@ -349,6 +383,12 @@ if __name__ == "__main__":
         function = device_validate
     elif args.command == "account_balance":
         function = account_balance
+    elif args.command == "account_kyc":
+        function = account_kyc
+    elif args.command == "account_kyc_upgrade":
+        function = account_kyc_upgrade
+    elif args.command == "account_kyc_upgrade_status":
+        function = account_kyc_upgrade_status
     elif args.command == "market_list":
         function = market_list
     elif args.command == "market_status":

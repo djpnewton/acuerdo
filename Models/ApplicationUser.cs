@@ -184,4 +184,12 @@ namespace viafront3.Models
         public string Amount { get; set; }
         public string WithdrawalAssetEquivalent { get; set; }
     }
+
+    public class KycRequest
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public long Date { get; set; }
+        public string Token { get; set; }
+    }
 }

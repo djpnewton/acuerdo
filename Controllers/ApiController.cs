@@ -17,6 +17,8 @@ using viafront3.Models.ApiViewModels;
 using viafront3.Data;
 using viafront3.Services;
 using via_jsonrpc;
+using RestSharp;
+using Newtonsoft.Json;
 
 namespace viafront3.Controllers
 {
@@ -30,6 +32,7 @@ namespace viafront3.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ILogger _logger;
         private readonly ApiSettings _apiSettings;
+        private readonly KycSettings _kycSettings;
 
         public ApiController(
             UserManager<ApplicationUser> userManager,
@@ -39,13 +42,15 @@ namespace viafront3.Controllers
             ILogger<AccountController> logger,
             IOptions<ExchangeSettings> settings,
             IOptions<ApiSettings> apiSettings,
-            RoleManager<IdentityRole> roleManager) : base(userManager, context, settings)
+            RoleManager<IdentityRole> roleManager,
+            IOptions<KycSettings> kycSettings) : base(userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _logger = logger;
             _apiSettings = apiSettings.Value;
+            _kycSettings = kycSettings.Value;
         }
 
         [HttpPost]
@@ -274,6 +279,122 @@ namespace viafront3.Controllers
             {
                 return BadRequest(ex.Message);
             }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ApiAccountKyc>> AccountKyc([FromBody] ApiAuth req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+            if (user == null)
+                return BadRequest();
+            var level = user.Kyc != null ? user.Kyc.Level : 0;
+            KycLevel kycLevel = null;
+            if (level < _kycSettings.Levels.Count())
+                kycLevel = _kycSettings.Levels[level];
+            else
+                return BadRequest();
+            var model = new ApiAccountKyc
+            {
+                Level = level.ToString(),
+                WithdrawalLimit = kycLevel.WithdrawalLimit,
+                WithdrawalAsset = _kycSettings.WithdrawalAsset,
+                WithdrawalPeriod = _kycSettings.WithdrawalPeriod.ToString(),
+                WithdrawalTotal = user.WithdrawalTotalThisPeriod(_kycSettings).ToString(),
+
+            };
+            return model;
+        }
+
+        [HttpPost]
+        public ActionResult<ApiAccountKycRequest> AccountKycUpgrade([FromBody] ApiAuth req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            // call kyc server to create request
+            var token = Utils.CreateToken();
+            var client = new RestClient(_kycSettings.KycServerUrl);
+            var request = new RestRequest("request", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddJsonBody(new { token = token });
+            var response = client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    // save to database
+                    var date = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    var kycReq = new KycRequest { ApplicationUserId = device.ApplicationUserId, Date = date, Token = token };
+                    _context.KycRequests.Add(kycReq);
+                    _context.SaveChanges();
+                    // return to user
+                    var model = new ApiAccountKycRequest
+                    {
+                        Token = token,
+                        ServiceUrl = $"{_kycSettings.KycServerUrl}/request/{token}",
+                        Status = status,
+                    };
+                    return model;
+                }
+            }
+            return BadRequest();
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ApiAccountKycRequest>> AccountKycUpgradeStatus([FromBody] ApiAccountKycRequestStatus req) 
+        {
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            // call kyc server to create request
+            var client = new RestClient(_kycSettings.KycServerUrl);
+            var request = new RestRequest("status", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddJsonBody(new { token = req.Token });
+            var response = client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    // update kyc level if complete
+                    var newLevel = 2;
+                    var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+                    if (user == null)
+                        return BadRequest();
+                    var userKyc = user.Kyc;
+                    if (userKyc != null)
+                    {
+                        userKyc = new Kyc { ApplicationUserId = user.Id, Level = newLevel };
+                        _context.Kycs.Add(userKyc);
+                    }
+                    else if (userKyc.Level < newLevel)
+                    {
+
+                        userKyc.Level = newLevel;
+                        _context.Kycs.Update(userKyc);
+                    }
+                    _context.SaveChanges();;
+                    // return to user
+                    var model = new ApiAccountKycRequest
+                    {
+                        Token = req.Token,
+                        ServiceUrl = $"{_kycSettings.KycServerUrl}/request/{req.Token}",
+                        Status = status,
+                    };
+                    return model;
+                }
+            }
+            return BadRequest();
         }
 
         [HttpGet]
