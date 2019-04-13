@@ -78,9 +78,18 @@ namespace viafront3
         public string From { get; set; }
     }
 
+    public class Broker
+    {
+        public decimal Fee { get; set; }
+        public int TimeLimitMinutes { get; set; }
+        public List<string> SellMarkets { get; set; }
+        public List<string> BuyMarkets { get; set; }
+    }
+
     public class ApiSettings
     {
         public int CreationExpiryMinutes { get; set; }
+        public Broker Broker { get; set; }
     }
 
     public enum WithdrawalPeriod

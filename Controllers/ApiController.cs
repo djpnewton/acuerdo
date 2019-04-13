@@ -783,5 +783,116 @@ namespace viafront3.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+        [HttpGet]
+        [HttpPost]
+        public ActionResult<ApiBrokerMarkets> BrokerMarkets() 
+        {
+            var model = new ApiBrokerMarkets { SellMarkets = _apiSettings.Broker.SellMarkets, BuyMarkets = _apiSettings.Broker.BuyMarkets };
+            return model;
+        }
+
+        [HttpPost]
+        public ActionResult<ApiBrokerQuoteResponse> BrokerQuote([FromBody] ApiBrokerQuote req) 
+        {
+            // validate market
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid request");
+            var side = OrderSide.Bid;
+            if (req.Side == "buy")
+            {
+                side = OrderSide.Bid;
+                if (_apiSettings.Broker.BuyMarkets == null || !_apiSettings.Broker.BuyMarkets.Contains(req.Market))
+                    return BadRequest();
+            }
+            else if (req.Side == "sell")
+            {
+                side = OrderSide.Ask;
+                if (_apiSettings.Broker.SellMarkets == null || !_apiSettings.Broker.SellMarkets.Contains(req.Market))
+                    return BadRequest();
+            }
+            else
+                return BadRequest();
+            var marketSettings = _settings.Markets[req.Market];
+            // validate auth
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest();
+            // get orderbook
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var orderDepth = via.OrderDepthQuery(req.Market, 100, marketSettings.PriceInterval);
+                // calculate price
+                decimal amountSend = 0;
+                decimal amountRecieve = 0;
+                var assetSend = "";
+                var assetRecieve = "";
+                var amountLeft = decimal.Parse(req.Amount);
+                if (side == OrderSide.Bid)
+                {
+                    assetSend = marketSettings.PriceUnit;
+                    assetRecieve = marketSettings.AmountUnit;
+                    amountRecieve = decimal.Parse(req.Amount);
+
+                    var depth = orderDepth.asks;
+                    while (amountLeft > 0)
+                    {
+                        if (depth.Count() == 0)
+                            return BadRequest("insufficient liquidity");
+                        var price = decimal.Parse(depth[0][0]);
+                        var amount = decimal.Parse(depth[0][1]);
+                        depth.RemoveAt(0);
+                        var amountToUse = amount;
+                        if (amountLeft < amount)
+                            amountToUse = amountLeft;
+                        amountSend += price * amountToUse;
+                        amountLeft -= amountToUse;
+                    }
+                    amountSend *= (1 + _apiSettings.Broker.Fee);
+                }
+                else
+                {
+                    assetSend = marketSettings.AmountUnit;
+                    assetRecieve = marketSettings.PriceUnit;
+                    amountSend = decimal.Parse(req.Amount);
+
+                    var depth = orderDepth.bids;
+                    while (amountLeft > 0)
+                    {
+                        if (depth.Count() == 0)
+                            return BadRequest("insufficient liquidity");
+                        var price = decimal.Parse(depth[0][0]);
+                        var amount = decimal.Parse(depth[0][1]);
+                        depth.RemoveAt(0);
+                        var amountToUse = amount;
+                        if (amountLeft < amount)
+                            amountToUse = amountLeft;
+                        amountRecieve += price * amountToUse;
+                        amountLeft -= amountToUse;
+                    }
+                    amountRecieve *= (1 - _apiSettings.Broker.Fee);
+
+                }
+                var model = new ApiBrokerQuoteResponse
+                {
+                    AssetSend = assetSend,
+                    AmountSend = amountSend.ToString(),
+                    AssetRecieve = assetRecieve,
+                    AmountRecieve = amountRecieve.ToString(),
+                    TimeLimit = _apiSettings.Broker.TimeLimitMinutes,
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 }

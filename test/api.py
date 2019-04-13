@@ -144,6 +144,17 @@ def construct_parser():
     parser_trades_executed.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
     parser_trades_executed.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
 
+    ## Broker
+
+    parser_broker_markets = subparsers.add_parser("broker_markets", help="Get the list of open broker markets")
+
+    parser_broker_quote = subparsers.add_parser("broker_quote", help="Get a brokerage quote")
+    parser_broker_quote.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_broker_quote.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_quote.add_argument("market", metavar="MARKET", type=str, help="the market to query")
+    parser_broker_quote.add_argument("side", metavar="SIDE", type=str, help="'buy' or 'sell'")
+    parser_broker_quote.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
+
     return parser
 
 def create_sig(device_key, device_secret, message):
@@ -358,6 +369,19 @@ def trades_executed(args):
     check_request_status(r)
     print(r.text)
 
+def broker_markets(args):
+    print(":: calling broker markets..")
+    r = req("BrokerMarkets", None)
+    check_request_status(r)
+    print(r.text)
+
+def broker_quote(args):
+    print(":: calling broker quote..")
+    params = {"market": args.market, "side": args.side, "amount": args.amount}
+    r = req("BrokerQuote", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 if __name__ == "__main__":
     # parse arguments
     parser = construct_parser()
@@ -415,6 +439,10 @@ if __name__ == "__main__":
         function = order_cancel
     elif args.command == "trades_executed":
         function = trades_executed
+    elif args.command == "broker_markets":
+        function = broker_markets
+    elif args.command == "broker_quote":
+        function = broker_quote
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)

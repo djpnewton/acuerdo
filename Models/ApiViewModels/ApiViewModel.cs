@@ -219,4 +219,26 @@ namespace viafront3.Models.ApiViewModels
         public int Limit { get; set; }       
         public IList<ApiTrade> Trades;   
     }
+
+    public class ApiBrokerMarkets
+    {
+        public List<string> SellMarkets { get; set; }
+        public List<string> BuyMarkets { get; set; } 
+    }
+
+    public class ApiBrokerQuote : ApiAuth
+    {
+        public string Market { get; set; }
+        public string Side { get; set; }
+        public string Amount { get; set; }
+    }
+
+    public class ApiBrokerQuoteResponse
+    {
+        public string AssetSend { get; set; }
+        public string AmountSend { get; set; }
+        public string AssetRecieve { get; set; }
+        public string AmountRecieve { get; set; }
+        public int TimeLimit { get; set; }
+    }
 }
