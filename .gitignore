@@ -31,3 +31,6 @@ wwwroot/js/site.min.js
 
 # logs
 logs/
+
+# visual studio stuff
+.vs/

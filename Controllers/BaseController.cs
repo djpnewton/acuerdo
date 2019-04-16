@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Primitives;
@@ -13,13 +14,16 @@ namespace viafront3.Controllers
 {
     public class BaseController : Controller
     {
+        protected readonly ILogger _logger;
         protected readonly UserManager<ApplicationUser> _userManager;
         protected readonly ApplicationDbContext _context;
 
         public BaseController(
+          ILogger logger,
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context)
         {
+            _logger = logger;
             _userManager = userManager;
             _context = context;
         }

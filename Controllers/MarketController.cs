@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
@@ -16,9 +17,11 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class MarketController : BaseSettingsController
     {
-        public MarketController(UserManager<ApplicationUser> userManager,
+        public MarketController(
+            ILogger<MarketController> logger, 
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
-            IOptions<ExchangeSettings> settings) : base(userManager, context, settings)
+            IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings)
         {
         }
 

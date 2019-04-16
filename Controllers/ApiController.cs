@@ -25,32 +25,29 @@ namespace viafront3.Controllers
     [Produces("application/json")]
     [Route("api/v1/[action]")]
     [ApiController]
-    public class ApiController : BaseSettingsController
+    public class ApiController : BaseWalletController
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ILogger _logger;
         private readonly ApiSettings _apiSettings;
-        private readonly KycSettings _kycSettings;
 
         public ApiController(
+            ILogger<ApiController> logger,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ApplicationDbContext context,
             IEmailSender emailSender,
-            ILogger<AccountController> logger,
             IOptions<ExchangeSettings> settings,
             IOptions<ApiSettings> apiSettings,
             RoleManager<IdentityRole> roleManager,
-            IOptions<KycSettings> kycSettings) : base(userManager, context, settings)
+            IOptions<KycSettings> kycSettings,
+            IWalletProvider walletProvider) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
-            _logger = logger;
             _apiSettings = apiSettings.Value;
-            _kycSettings = kycSettings.Value;
         }
 
         [HttpPost]
@@ -792,66 +789,66 @@ namespace viafront3.Controllers
             return model;
         }
 
-        [HttpPost]
-        public ActionResult<ApiBrokerQuoteResponse> BrokerQuote([FromBody] ApiBrokerQuote req) 
+        bool ValidateBrokerMarket(string market, string side, out OrderSide orderSide)
         {
+            orderSide = OrderSide.Any;
             // validate market
-            if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid request");
-            var side = OrderSide.Bid;
-            if (req.Side == "buy")
+            if (!_settings.Markets.ContainsKey(market))
+                return false;
+            if (side == "buy")
             {
-                side = OrderSide.Bid;
-                if (_apiSettings.Broker.BuyMarkets == null || !_apiSettings.Broker.BuyMarkets.Contains(req.Market))
-                    return BadRequest();
+                orderSide = OrderSide.Bid;
+                if (_apiSettings.Broker.BuyMarkets == null || !_apiSettings.Broker.BuyMarkets.Contains(market))
+                    return false;
             }
-            else if (req.Side == "sell")
+            else if (side == "sell")
             {
-                side = OrderSide.Ask;
-                if (_apiSettings.Broker.SellMarkets == null || !_apiSettings.Broker.SellMarkets.Contains(req.Market))
-                    return BadRequest();
+                orderSide = OrderSide.Ask;
+                if (_apiSettings.Broker.SellMarkets == null || !_apiSettings.Broker.SellMarkets.Contains(market))
+                    return false;
             }
             else
-                return BadRequest();
-            var marketSettings = _settings.Markets[req.Market];
-            // validate auth
-            string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
-                return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
-            if (xch == null)
-                return BadRequest();
-            // get orderbook
+                return false;
+            return true;
+        }
+
+        ApiBrokerQuoteResponse _brokerQuote(string market, string amount, OrderSide side, out string error)
+        {
+            error = null;
+            var marketSettings = _settings.Markets[market];
             try
             {
+                // get orderbook
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var orderDepth = via.OrderDepthQuery(req.Market, 100, marketSettings.PriceInterval);
+                var orderDepth = via.OrderDepthQuery(market, 100, marketSettings.PriceInterval);
                 // calculate price
                 decimal amountSend = 0;
                 decimal amountRecieve = 0;
                 var assetSend = "";
                 var assetRecieve = "";
-                var amountLeft = decimal.Parse(req.Amount);
+                var amountLeft = decimal.Parse(amount);
                 if (side == OrderSide.Bid)
                 {
                     assetSend = marketSettings.PriceUnit;
                     assetRecieve = marketSettings.AmountUnit;
-                    amountRecieve = decimal.Parse(req.Amount);
+                    amountRecieve = amountLeft;
 
                     var depth = orderDepth.asks;
                     while (amountLeft > 0)
                     {
                         if (depth.Count() == 0)
-                            return BadRequest("insufficient liquidity");
-                        var price = decimal.Parse(depth[0][0]);
-                        var amount = decimal.Parse(depth[0][1]);
+                        {
+                            error = "insufficient liquidity";
+                            return null;
+                        }
+                        var priceItem = decimal.Parse(depth[0][0]);
+                        var amountItem = decimal.Parse(depth[0][1]);
                         depth.RemoveAt(0);
-                        var amountToUse = amount;
-                        if (amountLeft < amount)
+                        var amountToUse = amountItem;
+                        if (amountLeft < amountItem)
                             amountToUse = amountLeft;
-                        amountSend += price * amountToUse;
+                        amountSend += priceItem * amountToUse;
                         amountLeft -= amountToUse;
                     }
                     amountSend *= (1 + _apiSettings.Broker.Fee);
@@ -860,39 +857,170 @@ namespace viafront3.Controllers
                 {
                     assetSend = marketSettings.AmountUnit;
                     assetRecieve = marketSettings.PriceUnit;
-                    amountSend = decimal.Parse(req.Amount);
+                    amountSend = amountLeft;
 
                     var depth = orderDepth.bids;
                     while (amountLeft > 0)
                     {
                         if (depth.Count() == 0)
-                            return BadRequest("insufficient liquidity");
-                        var price = decimal.Parse(depth[0][0]);
-                        var amount = decimal.Parse(depth[0][1]);
+                        {
+                            error = "insufficient liquidity";
+                            return null;
+                        }
+                        var priceItem = decimal.Parse(depth[0][0]);
+                        var amountItem = decimal.Parse(depth[0][1]);
                         depth.RemoveAt(0);
-                        var amountToUse = amount;
-                        if (amountLeft < amount)
+                        var amountToUse = amountItem;
+                        if (amountLeft < amountItem)
                             amountToUse = amountLeft;
-                        amountRecieve += price * amountToUse;
+                        amountRecieve += priceItem * amountToUse;
                         amountLeft -= amountToUse;
                     }
                     amountRecieve *= (1 - _apiSettings.Broker.Fee);
-
                 }
                 var model = new ApiBrokerQuoteResponse
                 {
                     AssetSend = assetSend,
-                    AmountSend = amountSend.ToString(),
+                    AmountSend = amountSend,
                     AssetRecieve = assetRecieve,
-                    AmountRecieve = amountRecieve.ToString(),
+                    AmountRecieve = amountRecieve,
                     TimeLimit = _apiSettings.Broker.TimeLimitMinutes,
                 };
                 return model;
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                error = ex.Message;
+                return null;
             }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiBrokerQuoteResponse> BrokerQuote([FromBody] ApiBrokerQuote req) 
+        {
+            // validate market
+            OrderSide side;
+            if (!ValidateBrokerMarket(req.Market, req.Side, out side))
+                return BadRequest();
+            // validate auth
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest();
+            // get quote
+            var model = _brokerQuote(req.Market, req.Amount, side, out error);
+            if (model == null)
+                return BadRequest(error);
+            return model;
+        }
+
+        bool ValidateRecipient(string market, OrderSide side, string recipient)
+        {
+            var marketSettings = _settings.Markets[market];
+            var assetToReceive = marketSettings.AmountUnit;
+            if (side == OrderSide.Ask)
+                assetToReceive = marketSettings.PriceUnit;
+            if (_walletProvider.IsChain(assetToReceive))
+            {
+                var wallet = _walletProvider.GetChain(assetToReceive);
+                return wallet.ValidateAddress(recipient);
+            }
+            else
+                return Utils.ValidateBankAccount(recipient);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ApiBrokerOrder>> BrokerCreate([FromBody] ApiBrokerCreate req) 
+        {
+            // validate market
+            OrderSide side;
+            if (!ValidateBrokerMarket(req.Market, req.Side, out side))
+                return BadRequest("invalid market");
+            if (!ValidateRecipient(req.Market, side, req.Recipient))
+                return BadRequest("invalid recipient");
+            // validate auth
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            if (xch == null)
+                return BadRequest();
+            // get quote
+            var quote = _brokerQuote(req.Market, req.Amount, side, out error);
+            if (quote == null)
+                return BadRequest(error);
+            // get user
+            var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+            if (user == null)
+                return BadRequest();
+            // check kyc limits
+            var res = ValidateWithdrawlLimit(user, quote.AssetRecieve, quote.AmountRecieve);
+            var withdrawalAssetAmount = res.Item2;
+            if (!res.Item1)
+                return BadRequest(res.Item3);
+            // register withdrawal with kyc limits
+            user.AddWithdrawal(_context, quote.AssetRecieve, quote.AmountRecieve, withdrawalAssetAmount);
+            // create order
+            string invoiceId = null;
+            string paymentAddress = null;
+            string paymentUrl = null;
+            if (_walletProvider.IsChain(quote.AssetSend))
+            {
+                var wallet = _walletProvider.GetChain(quote.AssetSend);
+                var assetSettings = _walletProvider.ChainAssetSettings(quote.AssetSend);
+                if (assetSettings.LedgerModel == LedgerModel.Account)
+                {
+                    invoiceId = Utils.CreateToken();
+                    paymentAddress = wallet.NewOrExistingAddress(_apiSettings.Broker.BrokerTag).Address;
+                }
+                else // UTXO
+                    paymentAddress = wallet.NewAddress(_apiSettings.Broker.BrokerTag).Address;
+            }
+            else // fiat
+            {
+                invoiceId = Utils.CreateToken();
+                paymentUrl = "not implemented";
+            }
+            var order = new BrokerOrder
+            {
+                AssetReceive = quote.AssetRecieve,
+                AmountReceive = quote.AmountRecieve,
+                AssetSend = quote.AssetSend,
+                AmountSend = quote.AmountSend,
+                ApplicationUserId = device.ApplicationUserId,
+                Date = DateTimeOffset.Now.ToUnixTimeSeconds(),
+                Expiry = DateTimeOffset.Now.ToUnixTimeSeconds() + _apiSettings.Broker.TimeLimitMinutes * 60,
+                Fee = _apiSettings.Broker.Fee,
+                Market = req.Market,
+                Token = Utils.CreateToken(),
+                InvoiceId = invoiceId,
+                PaymentAddress = paymentAddress,
+                PaymentUrl = paymentUrl,
+                Recipient = req.Recipient,
+                Status = BrokerOrderStatus.Created.ToString(),
+            };
+            _context.BrokerOrders.Add(order);
+            _context.SaveChanges();
+            // respond
+            var model = new ApiBrokerOrder
+            {
+                AssetRecieve = order.AssetReceive,
+                AmountRecieve = order.AmountReceive,
+                AssetSend = order.AssetSend,
+                AmountSend = order.AmountSend,
+                Expiry = order.Expiry,
+                Token = order.Token,
+                InvoiceId = order.InvoiceId,
+                PaymentAddress = order.PaymentAddress,
+                PaymentUrl = order.PaymentUrl,
+                Recipient = order.Recipient,
+                Status = order.Status,
+            };
+            return model;
         }
     }
 }

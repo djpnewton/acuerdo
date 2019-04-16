@@ -236,9 +236,29 @@ namespace viafront3.Models.ApiViewModels
     public class ApiBrokerQuoteResponse
     {
         public string AssetSend { get; set; }
-        public string AmountSend { get; set; }
+        public decimal AmountSend { get; set; }
         public string AssetRecieve { get; set; }
-        public string AmountRecieve { get; set; }
+        public decimal AmountRecieve { get; set; }
         public int TimeLimit { get; set; }
+    }
+    
+    public class ApiBrokerCreate : ApiBrokerQuote
+    {
+        public string Recipient { get; set; }
+    }
+    
+    public class ApiBrokerOrder
+    {
+        public string AssetSend { get; set; }
+        public decimal AmountSend { get; set; }
+        public string AssetRecieve { get; set; }
+        public decimal AmountRecieve { get; set; }
+        public long Expiry { get; set; }
+        public string Token { get; set; }
+        public string InvoiceId { get; set; }
+        public string PaymentAddress { get; set; }
+        public string PaymentUrl { get; set; }
+        public string Recipient { get; set; }
+        public string Status { get; set; }
     }
 }

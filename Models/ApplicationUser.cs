@@ -192,4 +192,32 @@ namespace viafront3.Models
         public long Date { get; set; }
         public string Token { get; set; }
     }
+
+    public enum BrokerOrderStatus
+    {
+        Created,
+        Incomming,
+        Confirmed,
+        Sent
+    }
+
+    public class BrokerOrder
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public long Date { get; set; }
+        public long Expiry { get; set; }
+        public string Token { get; set; }
+        public string Market { get; set; }
+        public string AssetSend { get; set; }
+        public decimal AmountSend { get; set; }
+        public string AssetReceive { get; set; }
+        public decimal AmountReceive { get; set; }
+        public decimal Fee { get; set; }
+        public string InvoiceId { get; set; }
+        public string PaymentAddress { get; set; }
+        public string PaymentUrl { get; set; }
+        public string Recipient { get; set; }
+        public string Status { get; set; }
+    }
 }

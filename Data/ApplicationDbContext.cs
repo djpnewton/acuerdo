@@ -17,6 +17,7 @@ namespace viafront3.Data
         public DbSet<Kyc> Kycs { get; set; }
         public DbSet<Withdrawal> Withdrawals { get; set; }
         public DbSet<KycRequest> KycRequests { get; set; }
+        public DbSet<BrokerOrder> BrokerOrders { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -48,6 +49,14 @@ namespace viafront3.Data
 
             builder.Entity<KycRequest>()
                 .HasIndex(r => r.Token)
+                .IsUnique();
+
+            builder.Entity<BrokerOrder>()
+                .HasIndex(r => r.Token)
+                .IsUnique();
+
+            builder.Entity<BrokerOrder>()
+                .HasIndex(r => r.InvoiceId)
                 .IsUnique();
         }
     }

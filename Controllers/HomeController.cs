@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using viafront3.Data;
@@ -12,7 +13,7 @@ namespace viafront3.Controllers
 {
     public class HomeController : BaseController
     {
-        public HomeController(UserManager<ApplicationUser> userManager, ApplicationDbContext context) : base(userManager, context)
+        public HomeController(ILogger<HomeController> logger, UserManager<ApplicationUser> userManager, ApplicationDbContext context) : base(logger, userManager, context)
         {}
 
         public IActionResult Index()

@@ -27,22 +27,21 @@ namespace viafront3.Controllers
     public class InternalController : BaseSettingsController
     {
         private readonly IWebsocketTokens _websocketTokens;
-        private readonly ILogger _logger;
         private readonly WalletSettings _walletSettings;
         private readonly IWalletProvider _walletProvider;
 
-        public InternalController(UserManager<ApplicationUser> userManager,
+        public InternalController(
+            ILogger<InternalController> logger,
+            UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
             IOptions<ExchangeSettings> settings,
             IOptions<WalletSettings> walletSettings,
             IWalletProvider walletProvider,
-            IWebsocketTokens websocketTokens,
-            ILogger<InternalController> logger) : base(userManager, context, settings)
+            IWebsocketTokens websocketTokens) : base(logger, userManager, context, settings)
         {
             _walletSettings = walletSettings.Value;
             _walletProvider = walletProvider;
             _websocketTokens = websocketTokens;
-            _logger = logger;
         }
 
         public IActionResult Index()

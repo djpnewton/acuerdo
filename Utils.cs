@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
@@ -429,6 +430,19 @@ namespace viafront3
             else
                 return new Tuple<OrderSide, string>(res, $"Invalid side '{side}'");
             return new Tuple<OrderSide, string>(res, null);
+        }
+
+        public static bool ValidateBankAccount(string account)
+        {
+            account = account.Replace("-", "");
+            account = Regex.Replace(account, @"\s+", "");
+            // bank account digits 2 + 4 + 7 + 2/3, 15-16 digits
+            if (account.Count() != 15 || account.Count() != 16)
+                return false;
+            foreach (var ch in account)
+                if (!Char.IsDigit(ch))
+                    return false;
+            return true;
         }
     }
 }

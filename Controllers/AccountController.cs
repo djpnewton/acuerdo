@@ -24,23 +24,21 @@ namespace viafront3.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ILogger _logger;
         private readonly KycSettings _kycSettings;
 
         public AccountController(
+            ILogger<AccountController> logger,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             ApplicationDbContext context,
             IEmailSender emailSender,
-            ILogger<AccountController> logger,
             IOptions<ExchangeSettings> settings,
             RoleManager<IdentityRole> roleManager,
-            IOptions<KycSettings> kycSettings) : base(userManager, context, settings)
+            IOptions<KycSettings> kycSettings) : base(logger, userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
-            _logger = logger;
             _kycSettings = kycSettings.Value;
         }
 

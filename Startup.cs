@@ -55,12 +55,19 @@ namespace viafront3
         public bool MarketOrderBidAmountMoney { get; set; } = false;
     }
 
+    public enum LedgerModel
+    {
+        Account,
+        UTXO
+    }
+
     public class ChainAssetSettings
     {
         public string NodeUrl { get; set; }
         public long FeeUnit { get; set; }
         public long FeeMax { get; set; }
         public int MinConf { get; set; }
+        public LedgerModel LedgerModel { get; set; }
     }
 
     public class WalletSettings
@@ -84,6 +91,7 @@ namespace viafront3
         public int TimeLimitMinutes { get; set; }
         public List<string> SellMarkets { get; set; }
         public List<string> BuyMarkets { get; set; }
+        public string BrokerTag { get; set; }
     }
 
     public class ApiSettings
