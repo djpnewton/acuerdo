@@ -261,4 +261,9 @@ namespace viafront3.Models.ApiViewModels
         public string Recipient { get; set; }
         public string Status { get; set; }
     }
+
+    public class ApiBrokerStatus : ApiAuth
+    {
+        public string Token { get; set; }
+    }
 }

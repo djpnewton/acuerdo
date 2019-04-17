@@ -163,6 +163,11 @@ def construct_parser():
     parser_broker_create.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
     parser_broker_create.add_argument("recipient", metavar="RECIPIENT", type=str, help="The recipient (cryptocurrency address or bank account number")
 
+    parser_broker_status = subparsers.add_parser("broker_status", help="Check a brokerage order")
+    parser_broker_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_broker_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_status.add_argument("token", metavar="TOKEN", type=str, help="the brokerage order token")
+
     return parser
 
 def create_sig(device_key, device_secret, message):
@@ -397,6 +402,13 @@ def broker_create(args):
     check_request_status(r)
     print(r.text)
 
+def broker_status(args):
+    print(":: calling broker status..")
+    params = {"token": args.token}
+    r = req("BrokerStatus", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 if __name__ == "__main__":
     # parse arguments
     parser = construct_parser()
@@ -460,6 +472,8 @@ if __name__ == "__main__":
         function = broker_quote
     elif args.command == "broker_create":
         function = broker_create
+    elif args.command == "broker_status":
+        function = broker_status
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)

@@ -793,6 +793,8 @@ namespace viafront3.Controllers
         {
             orderSide = OrderSide.Any;
             // validate market
+            if (market == null)
+                return false;
             if (!_settings.Markets.ContainsKey(market))
                 return false;
             if (side == "buy")
@@ -932,8 +934,26 @@ namespace viafront3.Controllers
                 return Utils.ValidateBankAccount(recipient);
         }
 
+        private static ApiBrokerOrder FormatOrder(BrokerOrder order)
+        {
+            return new ApiBrokerOrder
+            {
+                AssetRecieve = order.AssetReceive,
+                AmountRecieve = order.AmountReceive,
+                AssetSend = order.AssetSend,
+                AmountSend = order.AmountSend,
+                Expiry = order.Expiry,
+                Token = order.Token,
+                InvoiceId = order.InvoiceId,
+                PaymentAddress = order.PaymentAddress,
+                PaymentUrl = order.PaymentUrl,
+                Recipient = order.Recipient,
+                Status = order.Status,
+            };
+        }
+
         [HttpPost]
-        public async Task<ActionResult<ApiBrokerOrder>> BrokerCreate([FromBody] ApiBrokerCreate req) 
+        public async Task<ActionResult<ApiBrokerOrder>> BrokerCreate([FromBody] ApiBrokerCreate req)
         {
             // validate market
             OrderSide side;
@@ -987,11 +1007,11 @@ namespace viafront3.Controllers
             }
             var order = new BrokerOrder
             {
+                ApplicationUserId = device.ApplicationUserId,
                 AssetReceive = quote.AssetRecieve,
                 AmountReceive = quote.AmountRecieve,
                 AssetSend = quote.AssetSend,
                 AmountSend = quote.AmountSend,
-                ApplicationUserId = device.ApplicationUserId,
                 Date = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 Expiry = DateTimeOffset.Now.ToUnixTimeSeconds() + _apiSettings.Broker.TimeLimitMinutes * 60,
                 Fee = _apiSettings.Broker.Fee,
@@ -1006,21 +1026,22 @@ namespace viafront3.Controllers
             _context.BrokerOrders.Add(order);
             _context.SaveChanges();
             // respond
-            var model = new ApiBrokerOrder
-            {
-                AssetRecieve = order.AssetReceive,
-                AmountRecieve = order.AmountReceive,
-                AssetSend = order.AssetSend,
-                AmountSend = order.AmountSend,
-                Expiry = order.Expiry,
-                Token = order.Token,
-                InvoiceId = order.InvoiceId,
-                PaymentAddress = order.PaymentAddress,
-                PaymentUrl = order.PaymentUrl,
-                Recipient = order.Recipient,
-                Status = order.Status,
-            };
-            return model;
+            return FormatOrder(order);
+        }
+
+        [HttpPost]
+        public ActionResult<ApiBrokerOrder> BrokerStatus([FromBody] ApiBrokerStatus req)
+        {
+            // validate auth
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            // get order
+            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == device.ApplicationUserId && o.Token == req.Token);
+            if (order == null)
+                return BadRequest();
+            return FormatOrder(order);
         }
     }
 }
