@@ -947,7 +947,9 @@ namespace viafront3.Controllers
                 InvoiceId = order.InvoiceId,
                 PaymentAddress = order.PaymentAddress,
                 PaymentUrl = order.PaymentUrl,
+                TxIdPayment = order.TxIdPayment,
                 Recipient = order.Recipient,
+                TxIdRecipient = order.TxIdRecipient,
                 Status = order.Status,
             };
         }
@@ -992,6 +994,11 @@ namespace viafront3.Controllers
             {
                 var wallet = _walletProvider.GetChain(quote.AssetSend);
                 var assetSettings = _walletProvider.ChainAssetSettings(quote.AssetSend);
+                if (!wallet.HasTag(_apiSettings.Broker.BrokerTag))
+                {
+                    wallet.NewTag(_apiSettings.Broker.BrokerTag);
+                    wallet.Save();
+                }
                 if (assetSettings.LedgerModel == LedgerModel.Account)
                 {
                     invoiceId = Utils.CreateToken();
@@ -999,6 +1006,7 @@ namespace viafront3.Controllers
                 }
                 else // UTXO
                     paymentAddress = wallet.NewAddress(_apiSettings.Broker.BrokerTag).Address;
+                wallet.Save();
             }
             else // fiat
             {

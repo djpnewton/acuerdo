@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pomelo.EntityFrameworkCore.MySql;
+using Hangfire;
+using Hangfire.MySql.Core;
 using viafront3.Data;
 using viafront3.Models;
 using viafront3.Services;
@@ -89,6 +91,7 @@ namespace viafront3
     {
         public decimal Fee { get; set; }
         public int TimeLimitMinutes { get; set; }
+        public int TimeLimitGracePeriod { get; set; }
         public List<string> SellMarkets { get; set; }
         public List<string> BuyMarkets { get; set; }
         public string BrokerTag { get; set; }
@@ -148,10 +151,15 @@ namespace viafront3
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 .AddDefaultTokenProviders();
 
+            var storage = new MySqlStorage(Configuration.GetConnectionString("DefaultConnection"), new MySqlStorageOptions { TablePrefix = "Hangfire" });
+            services.AddHangfire(x =>
+                x.UseStorage(storage));
+
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddSingleton<IWebsocketTokens, WebsocketTokens>();
             services.AddSingleton<IWalletProvider, WalletProvider>();
+            services.AddTransient<IBroker, viafront3.Services.Broker>();
 
             services.AddMvc();
         }
@@ -179,6 +187,11 @@ namespace viafront3
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            app.UseHangfireDashboard();
+            app.UseHangfireServer();
+            RecurringJob.AddOrUpdate<IBroker>(
+                broker => broker.ProcessOrders(), "0 */5 * ? * *"); // every 5 minutes
 
             loggerFactory.AddFile("logs/viafront-{Date}.txt");
         }

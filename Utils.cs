@@ -437,7 +437,7 @@ namespace viafront3
             account = account.Replace("-", "");
             account = Regex.Replace(account, @"\s+", "");
             // bank account digits 2 + 4 + 7 + 2/3, 15-16 digits
-            if (account.Count() != 15 || account.Count() != 16)
+            if (account.Count() != 15 && account.Count() != 16)
                 return false;
             foreach (var ch in account)
                 if (!Char.IsDigit(ch))

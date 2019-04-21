@@ -9,7 +9,7 @@ using viafront3.Data;
 namespace viafront3.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20190416170630_BrokerOrders")]
+    [Migration("20190421185049_BrokerOrders")]
     partial class BrokerOrders
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -237,6 +237,10 @@ namespace viafront3.Data.Migrations
                     b.Property<string>("Status");
 
                     b.Property<string>("Token");
+
+                    b.Property<string>("TxIdPayment");
+
+                    b.Property<string>("TxIdRecipient");
 
                     b.HasKey("Id");
 

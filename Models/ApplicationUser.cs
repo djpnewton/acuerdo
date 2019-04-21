@@ -198,7 +198,8 @@ namespace viafront3.Models
         Created,
         Incomming,
         Confirmed,
-        Sent
+        Sent,
+        Expired
     }
 
     public class BrokerOrder
@@ -217,7 +218,9 @@ namespace viafront3.Models
         public string InvoiceId { get; set; }
         public string PaymentAddress { get; set; }
         public string PaymentUrl { get; set; }
+        public string TxIdPayment { get; set; }
         public string Recipient { get; set; }
+        public string TxIdRecipient { get; set; }
         public string Status { get; set; }
     }
 }

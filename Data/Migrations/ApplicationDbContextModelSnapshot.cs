@@ -236,6 +236,10 @@ namespace viafront3.Data.Migrations
 
                     b.Property<string>("Token");
 
+                    b.Property<string>("TxIdPayment");
+
+                    b.Property<string>("TxIdRecipient");
+
                     b.HasKey("Id");
 
                     b.HasIndex("InvoiceId")

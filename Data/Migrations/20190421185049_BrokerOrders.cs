@@ -26,7 +26,9 @@ namespace viafront3.Data.Migrations
                     InvoiceId = table.Column<string>(nullable: true),
                     PaymentAddress = table.Column<string>(nullable: true),
                     PaymentUrl = table.Column<string>(nullable: true),
+                    TxIdPayment = table.Column<string>(nullable: true),
                     Recipient = table.Column<string>(nullable: true),
+                    TxIdRecipient = table.Column<string>(nullable: true),
                     Status = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
