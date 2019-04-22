@@ -938,8 +938,8 @@ namespace viafront3.Controllers
         {
             return new ApiBrokerOrder
             {
-                AssetRecieve = order.AssetReceive,
-                AmountRecieve = order.AmountReceive,
+                AssetReceive = order.AssetReceive,
+                AmountReceive = order.AmountReceive,
                 AssetSend = order.AssetSend,
                 AmountSend = order.AmountSend,
                 Expiry = order.Expiry,
@@ -975,17 +975,6 @@ namespace viafront3.Controllers
             var quote = _brokerQuote(req.Market, req.Amount, side, out error);
             if (quote == null)
                 return BadRequest(error);
-            // get user
-            var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
-            if (user == null)
-                return BadRequest();
-            // check kyc limits
-            var res = ValidateWithdrawlLimit(user, quote.AssetRecieve, quote.AmountRecieve);
-            var withdrawalAssetAmount = res.Item2;
-            if (!res.Item1)
-                return BadRequest(res.Item3);
-            // register withdrawal with kyc limits
-            user.AddWithdrawal(_context, quote.AssetRecieve, quote.AmountRecieve, withdrawalAssetAmount);
             // create order
             string invoiceId = null;
             string paymentAddress = null;
@@ -1034,6 +1023,46 @@ namespace viafront3.Controllers
             _context.BrokerOrders.Add(order);
             _context.SaveChanges();
             // respond
+            return FormatOrder(order);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ApiBrokerOrder>> BrokerAccept([FromBody] ApiBrokerStatus req)
+        {
+            // validate auth
+            string error;
+            var device = AuthDevice(req.Key, req.Nonce, out error);
+            if (device == null)
+                return BadRequest(error);
+            // get order
+            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == device.ApplicationUserId && o.Token == req.Token);
+            if (order == null)
+                return BadRequest();
+            // update order status
+            if (order.Status == BrokerOrderStatus.Created.ToString())
+            {
+                if (DateTimeOffset.Now.ToUnixTimeSeconds() < order.Expiry)
+                    order.Status = BrokerOrderStatus.Ready.ToString();
+                else
+                    order.Status = BrokerOrderStatus.Expired.ToString();
+            }
+            if (order.Status == BrokerOrderStatus.Ready.ToString())
+            {
+                // get user
+                var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+                if (user == null)
+                    return BadRequest();
+                // check kyc limits
+                var res = ValidateWithdrawlLimit(user, order.AssetReceive, order.AmountReceive);
+                var withdrawalAssetAmount = res.Item2;
+                if (!res.Item1)
+                    return BadRequest(res.Item3);
+                // register withdrawal with kyc limits
+                user.AddWithdrawal(_context, order.AssetReceive, order.AmountReceive, withdrawalAssetAmount);
+            }
+            // save order and withdrawal record
+            _context.BrokerOrders.Update(order);
+            _context.SaveChanges();
             return FormatOrder(order);
         }
 

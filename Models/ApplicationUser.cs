@@ -196,10 +196,12 @@ namespace viafront3.Models
     public enum BrokerOrderStatus
     {
         Created,
+        Ready,
         Incomming,
         Confirmed,
         Sent,
-        Expired
+        Expired,
+        Error
     }
 
     public class BrokerOrder

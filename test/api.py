@@ -163,6 +163,11 @@ def construct_parser():
     parser_broker_create.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
     parser_broker_create.add_argument("recipient", metavar="RECIPIENT", type=str, help="The recipient (cryptocurrency address or bank account number")
 
+    parser_broker_accept = subparsers.add_parser("broker_accept", help="Accept a brokerage order")
+    parser_broker_accept.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
+    parser_broker_accept.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_accept.add_argument("token", metavar="TOKEN", type=str, help="the brokerage order token")
+
     parser_broker_status = subparsers.add_parser("broker_status", help="Check a brokerage order")
     parser_broker_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
     parser_broker_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
@@ -402,12 +407,22 @@ def broker_create(args):
     check_request_status(r)
     print(r.text)
 
+def broker_accept(args):
+    print(":: calling broker accept..")
+    params = {"token": args.token}
+    r = req("BrokerAccept", params, args.device_key, args.device_secret)
+    check_request_status(r)
+    print(r.text)
+
 def broker_status(args):
     print(":: calling broker status..")
     params = {"token": args.token}
     r = req("BrokerStatus", params, args.device_key, args.device_secret)
     check_request_status(r)
     print(r.text)
+    print(" - payment address: %s" % r.json()["paymentAddress"])
+    print(" - amount: %s" % r.json()["amountSend"])
+    print(" - attachement: {\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"])
 
 if __name__ == "__main__":
     # parse arguments
@@ -472,6 +487,8 @@ if __name__ == "__main__":
         function = broker_quote
     elif args.command == "broker_create":
         function = broker_create
+    elif args.command == "broker_accept":
+        function = broker_accept
     elif args.command == "broker_status":
         function = broker_status
     else:
