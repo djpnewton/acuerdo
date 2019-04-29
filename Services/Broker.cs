@@ -44,17 +44,8 @@ namespace viafront3.Services
             _settings = settings.Value;
         }
 
-        bool DepositAndCreateTrade(IWallet wallet, BrokerOrder order, WalletTx tx)
+        bool DepositAndCreateTrade(ApplicationUser brokerUser, IWallet wallet, BrokerOrder order, WalletTx tx)
         {
-            // check/create broker user
-            var task = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
-            task.Wait();
-            var brokerUser = task.Result;
-            if (brokerUser == null)
-            {
-                _logger.LogError("Failed to find broker user");
-                return false;
-            }
             // check broker exchange id
             if (brokerUser.Exchange == null)
             {
@@ -84,6 +75,15 @@ namespace viafront3.Services
 
         void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
         {
+            // get broker user
+            var task = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
+            task.Wait();
+            var brokerUser = task.Result;
+            if (brokerUser == null)
+            {
+                _logger.LogError("Failed to find broker user");
+                return;
+            }
             // get wallet and only update from the blockchain one time
             IWallet wallet;
             if (wallets.ContainsKey(order.AssetSend))
@@ -135,13 +135,13 @@ namespace viafront3.Services
                                 _context.BrokerOrders.Update(order);
                                 ackTxs.Add(tx);
                                 _logger.LogInformation($"Payment confirmed for order {order.Token}, {tx}");
-                                DepositAndCreateTrade(wallet, order, tx);
+                                DepositAndCreateTrade(brokerUser, wallet, order, tx);
                             }
                         }
                     }
                 }
             }
-            wallet.AcknowledgeTransactions(_apiSettings.Broker.BrokerTag, ackTxs);
+            wallet.AcknowledgeTransactions(brokerUser.Id, ackTxs);
             wallet.Save();
         }
 

@@ -1003,18 +1003,18 @@ namespace viafront3.Controllers
             {
                 var wallet = _walletProvider.GetChain(quote.AssetSend);
                 var assetSettings = _walletProvider.ChainAssetSettings(quote.AssetSend);
-                if (!wallet.HasTag(_apiSettings.Broker.BrokerTag))
+                if (!wallet.HasTag(brokerUser.Id))
                 {
-                    wallet.NewTag(_apiSettings.Broker.BrokerTag);
+                    wallet.NewTag(brokerUser.Id);
                     wallet.Save();
                 }
                 if (assetSettings.LedgerModel == LedgerModel.Account)
                 {
                     invoiceId = Utils.CreateToken();
-                    paymentAddress = wallet.NewOrExistingAddress(_apiSettings.Broker.BrokerTag).Address;
+                    paymentAddress = wallet.NewOrExistingAddress(brokerUser.Id).Address;
                 }
                 else // UTXO
-                    paymentAddress = wallet.NewAddress(_apiSettings.Broker.BrokerTag).Address;
+                    paymentAddress = wallet.NewAddress(brokerUser.Id).Address;
                 wallet.Save();
             }
             else // fiat
