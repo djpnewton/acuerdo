@@ -283,11 +283,10 @@ namespace viafront3.Controllers
                 }
 
                 // validate kyc level
-                var res = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
-                var withdrawalAssetAmount = res.Item2;
-                if (!res.Item1)
+                (var success, var withdrawalAssetAmount, var error) = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
+                if (!success)
                 {
-                    this.FlashError(res.Item3);
+                    this.FlashError(error);
                     return View(model);
                 }
 
@@ -421,11 +420,10 @@ namespace viafront3.Controllers
             }
 
             // validate kyc level
-            var res = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
-            var withdrawalAssetAmount = res.Item2;
-            if (!res.Item1)
+            (var success, var withdrawalAssetAmount, var error) = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
+            if (!success)
             {
-                this.FlashError(res.Item3);
+                this.FlashError(error);
                 return View(model);
             }
 

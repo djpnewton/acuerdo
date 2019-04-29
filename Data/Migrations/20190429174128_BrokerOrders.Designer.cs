@@ -9,7 +9,7 @@ using viafront3.Data;
 namespace viafront3.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20190421185049_BrokerOrders")]
+    [Migration("20190429174128_BrokerOrders")]
     partial class BrokerOrders
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -232,7 +232,11 @@ namespace viafront3.Data.Migrations
 
                     b.Property<string>("PaymentUrl");
 
+                    b.Property<decimal>("Price");
+
                     b.Property<string>("Recipient");
+
+                    b.Property<int>("Side");
 
                     b.Property<string>("Status");
 

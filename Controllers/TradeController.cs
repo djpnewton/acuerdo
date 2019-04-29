@@ -63,19 +63,19 @@ namespace viafront3.Controllers
         [HttpPost] 
         public async Task<IActionResult> LimitOrder(TradeViewModel model)
         {
-            var result = Utils.ValidateOrderParams(_settings, model.Order, model.Order.Price);
-            if (!result.Item1)
-                return FlashErrorAndRedirect("Trade", model.Market, result.Item2);
+            (var success, var error) = Utils.ValidateOrderParams(_settings, model.Order, model.Order.Price);
+            if (!success)
+                return FlashErrorAndRedirect("Trade", model.Market, error);
 
             var user = await GetUser(required: true);
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var side = Utils.GetOrderSide(model.Order.Side);
-                if (side.Item2 != null)
-                    return BadRequest(side.Item2);
-                var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, side.Item1, model.Order.Amount, model.Order.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
+                (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
+                if (error2 != null)
+                    return BadRequest(error2);
+                var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, model.Order.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
                 // send email: order created
                 var amountUnit = _settings.Markets[model.Market].AmountUnit;
                 var priceUnit = _settings.Markets[model.Market].PriceUnit;
@@ -97,23 +97,23 @@ namespace viafront3.Controllers
         [HttpPost] 
         public async Task<IActionResult> MarketOrder(TradeViewModel model)
         {
-            var result = Utils.ValidateOrderParams(_settings, model.Order, null, marketOrder: true);
-            if (!result.Item1)
-                return FlashErrorAndRedirect("Trade", model.Market, result.Item2);
+            (var success, var error) = Utils.ValidateOrderParams(_settings, model.Order, null, marketOrder: true);
+            if (!success)
+                return FlashErrorAndRedirect("Trade", model.Market, error);
 
             var user = await GetUser(required: true);
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var side = Utils.GetOrderSide(model.Order.Side);
-                if (side.Item2 != null)
-                    return BadRequest(side.Item2);
+                (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
+                if (error2 != null)
+                    return BadRequest(error2);
                 Order order;
                 if (_settings.MarketOrderBidAmountMoney)
-                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side.Item1, model.Order.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
+                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
                 else
-                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side.Item1, model.Order.Amount, _settings.TakerFeeRate, "viafront");
+                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront");
                 // send email: order created
                 var amountUnit = _settings.Markets[model.Market].AmountUnit;
                 this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");

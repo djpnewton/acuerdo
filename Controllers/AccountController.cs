@@ -233,24 +233,10 @@ namespace viafront3.Controllers
             ViewData["ReturnUrl"] = returnUrl;
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
-                var result = await _userManager.CreateAsync(user, model.Password);
+                (var result, var user) = await CreateUser(_signInManager, _emailSender, model.Email, model.Email, model.Password, sendEmail: true, signIn: true);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
-                    await _emailSender.SendEmailConfirmationAsync(model.Email, callbackUrl);
-
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    _logger.LogInformation("User created a new account with password.");
-
-                    if (user.EnsureExchangePresent(_context))
-                        _context.SaveChanges();
-                    if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
-                        _logger.LogError("Failed to ensure backend tables present");
-
                     return RedirectToLocal(returnUrl);
                 }
                 AddErrors(result);
@@ -423,8 +409,7 @@ namespace viafront3.Controllers
             if (accountReq != null && !accountReq.Completed)
             {
                 // create new user
-                var user = new ApplicationUser { UserName = accountReq.RequestedEmail, Email = accountReq.RequestedEmail };
-                var result = await _userManager.CreateAsync(user, model.Password);
+                (var result, var user) = await CreateUser(_signInManager, _emailSender, accountReq.RequestedEmail, accountReq.RequestedEmail, model.Password, sendEmail: false, signIn: false);
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with api.");
@@ -433,11 +418,6 @@ namespace viafront3.Controllers
                     accountReq.Completed = true;
                     _context.AccountCreationRequests.Update(accountReq);
                     _context.SaveChanges();
-
-                    if (user.EnsureExchangePresent(_context))
-                        _context.SaveChanges();
-                    if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
-                        _logger.LogError("Failed to ensure backend tables present");
 
                     this.FlashSuccess("Account created");
                     return RedirectToAction(nameof(HomeController.Index), "Home");

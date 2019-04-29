@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 using viafront3.Data;
 using viafront3.Models;
 using xchwallet;
+using via_jsonrpc;
 using Newtonsoft.Json;
 
 namespace viafront3.Services
@@ -24,13 +26,60 @@ namespace viafront3.Services
         private readonly ApplicationDbContext _context;
         private readonly IWalletProvider _walletProvider;
         private readonly ApiSettings _apiSettings;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly ExchangeSettings _settings;
 
-        public Broker(ILogger<Broker> logger, ApplicationDbContext context, IWalletProvider walletProvider, IOptions<ApiSettings> apiSettings)
+        public Broker(ILogger<Broker> logger,
+            ApplicationDbContext context,
+            IWalletProvider walletProvider,
+            IOptions<ApiSettings> apiSettings,
+            UserManager<ApplicationUser> userManager,
+            IOptions<ExchangeSettings> settings)
         {
             _logger = logger;
             _context = context;
             _walletProvider = walletProvider;
             _apiSettings = apiSettings.Value;
+            _userManager = userManager;
+            _settings = settings.Value;
+        }
+
+        bool DepositAndCreateTrade(IWallet wallet, BrokerOrder order, WalletTx tx)
+        {
+            // check/create broker user
+            var task = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
+            task.Wait();
+            var brokerUser = task.Result;
+            if (brokerUser == null)
+            {
+                _logger.LogError("Failed to find broker user");
+                return false;
+            }
+            // check broker exchange id
+            if (brokerUser.Exchange == null)
+            {
+                _logger.LogError("Failed to get broker exchange id");
+                return false;
+            }
+            // create and test backend connection
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            via.BalanceQuery(1);
+            // register new deposit with the exchange backend
+            var amount = wallet.AmountToString(tx.ChainTx.Amount);
+            var source = new Dictionary<string, object>();
+            source["txid"] = tx.ChainTx.TxId;
+            var businessId = tx.Meta.Id;
+            via.BalanceUpdateQuery(brokerUser.Exchange.Id, order.AssetSend, "deposit", businessId, amount, source);
+            // make trade
+            string tradeAmount;
+            if (order.Side == OrderSide.Bid)
+                tradeAmount = order.AmountReceive.ToString();
+            else if (order.Side == OrderSide.Ask)
+                tradeAmount = order.AmountSend.ToString();
+            else
+                throw new Exception("invalid order side");
+            via.OrderMarketQuery(brokerUser.Exchange.Id, order.Market, order.Side, tradeAmount, "0", _apiSettings.Broker.BrokerTag);
+            return true;
         }
 
         void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
@@ -86,9 +135,9 @@ namespace viafront3.Services
                                 _context.BrokerOrders.Update(order);
                                 ackTxs.Add(tx);
                                 _logger.LogInformation($"Payment confirmed for order {order.Token}, {tx}");
+                                DepositAndCreateTrade(wallet, order, tx);
                             }
                         }
-
                     }
                 }
             }

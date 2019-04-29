@@ -237,8 +237,8 @@ namespace viafront3.Models.ApiViewModels
     {
         public string AssetSend { get; set; }
         public decimal AmountSend { get; set; }
-        public string AssetRecieve { get; set; }
-        public decimal AmountRecieve { get; set; }
+        public string AssetReceive { get; set; }
+        public decimal AmountReceive { get; set; }
         public int TimeLimit { get; set; }
     }
     

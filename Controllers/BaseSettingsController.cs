@@ -29,6 +29,35 @@ namespace viafront3.Controllers
         {
             _settings = settings.Value;
         }
+
+        protected async Task<(IdentityResult result, ApplicationUser user)> CreateUser(SignInManager<ApplicationUser> signInManager, IEmailSender emailSender, string username, string email, string password, bool sendEmail, bool signIn)
+        {
+            var user = new ApplicationUser { UserName = username, Email = email };
+            IdentityResult result;
+            if (password != null)
+                result = await _userManager.CreateAsync(user, password);
+            else
+                result = await _userManager.CreateAsync(user);
+            if (result.Succeeded)
+            {
+                _logger.LogInformation("Created a new user account.");
+                if (email != null && sendEmail)
+                {
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    var callbackUrl = Url.EmailConfirmationLink(user.Id, code, Request.Scheme);
+                    await emailSender.SendEmailConfirmationAsync(email, callbackUrl);
+                }
+
+                if (signIn)
+                    await signInManager.SignInAsync(user, isPersistent: false);
+
+                if (user.EnsureExchangePresent(_context))
+                    _context.SaveChanges();
+                if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
+                    _logger.LogError("Failed to ensure backend tables present");
+            }
+            return (result, user);
+        }
     }
 
     public class BaseWalletController : BaseSettingsController
@@ -67,7 +96,7 @@ namespace viafront3.Controllers
             throw new Exception($"no price found for asset {asset}");
         }
 
-        protected Tuple<bool, decimal, string> ValidateWithdrawlLimit(ApplicationUser user, string asset, decimal amount)
+        protected (bool success, decimal withdrawalAssetAmount, string error) ValidateWithdrawlLimit(ApplicationUser user, string asset, decimal amount)
         {
             var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
             var withdrawalAssetAmount = CalculateWithdrawalAssetEquivalent(_logger, _settings, _kycSettings, asset, amount);
@@ -76,10 +105,10 @@ namespace viafront3.Controllers
             if (user.Kyc != null && user.Kyc.Level < _kycSettings.Levels.Count)
                 kycLevel = _kycSettings.Levels[user.Kyc.Level];
             if (decimal.Parse(kycLevel.WithdrawalLimit) <= newWithdrawalTotal)
-                return new Tuple<bool, decimal, string>(false, 0,
+                return (false, 0,
                     $"Your withdrawal limit is {kycLevel.WithdrawalLimit} {_kycSettings.WithdrawalAsset} equivalent, your current withdrawal total this period ({_kycSettings.WithdrawalPeriod}) is {withdrawalTotalThisPeriod} {_kycSettings.WithdrawalAsset}");
 
-            return new Tuple<bool, decimal, string>(true, withdrawalAssetAmount, null);
+            return (true, withdrawalAssetAmount, null);
         }
     }
 }

@@ -537,11 +537,10 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderLimit([FromBody] ApiOrderCreateLimit req) 
         {
-            var result = Utils.ValidateOrderParams(_settings, req, req.Price);
-            if (!result.Item1)
-                return BadRequest(result.Item2);
+            (var success, var error) = Utils.ValidateOrderParams(_settings, req, req.Price);
+            if (!success)
+                return BadRequest(error);
 
-            string error;
             var device = AuthDevice(req.Key, req.Nonce, out error);
             if (device == null)
                 return BadRequest(error);
@@ -552,10 +551,10 @@ namespace viafront3.Controllers
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var side = Utils.GetOrderSide(req.Side);
-                if (side.Item2 != null)
-                    return BadRequest(side.Item2);
-                var order = via.OrderLimitQuery(xch.Id, req.Market, side.Item1, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
+                (var side, var error2) = Utils.GetOrderSide(req.Side);
+                if (error2 != null)
+                    return BadRequest(error2);
+                var order = via.OrderLimitQuery(xch.Id, req.Market, side, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
                 return FormatOrder(order);
             }
             catch (ViaJsonException ex)
@@ -567,11 +566,10 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderMarket([FromBody] ApiOrderCreateMarket req) 
         {
-            var result = Utils.ValidateOrderParams(_settings, req, null, marketOrder: true);
-            if (!result.Item1)
-                return BadRequest(result.Item2);
+            (var success, var error) = Utils.ValidateOrderParams(_settings, req, null, marketOrder: true);
+            if (!success)
+                return BadRequest(error);
 
-            string error;
             var device = AuthDevice(req.Key, req.Nonce, out error);
             if (device == null)
                 return BadRequest(error);
@@ -582,14 +580,14 @@ namespace viafront3.Controllers
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var side = Utils.GetOrderSide(req.Side);
-                if (side.Item2 != null)
-                    return BadRequest(side.Item2);
+                (var side, var error2) = Utils.GetOrderSide(req.Side);
+                if (error2 != null)
+                    return BadRequest(error2);
                 Order order;
                 if (_settings.MarketOrderBidAmountMoney)
-                    order = via.OrderMarketQuery(xch.Id, req.Market, side.Item1, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
+                    order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
                 else
-                    order = via.OrderMarketQuery(xch.Id, req.Market, side.Item1, req.Amount, _settings.TakerFeeRate, "viafront api");
+                    order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api");
                 return FormatOrder(order);
             }
             catch (ViaJsonException ex)
@@ -814,9 +812,10 @@ namespace viafront3.Controllers
             return true;
         }
 
-        ApiBrokerQuoteResponse _brokerQuote(string market, string amount, OrderSide side, out string error)
+        ApiBrokerQuoteResponse _brokerQuote(string market, string amount, OrderSide side, out string error, out decimal avgPrice)
         {
             error = null;
+            avgPrice = 0;
             var marketSettings = _settings.Markets[market];
             try
             {
@@ -826,15 +825,15 @@ namespace viafront3.Controllers
                 var orderDepth = via.OrderDepthQuery(market, 100, marketSettings.PriceInterval);
                 // calculate price
                 decimal amountSend = 0;
-                decimal amountRecieve = 0;
+                decimal amountReceive = 0;
                 var assetSend = "";
-                var assetRecieve = "";
+                var assetReceive = "";
                 var amountLeft = decimal.Parse(amount);
                 if (side == OrderSide.Bid)
                 {
                     assetSend = marketSettings.PriceUnit;
-                    assetRecieve = marketSettings.AmountUnit;
-                    amountRecieve = amountLeft;
+                    assetReceive = marketSettings.AmountUnit;
+                    amountReceive = amountLeft;
 
                     var depth = orderDepth.asks;
                     while (amountLeft > 0)
@@ -853,12 +852,14 @@ namespace viafront3.Controllers
                         amountSend += priceItem * amountToUse;
                         amountLeft -= amountToUse;
                     }
+                    if (amountSend > 0)
+                        avgPrice = amountReceive / amountSend;
                     amountSend *= (1 + _apiSettings.Broker.Fee);
                 }
                 else
                 {
                     assetSend = marketSettings.AmountUnit;
-                    assetRecieve = marketSettings.PriceUnit;
+                    assetReceive = marketSettings.PriceUnit;
                     amountSend = amountLeft;
 
                     var depth = orderDepth.bids;
@@ -875,17 +876,19 @@ namespace viafront3.Controllers
                         var amountToUse = amountItem;
                         if (amountLeft < amountItem)
                             amountToUse = amountLeft;
-                        amountRecieve += priceItem * amountToUse;
+                        amountReceive += priceItem * amountToUse;
                         amountLeft -= amountToUse;
                     }
-                    amountRecieve *= (1 - _apiSettings.Broker.Fee);
+                    if (amountSend > 0)
+                        avgPrice = amountSend / amountReceive;
+                    amountReceive *= (1 - _apiSettings.Broker.Fee);
                 }
                 var model = new ApiBrokerQuoteResponse
                 {
                     AssetSend = assetSend,
                     AmountSend = amountSend,
-                    AssetRecieve = assetRecieve,
-                    AmountRecieve = amountRecieve,
+                    AssetReceive = assetReceive,
+                    AmountReceive = amountReceive,
                     TimeLimit = _apiSettings.Broker.TimeLimitMinutes,
                 };
                 return model;
@@ -913,7 +916,8 @@ namespace viafront3.Controllers
             if (xch == null)
                 return BadRequest();
             // get quote
-            var model = _brokerQuote(req.Market, req.Amount, side, out error);
+            decimal avgPrice;
+            var model = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
             if (model == null)
                 return BadRequest(error);
             return model;
@@ -968,11 +972,27 @@ namespace viafront3.Controllers
             var device = AuthDevice(req.Key, req.Nonce, out error);
             if (device == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
-            if (xch == null)
+            // check/create broker user
+            var brokerUser = await _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
+            if (brokerUser == null)
+            {
+                (var result, var user) = await CreateUser(_signInManager, _emailSender, _apiSettings.Broker.BrokerTag, email: null, password: null, sendEmail: false, signIn: false);
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Failed to create broker user");
+                    return BadRequest();
+                }
+                brokerUser = user;
+            }
+            // check broker exchange id
+            if (brokerUser.Exchange == null)
+            {
+                _logger.LogError("Failed to get broker exchange id");
                 return BadRequest();
+            }
             // get quote
-            var quote = _brokerQuote(req.Market, req.Amount, side, out error);
+            decimal avgPrice;
+            var quote = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
             if (quote == null)
                 return BadRequest(error);
             // create order
@@ -1005,14 +1025,16 @@ namespace viafront3.Controllers
             var order = new BrokerOrder
             {
                 ApplicationUserId = device.ApplicationUserId,
-                AssetReceive = quote.AssetRecieve,
-                AmountReceive = quote.AmountRecieve,
+                AssetReceive = quote.AssetReceive,
+                AmountReceive = quote.AmountReceive,
                 AssetSend = quote.AssetSend,
                 AmountSend = quote.AmountSend,
                 Date = DateTimeOffset.Now.ToUnixTimeSeconds(),
                 Expiry = DateTimeOffset.Now.ToUnixTimeSeconds() + _apiSettings.Broker.TimeLimitMinutes * 60,
                 Fee = _apiSettings.Broker.Fee,
                 Market = req.Market,
+                Side = side,
+                Price = avgPrice,
                 Token = Utils.CreateToken(),
                 InvoiceId = invoiceId,
                 PaymentAddress = paymentAddress,
@@ -1053,10 +1075,9 @@ namespace viafront3.Controllers
                 if (user == null)
                     return BadRequest();
                 // check kyc limits
-                var res = ValidateWithdrawlLimit(user, order.AssetReceive, order.AmountReceive);
-                var withdrawalAssetAmount = res.Item2;
-                if (!res.Item1)
-                    return BadRequest(res.Item3);
+                (var success, var withdrawalAssetAmount, var error2) = ValidateWithdrawlLimit(user, order.AssetReceive, order.AmountReceive);
+                if (!success)
+                    return BadRequest(error2);
                 // register withdrawal with kyc limits
                 user.AddWithdrawal(_context, order.AssetReceive, order.AmountReceive, withdrawalAssetAmount);
             }

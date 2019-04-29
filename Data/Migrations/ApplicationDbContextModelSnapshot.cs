@@ -230,7 +230,11 @@ namespace viafront3.Data.Migrations
 
                     b.Property<string>("PaymentUrl");
 
+                    b.Property<decimal>("Price");
+
                     b.Property<string>("Recipient");
+
+                    b.Property<int>("Side");
 
                     b.Property<string>("Status");
 

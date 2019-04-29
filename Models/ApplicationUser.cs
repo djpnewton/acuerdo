@@ -212,6 +212,8 @@ namespace viafront3.Models
         public long Expiry { get; set; }
         public string Token { get; set; }
         public string Market { get; set; }
+        public via_jsonrpc.OrderSide Side { get; set; }
+        public decimal Price { get; set; }
         public string AssetSend { get; set; }
         public decimal AmountSend { get; set; }
         public string AssetReceive { get; set; }

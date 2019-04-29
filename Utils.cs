@@ -384,43 +384,43 @@ namespace viafront3
             };
         }
 
-       public static Tuple<bool, string> ValidateOrderParams(ExchangeSettings settings, ApiOrderCreateMarket model, string price, bool marketOrder=false)
+       public static (bool success, string error) ValidateOrderParams(ExchangeSettings settings, ApiOrderCreateMarket model, string price, bool marketOrder=false)
         {
             // check market exists
             if (model.Market == null || !settings.Markets.ContainsKey(model.Market))
-                return new Tuple<bool, string>(false, "Market does not exist");
+                return (false, "Market does not exist");
             // check amount exists
             if (model.Amount == null)
-                return new Tuple<bool, string>(false, "Amount not present");
+                return (false, "Amount not present");
             // initialize amount vars for further validation
             var amount = decimal.Parse(model.Amount);
             var amountInterval = decimal.Parse(settings.Markets[model.Market].AmountInterval);
             // check amount is greater then amountInterval
             if (amount < amountInterval)
-                return new Tuple<bool, string>(false, $"Amount is less then {amountInterval}");
+                return (false, $"Amount is less then {amountInterval}");
             // check amonut is a multiple of the amount interval
             if ((amount / amountInterval) % 1 != 0)
-                return new Tuple<bool, string>(false, $"Amount is not a multiple of {amountInterval}");
+                return (false, $"Amount is not a multiple of {amountInterval}");
             if (!marketOrder)
             {
                 // check price exists
                 if (price == null)
-                    return new Tuple<bool, string>(false, "Price not present");
+                    return (false, "Price not present");
                 // initialize price vars for further validation
                 var priceDec = decimal.Parse(price);
                 var priceInterval = decimal.Parse(settings.Markets[model.Market].PriceInterval);
                 // check price is greater then priceInterval
                 if (priceDec < priceInterval)
-                    return new Tuple<bool, string>(false, $"Price is less then {priceInterval}");
+                    return (false, $"Price is less then {priceInterval}");
                 // check price is a multiple of the price interval
                 if ((priceDec / priceInterval) % 1 != 0)
-                    return new Tuple<bool, string>(false, $"Price is not a multiple of {priceInterval}");
+                    return (false, $"Price is not a multiple of {priceInterval}");
             }
 
-            return new Tuple<bool, string>(true, null);
+            return (true, null);
         }
 
-        public static Tuple<OrderSide, string> GetOrderSide(String side)
+        public static (OrderSide side, string error) GetOrderSide(String side)
         {
             var res = OrderSide.Bid;
             if (side == "buy")
@@ -428,8 +428,8 @@ namespace viafront3
             else if (side == "sell")
                 res = OrderSide.Ask;
             else
-                return new Tuple<OrderSide, string>(res, $"Invalid side '{side}'");
-            return new Tuple<OrderSide, string>(res, null);
+                return (res, $"Invalid side '{side}'");
+            return (res, null);
         }
 
         public static bool ValidateBankAccount(string account)

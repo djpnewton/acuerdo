@@ -18,6 +18,8 @@ namespace viafront3.Data.Migrations
                     Expiry = table.Column<long>(nullable: false),
                     Token = table.Column<string>(nullable: true),
                     Market = table.Column<string>(nullable: true),
+                    Side = table.Column<int>(nullable: false),
+                    Price = table.Column<decimal>(nullable: false),
                     AssetSend = table.Column<string>(nullable: true),
                     AmountSend = table.Column<decimal>(nullable: false),
                     AssetReceive = table.Column<string>(nullable: true),
