@@ -318,7 +318,10 @@ namespace viafront3.Controllers
             var client = new RestClient(_kycSettings.KycServerUrl);
             var request = new RestRequest("request", Method.POST);
             request.RequestFormat = DataFormat.Json;
-            request.AddJsonBody(new { token = token });
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = _kycSettings.KycServerApiKey, token = token });
+            request.AddParameter("application/json", jsonBody, ParameterType.RequestBody);
+            var sig = HMacWithSha256(_kycSettings.KycServerApiSecret, jsonBody);
+            request.AddHeader("X-Signature", sig);
             var response = client.Execute(request);
             if (response.IsSuccessful)
             {

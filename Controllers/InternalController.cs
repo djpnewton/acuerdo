@@ -286,6 +286,21 @@ namespace viafront3.Controllers
             return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
 
+        public IActionResult Broker()
+        {
+            var user = GetUser(required: true).Result;
+
+            var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Confirmed.ToString());
+
+            var model = new BrokerViewModel
+            {
+                User = user,
+                OrdersConfirmed = orders,
+                AssetSettings = _settings.Assets,
+            };
+            return View(model);
+        }
+
         [AllowAnonymous]
         [Produces("application/json")]
         public IActionResult WebsocketAuth()
