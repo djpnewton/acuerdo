@@ -4,8 +4,7 @@
 [submodule "xchwallet"]
 	path = xchwallet
 	url = https://github.com/djpnewton/xchwallet.git
-    branch = waves
 [submodule "viabtc_exchange_server"]
 	path = viabtc_exchange_server
 	url = https://github.com/djpnewton/viabtc_exchange_server.git
-	branch = waves
+	branch = ansible
