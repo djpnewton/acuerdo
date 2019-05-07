@@ -8,8 +8,8 @@ namespace viafront3.Models.ManageViewModels
 {
     public class ApiViewModel : BaseViewModel
     {
-        public IList<Device> Devices { get; set; }
-        public string DeleteDeviceKey { get; set; }
+        public IList<ApiKey> ApiKeys { get; set; }
+        public string DeleteApiKey { get; set; }
     }
 
     public class ApiCreateViewModel : BaseViewModel

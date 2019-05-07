@@ -369,17 +369,17 @@ namespace viafront3
             return decimalPlaces;
         }
 
-        public static Device CreateDevice(ApplicationUser user, int deviceRequestId, string deviceName)
+        public static Models.ApiKey CreateApiKey(ApplicationUser user, int apiKeyRequestId, string deviceName)
         {
-            var deviceKey = Utils.CreateToken();
-            var deviceSecret = Utils.CreateToken(32);
-            return new Device
+            var key = Utils.CreateToken();
+            var secret = Utils.CreateToken(32);
+            return new Models.ApiKey
             { 
                 ApplicationUserId = user.Id,
-                CreationRequestId = deviceRequestId,
+                CreationRequestId = apiKeyRequestId,
                 Name = deviceName,
-                DeviceKey = deviceKey,
-                DeviceSecret = deviceSecret,
+                Key = key,
+                Secret = secret,
                 Nonce = 0
             };
         }

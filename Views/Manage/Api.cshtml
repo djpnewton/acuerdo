@@ -4,28 +4,28 @@
     ViewData.AddActivePage(ManageNavPages.Api);
 }
 
-<h4>Your API device keys</h4>
+<h4>Your API KEYS</h4>
 <div class="row">
     <div class="col-md-6">
         <table class="table table-condensed table-responsive table-hover">
             <tr>
                 <th>Device Name</th>
-                <th>Device Key</th>
+                <th>Key</th>
             </tr>
             <tbody>@{
-                foreach (var device in Model.Devices)
+                foreach (var apikey in Model.ApiKeys)
                 {
                     <tr>
                         <td>
-                            @device.Name
+                            @apikey.Name
                         </td>
                         <td>
-                            @device.DeviceKey
+                            @apikey.Key
                         </td>
                         <td>
-                            <form method="post" asp-action="ApiDelete" id="delete-device-form-@device.DeviceKey" x-device-name="@device.Name">
+                            <form method="post" asp-action="ApiDelete" id="delete-apikey-form-@apikey.Key" x-device-name="@apikey.Name">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" asp-for="DeleteDeviceKey" value="@device.DeviceKey" />
+                                <input type="hidden" asp-for="DeleteApiKey" value="@apikey.Key" />
                                 <button type="button" class="btn btn-warning btn-xs form-delete-button"
                                 data-toggle="modal" data-target="#confirm-delete-submit">Delete</button>
                             </form>
@@ -46,13 +46,13 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                Confirm Device Deletion
+                Confirm API KEY Deletion
             </div>
             <div class="modal-body">
                 <p>
-                    Are you sure you want to delete the following device?
+                    Are you sure you want to delete the following API KEY?
                 </p>
-                <p id="modal-device-delete-p"></p>
+                <p id="modal-apikey-delete-p"></p>
             </div>
 
             <div class="modal-footer">
@@ -65,5 +65,5 @@
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
-    @await Html.PartialAsync("_DeviceDeletionScriptPartial")
+    @await Html.PartialAsync("_ApiKeyDeletionScriptPartial")
 }

@@ -35,10 +35,10 @@ namespace Microsoft.AspNetCore.Mvc
                 protocol: scheme);
         }
 
-        public static string DeviceCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
+        public static string ApiKeyCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
         {
             return urlHelper.Action(
-                action: nameof(AccountController.ConfirmDeviceCreation),
+                action: nameof(AccountController.ConfirmApiKeyCreation),
                 controller: "Account",
                 values: new { token },
                 protocol: scheme);

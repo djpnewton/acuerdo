@@ -13,7 +13,7 @@ namespace viafront3.Models
     public class ApplicationUser : IdentityUser
     {
         public virtual Exchange Exchange { get; set; }
-        public virtual List<Device> Devices { get; set; }
+        public virtual List<ApiKey> ApiKeys { get; set; }
         public virtual Kyc Kyc { get; set; }
         public virtual List<Withdrawal> Withdrawals { get; set; }
 
@@ -134,14 +134,14 @@ namespace viafront3.Models
         public string ApplicationUserId { get; set; }
     }
 
-    public class Device
+    public class ApiKey
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }
         public int CreationRequestId { get; set; }
         public string Name { get; set; }
-        public string DeviceKey { get; set; }
-        public string DeviceSecret { get; set; }
+        public string Key { get; set; }
+        public string Secret { get; set; }
         public long Nonce { get; set; }
     }
 
@@ -157,7 +157,7 @@ namespace viafront3.Models
         public string RequestedDeviceName { get; set; }
     }
 
-    public class DeviceCreationRequest
+    public class ApiKeyCreationRequest
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }

@@ -69,35 +69,35 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiDevice>> AccountCreateStatus([FromBody] ApiToken token) 
+        public async Task<ActionResult<Models.ApiViewModels.ApiKey>> AccountCreateStatus([FromBody] ApiToken token) 
         {
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token.Token);
             if (accountReq == null)
-                return new ApiDevice { Completed = false }; // fake reply if token not found (so robot cant test for user emails)
+                return new Models.ApiViewModels.ApiKey { Completed = false }; // fake reply if token not found (so robot cant test for user emails)
             if (!accountReq.Completed)
-                return new ApiDevice { Completed = false };
+                return new Models.ApiViewModels.ApiKey { Completed = false };
             var user = await _userManager.FindByEmailAsync(accountReq.RequestedEmail);
             if (user == null)
-                return new ApiDevice { Completed = false };
+                return new Models.ApiViewModels.ApiKey { Completed = false };
             // check expiry
             if (accountReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
                 return BadRequest("expired");
-            // create new device
-            var deviceKey = Utils.CreateToken();
-            var deviceSecret = Utils.CreateToken(32);
-            var device = new Device
+            // create new apikey
+            var key = Utils.CreateToken();
+            var secret = Utils.CreateToken(32);
+            var apikey = new Models.ApiKey
             { 
                 ApplicationUserId = accountReq.ApplicationUserId,
                 CreationRequestId = accountReq.Id,
                 Name = accountReq.RequestedDeviceName,
-                DeviceKey = deviceKey,
-                DeviceSecret = deviceSecret,
+                Key = key,
+                Secret = secret,
                 Nonce = 0
             };
-            _context.Devices.Add(device);
+            _context.ApiKeys.Add(apikey);
             // save db and return connection details
             _context.SaveChanges();
-            return new ApiDevice { Completed = true, DeviceKey = device.DeviceKey, DeviceSecret = device.DeviceSecret };
+            return new Models.ApiViewModels.ApiKey { Completed = true, Key = apikey.Key, Secret = apikey.Secret };
         }
 
         [HttpPost]
@@ -112,7 +112,7 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiToken>> DeviceCreate([FromBody] ApiDeviceCreate req) 
+        public async Task<ActionResult<ApiToken>> ApiKeyCreate([FromBody] ApiKeyCreate req) 
         {
             var user = await _userManager.FindByEmailAsync(req.Email);
             if (user == null)
@@ -120,48 +120,48 @@ namespace viafront3.Controllers
             var date = DateTimeOffset.Now.ToUnixTimeSeconds();
             var token = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
-            var accountReq = new DeviceCreationRequest { ApplicationUserId = user.Id, Date = date, Token = token, Secret = secret, Completed = false,
+            var accountReq = new ApiKeyCreationRequest { ApplicationUserId = user.Id, Date = date, Token = token, Secret = secret, Completed = false,
                 RequestedDeviceName = req.DeviceName };
-            _context.DeviceCreationRequests.Add(accountReq);
-            var callbackUrl = Url.DeviceCreationConfirmationLink(token, Request.Scheme);
-            await _emailSender.SendEmailApiDeviceCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
+            _context.ApiKeyCreationRequests.Add(accountReq);
+            var callbackUrl = Url.ApiKeyCreationConfirmationLink(token, Request.Scheme);
+            await _emailSender.SendEmailApiKeyCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
             _context.SaveChanges();
             return new ApiToken { Token = token };       
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiDevice>> DeviceCreateStatus([FromBody] ApiToken token) 
+        public async Task<ActionResult<Models.ApiViewModels.ApiKey>> ApiKeyCreateStatus([FromBody] ApiToken token) 
         {
-            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == token.Token);
-            if (deviceReq == null)
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token.Token);
+            if (apiKeyReq == null)
                 return NotFound();
-            if (!deviceReq.Completed)
-                return new ApiDevice { Completed = false };
-            var device = _context.Devices.SingleOrDefault(d => d.CreationRequestId == deviceReq.Id);
-            if (device != null)
-                return new ApiDevice { Completed = true };
+            if (!apiKeyReq.Completed)
+                return new Models.ApiViewModels.ApiKey { Completed = false };
+            var apikey = _context.ApiKeys.SingleOrDefault(d => d.CreationRequestId == apiKeyReq.Id);
+            if (apikey != null)
+                return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
-            if (deviceReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
+            if (apiKeyReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
                 return BadRequest("expired");
             // get user
-            var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
+            var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
             if (user == null)
                 return BadRequest();
-            // create new device
-            device = Utils.CreateDevice(user, deviceReq.Id, deviceReq.RequestedDeviceName);
-            _context.Devices.Add(device);
+            // create new apikey
+            apikey = Utils.CreateApiKey(user, apiKeyReq.Id, apiKeyReq.RequestedDeviceName);
+            _context.ApiKeys.Add(apikey);
             // save db and return connection details
             _context.SaveChanges();
-            return new ApiDevice { Completed = true, DeviceKey = device.DeviceKey, DeviceSecret = device.DeviceSecret };      
+            return new Models.ApiViewModels.ApiKey { Completed = true, Key = apikey.Key, Secret = apikey.Secret };      
         }
 
         [HttpPost]
-        public IActionResult DeviceCreateCancel([FromBody] ApiToken token) 
+        public IActionResult ApiKeyCreateCancel([FromBody] ApiToken token) 
         {
-            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == token.Token);
-            if (deviceReq == null)
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token.Token);
+            if (apiKeyReq == null)
                 return NotFound(); // TODO: leaks account existence
-            _context.DeviceCreationRequests.Remove(deviceReq);
+            _context.ApiKeyCreationRequests.Remove(apiKeyReq);
             _context.SaveChanges();
             return Ok();
         }
@@ -187,7 +187,7 @@ namespace viafront3.Controllers
             return ret;
         }
 
-        Device AuthDevice(string key, long nonce, out string error)
+        Models.ApiKey AuthKey(string key, long nonce, out string error)
         {
             error = "";
             // get auth header
@@ -204,52 +204,52 @@ namespace viafront3.Controllers
             using (var stream = new System.IO.StreamReader(HttpContext.Request.Body))
             {
                 string requestBody = stream.ReadToEnd();
-                // find device that matches key
-                var device = _context.Devices.SingleOrDefault(d => d.DeviceKey == key);
-                if (device == null)
+                // find apikey that matches key
+                var apikey = _context.ApiKeys.SingleOrDefault(a => a.Key == key);
+                if (apikey == null)
                 {
                     error = "authentication failed";
                     return null;
                 }
                 // check signature
-                var ourSig = HMacWithSha256(device.DeviceSecret, requestBody);
+                var ourSig = HMacWithSha256(apikey.Secret, requestBody);
                 if (!CompareDigest(ourSig, signature))
                 {
                     error = "authentication failed";
                     return null;
                 }
                 // check nonce
-                if (nonce <= device.Nonce)
+                if (nonce <= apikey.Nonce)
                 {
                     error = "old nonce";
                     return null;
                 }
                 // update nonce in db
-                device.Nonce = nonce;
-                _context.Devices.Update(device);
+                apikey.Nonce = nonce;
+                _context.ApiKeys.Update(apikey);
                 _context.SaveChanges();
-                return device;
+                return apikey;
             }
         }
 
         [HttpPost]
-        public IActionResult DeviceDestroy([FromBody] ApiAuth req) 
+        public IActionResult ApiKeyDestroy([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            _context.Devices.Remove(device);
+            _context.ApiKeys.Remove(apikey);
             _context.SaveChanges();
             return Ok();          
         }
 
         [HttpPost]
-        public IActionResult DeviceValidate([FromBody] ApiAuth req) 
+        public IActionResult ApiKeyValidate([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             return Ok();
         }
@@ -258,10 +258,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiAccountBalance> AccountBalance([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -282,10 +282,10 @@ namespace viafront3.Controllers
         public async Task<ActionResult<ApiAccountKyc>> AccountKyc([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+            var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
             if (user == null)
                 return BadRequest();
             var level = user.Kyc != null ? user.Kyc.Level : 0;
@@ -310,8 +310,8 @@ namespace viafront3.Controllers
         public ActionResult<ApiAccountKycRequest> AccountKycUpgrade([FromBody] ApiAuth req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             // call kyc server to create request
             var token = Utils.CreateToken();
@@ -331,7 +331,7 @@ namespace viafront3.Controllers
                     var status = json["status"];
                     // save to database
                     var date = DateTimeOffset.Now.ToUnixTimeSeconds();
-                    var kycReq = new KycRequest { ApplicationUserId = device.ApplicationUserId, Date = date, Token = token };
+                    var kycReq = new KycRequest { ApplicationUserId = apikey.ApplicationUserId, Date = date, Token = token };
                     _context.KycRequests.Add(kycReq);
                     _context.SaveChanges();
                     // return to user
@@ -351,8 +351,8 @@ namespace viafront3.Controllers
         public async Task<ActionResult<ApiAccountKycRequest>> AccountKycUpgradeStatus([FromBody] ApiAccountKycRequestStatus req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             // call kyc server to create request
             var client = new RestClient(_kycSettings.KycServerUrl);
@@ -368,7 +368,7 @@ namespace viafront3.Controllers
                     var status = json["status"];
                     // update kyc level if complete
                     var newLevel = 2;
-                    var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+                    var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
                     if (user == null)
                         return BadRequest();
                     var userKyc = user.Kyc;
@@ -544,10 +544,10 @@ namespace viafront3.Controllers
             if (!success)
                 return BadRequest(error);
 
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -573,10 +573,10 @@ namespace viafront3.Controllers
             if (!success)
                 return BadRequest(error);
 
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -603,10 +603,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrdersResponse> OrdersPending([FromBody] ApiOrders req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -629,10 +629,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrdersResponse> OrdersExecuted([FromBody] ApiOrders req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -655,10 +655,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrder> OrderPendingStatus([FromBody] ApiOrderPendingStatus req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -682,10 +682,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrder> OrderExecutedStatus([FromBody] ApiOrderExecutedStatus req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -709,10 +709,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrder> OrderCancel([FromBody] ApiOrderCancel req) 
         {
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -760,10 +760,10 @@ namespace viafront3.Controllers
             var marketSettings = _settings.Markets[req.Market];
 
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest(); 
             try
@@ -912,10 +912,10 @@ namespace viafront3.Controllers
                 return BadRequest();
             // validate auth
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == device.ApplicationUserId);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
                 return BadRequest();
             // get quote
@@ -972,8 +972,8 @@ namespace viafront3.Controllers
                 return BadRequest("invalid recipient");
             // validate auth
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             // check/create broker user
             var brokerUser = await _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
@@ -1027,7 +1027,7 @@ namespace viafront3.Controllers
             }
             var order = new BrokerOrder
             {
-                ApplicationUserId = device.ApplicationUserId,
+                ApplicationUserId = apikey.ApplicationUserId,
                 AssetReceive = quote.AssetReceive,
                 AmountReceive = quote.AmountReceive,
                 AssetSend = quote.AssetSend,
@@ -1056,11 +1056,11 @@ namespace viafront3.Controllers
         {
             // validate auth
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             // get order
-            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == device.ApplicationUserId && o.Token == req.Token);
+            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == apikey.ApplicationUserId && o.Token == req.Token);
             if (order == null)
                 return BadRequest();
             // update order status
@@ -1074,7 +1074,7 @@ namespace viafront3.Controllers
             if (order.Status == BrokerOrderStatus.Ready.ToString())
             {
                 // get user
-                var user = await _userManager.FindByIdAsync(device.ApplicationUserId);
+                var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
                 if (user == null)
                     return BadRequest();
                 // check kyc limits
@@ -1095,11 +1095,11 @@ namespace viafront3.Controllers
         {
             // validate auth
             string error;
-            var device = AuthDevice(req.Key, req.Nonce, out error);
-            if (device == null)
+            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (apikey == null)
                 return BadRequest(error);
             // get order
-            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == device.ApplicationUserId && o.Token == req.Token);
+            var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == apikey.ApplicationUserId && o.Token == req.Token);
             if (order == null)
                 return BadRequest();
             return FormatOrder(order);

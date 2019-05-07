@@ -11,9 +11,9 @@ namespace viafront3.Data
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public DbSet<Exchange> Exchange { get; set; }
-        public DbSet<Device> Devices { get; set; }
+        public DbSet<ApiKey> ApiKeys { get; set; }
         public DbSet<AccountCreationRequest> AccountCreationRequests { get; set; }
-        public DbSet<DeviceCreationRequest> DeviceCreationRequests { get; set; }
+        public DbSet<ApiKeyCreationRequest> ApiKeyCreationRequests { get; set; }
         public DbSet<Kyc> Kycs { get; set; }
         public DbSet<Withdrawal> Withdrawals { get; set; }
         public DbSet<KycRequest> KycRequests { get; set; }
@@ -31,15 +31,15 @@ namespace viafront3.Data
             // For example, you can rename the ASP.NET Identity table names and more.
             // Add your customizations after calling base.OnModelCreating(builder);
 
-            builder.Entity<Device>()
-                .HasIndex(d => d.DeviceKey)
+            builder.Entity<ApiKey>()
+                .HasIndex(d => d.Key)
                 .IsUnique();
 
             builder.Entity<AccountCreationRequest>()
                 .HasIndex(r => r.Token)
                 .IsUnique();
 
-            builder.Entity<DeviceCreationRequest>()
+            builder.Entity<ApiKeyCreationRequest>()
                 .HasIndex(r => r.Token)
                 .IsUnique();
 

@@ -1,6 +1,6 @@
-﻿@model ConfirmDeviceCreationViewModel
+﻿@model ConfirmApiKeyCreationViewModel
 @{
-    ViewData["Title"] = "Confirm device creation";
+    ViewData["Title"] = "Confirm API KEY creation";
 }
 
 <h2>@ViewData["Title"]</h2>
@@ -8,10 +8,10 @@
 <div class="row">
     <div class="col-md-4">
         <form method="post">
-            <h4>Confirm adding device (@Model.DeviceName) to your account.</h4>
+            <h4>Confirm adding API KEY (@Model.DeviceName) to your account.</h4>
             <hr />
             <div class="alert alert-warning">
-                Only complete this form if you initiated the device creation request. The new device will have access to your account.
+                Only complete this form if you initiated the API KEY creation request. The new API KEY will have access to your account.
             </div>
             <div asp-validation-summary="All" class="text-danger"></div>
             <input type="hidden" asp-for="Token" />

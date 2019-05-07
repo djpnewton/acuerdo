@@ -414,7 +414,7 @@ namespace viafront3.Controllers
             var model = new ApiViewModel
             {
                 User = user,
-                Devices = _context.Devices.Where(d => d.ApplicationUserId == user.Id).ToList(),
+                ApiKeys = _context.ApiKeys.Where(d => d.ApplicationUserId == user.Id).ToList(),
             };
 
             return View(model);
@@ -425,19 +425,19 @@ namespace viafront3.Controllers
         {
             var user = await GetUser(required: true);
 
-            if (model.DeleteDeviceKey != null)
+            if (model.DeleteApiKey != null)
             {
-                var device = _context.Devices.SingleOrDefault(d => d.DeviceKey == model.DeleteDeviceKey && d.ApplicationUserId == user.Id);
-                if (device != null)
+                var apikey = _context.ApiKeys.SingleOrDefault(d => d.Key == model.DeleteApiKey && d.ApplicationUserId == user.Id);
+                if (apikey != null)
                 {
-                    _context.Devices.Remove(device);
+                    _context.ApiKeys.Remove(apikey);
                     _context.SaveChanges();
-                    this.FlashSuccess($"Deleted device ({device.Name})");
+                    this.FlashSuccess($"Deleted API KEY ({apikey.Name})");
                     return RedirectToAction(nameof(Api));
                 }
             }
 
-            this.FlashError($"Failed to delete device");
+            this.FlashError($"Failed to delete API KEY");
             return RedirectToAction(nameof(Api));
         }
 
@@ -478,10 +478,10 @@ namespace viafront3.Controllers
                 }
             }
 
-            var device = Utils.CreateDevice(user, -1, model.DeviceName);
-            _context.Devices.Add(device);
+            var apikey = Utils.CreateApiKey(user, -1, model.DeviceName);
+            _context.ApiKeys.Add(apikey);
             _context.SaveChanges();
-            this.FlashSuccess($"Created device ({device.Name} - Key: {device.DeviceKey} - Secret: {device.DeviceSecret})");
+            this.FlashSuccess($"Created API KEY ({apikey.Name} - Key: {apikey.Key} - Secret: {apikey.Secret})");
             return RedirectToAction(nameof(Api));
         }
 

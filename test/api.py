@@ -20,11 +20,11 @@ def construct_parser():
 
     subparsers = parser.add_subparsers(dest="command")
 
-    ## Account / Device creation
+    ## Account / API KEY creation
 
     parser_acct_create = subparsers.add_parser("account_create", help="Create an account")
     parser_acct_create.add_argument("email", metavar="EMAIL", type=str, help="the email")
-    parser_acct_create.add_argument("device_name", metavar="DEVICE_NAME", type=str, help="the name for the created device")
+    parser_acct_create.add_argument("device_name", metavar="DEVICE_NAME", type=str, help="the name for the created api key")
 
     parser_acct_create_status = subparsers.add_parser("account_create_status", help="Check an account creation request")
     parser_acct_create_status.add_argument("token", metavar="TOKEN", type=str, help="the token")
@@ -32,41 +32,41 @@ def construct_parser():
     parser_acct_create_cancel = subparsers.add_parser("account_create_cancel", help="Cancel an account creation request")
     parser_acct_create_cancel.add_argument("token", metavar="TOKEN", type=str, help="the token")
 
-    parser_device_create = subparsers.add_parser("device_create", help="Create an device")
-    parser_device_create.add_argument("email", metavar="EMAIL", type=str, help="the email of the account")
-    parser_device_create.add_argument("device_name", metavar="DEVICE_NAME", type=str, help="the name for the created device")
+    parser_apikey_create = subparsers.add_parser("apikey_create", help="Create an apikey")
+    parser_apikey_create.add_argument("email", metavar="EMAIL", type=str, help="the email of the account")
+    parser_apikey_create.add_argument("device_name", metavar="DEVICE_NAME", type=str, help="the name for the created apikey")
 
-    parser_device_create_status = subparsers.add_parser("device_create_status", help="Check an device creation request")
-    parser_device_create_status.add_argument("token", metavar="TOKEN", type=str, help="the token")
+    parser_apikey_create_status = subparsers.add_parser("apikey_create_status", help="Check an apikey creation request")
+    parser_apikey_create_status.add_argument("token", metavar="TOKEN", type=str, help="the token")
 
-    parser_device_create_cancel = subparsers.add_parser("device_create_cancel", help="Cancel an device creation request")
-    parser_device_create_cancel.add_argument("token", metavar="TOKEN", type=str, help="the token")
+    parser_apikey_create_cancel = subparsers.add_parser("apikey_create_cancel", help="Cancel an apikey creation request")
+    parser_apikey_create_cancel.add_argument("token", metavar="TOKEN", type=str, help="the token")
 
-    parser_dev_destroy = subparsers.add_parser("device_destroy", help="Destroy device")
-    parser_dev_destroy.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_dev_destroy.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_apikey_destroy = subparsers.add_parser("apikey_destroy", help="Destroy apikey")
+    parser_apikey_destroy.add_argument("key", metavar="KEY", type=str, help="the key")
+    parser_apikey_destroy.add_argument("secret", metavar="SECRET", type=str, help="the secret")
 
-    parser_dev_validate = subparsers.add_parser("device_validate", help="Validate device authentication")
-    parser_dev_validate.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_dev_validate.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_apikey_validate = subparsers.add_parser("apikey_validate", help="Validate apikey authentication")
+    parser_apikey_validate.add_argument("key", metavar="KEY", type=str, help="the apikey key")
+    parser_apikey_validate.add_argument("secret", metavar="SECRET", type=str, help="the apikey secret")
 
     ## Account
 
     parser_account_balance = subparsers.add_parser("account_balance", help="Show account balance")
-    parser_account_balance.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_account_balance.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_account_balance.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_account_balance.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
 
     parser_account_kyc = subparsers.add_parser("account_kyc", help="Show account kyc")
-    parser_account_kyc.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_account_kyc.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_account_kyc.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_account_kyc.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
 
     parser_account_kyc_upgrade = subparsers.add_parser("account_kyc_upgrade", help="Request to upgrade account kyc")
-    parser_account_kyc_upgrade.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_account_kyc_upgrade.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_account_kyc_upgrade.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_account_kyc_upgrade.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
 
     parser_account_kyc_upgrade_status = subparsers.add_parser("account_kyc_upgrade_status", help="Get status of request to upgrade account kyc")
-    parser_account_kyc_upgrade_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_account_kyc_upgrade_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_account_kyc_upgrade_status.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_account_kyc_upgrade_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_account_kyc_upgrade_status.add_argument("token", metavar="TOKEN", type=str, help="the kyc upgrade request token")
 
     ## Market
@@ -92,54 +92,54 @@ def construct_parser():
     ## Trade
 
     parser_order_limit = subparsers.add_parser("order_limit", help="Create a limit order")
-    parser_order_limit.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_order_limit.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_limit.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_limit.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_limit.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
     parser_order_limit.add_argument("side", metavar="SIDE", type=str, help="The side to trade ('buy' or 'sell'")
     parser_order_limit.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the order")
     parser_order_limit.add_argument("price", metavar="PRICE", type=str, help="The price of the order")
 
     parser_order_market = subparsers.add_parser("order_market", help="Create a market order")
-    parser_order_market.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_order_market.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_market.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_market.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_market.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
     parser_order_market.add_argument("side", metavar="SIDE", type=str, help="The side to trade ('buy' or 'sell'")
     parser_order_market.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the order")
 
     parser_orders_pending = subparsers.add_parser("orders_pending", help="View pending orders")
-    parser_orders_pending.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_orders_pending.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_orders_pending.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_orders_pending.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_orders_pending.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
     parser_orders_pending.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
     parser_orders_pending.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
 
     parser_orders_executed = subparsers.add_parser("orders_executed", help="View executed orders")
-    parser_orders_executed.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_orders_executed.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_orders_executed.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_orders_executed.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_orders_executed.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
     parser_orders_executed.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
     parser_orders_executed.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
 
     parser_order_pending_status = subparsers.add_parser("order_pending_status", help="View order pending status")
-    parser_order_pending_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_order_pending_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_pending_status.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_pending_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_pending_status.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
     parser_order_pending_status.add_argument("id", metavar="ID", type=int, help="Order ID")
 
     parser_order_executed_status = subparsers.add_parser("order_executed_status", help="View order executed status")
-    parser_order_executed_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_order_executed_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_executed_status.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_executed_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_executed_status.add_argument("id", metavar="ID", type=int, help="Order ID")
 
 
     parser_order_cancel = subparsers.add_parser("order_cancel", help="Cancel order")
-    parser_order_cancel.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_order_cancel.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_order_cancel.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_cancel.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_cancel.add_argument("id", metavar="ID", type=int, help="Order ID")
 
     parser_trades_executed = subparsers.add_parser("trades_executed", help="View executed trades")
-    parser_trades_executed.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_trades_executed.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_trades_executed.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_trades_executed.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_trades_executed.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_trades_executed.add_argument("offset", metavar="OFFSET", type=int, help="The offset")
     parser_trades_executed.add_argument("limit", metavar="LIMIT", type=int, help="The limit")
@@ -149,50 +149,50 @@ def construct_parser():
     parser_broker_markets = subparsers.add_parser("broker_markets", help="Get the list of open broker markets")
 
     parser_broker_quote = subparsers.add_parser("broker_quote", help="Get a brokerage quote")
-    parser_broker_quote.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_broker_quote.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_quote.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_broker_quote.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_broker_quote.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_broker_quote.add_argument("side", metavar="SIDE", type=str, help="'buy' or 'sell'")
     parser_broker_quote.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
 
     parser_broker_create = subparsers.add_parser("broker_create", help="Create a brokerage order")
-    parser_broker_create.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_broker_create.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_create.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_broker_create.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_broker_create.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_broker_create.add_argument("side", metavar="SIDE", type=str, help="'buy' or 'sell'")
     parser_broker_create.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
     parser_broker_create.add_argument("recipient", metavar="RECIPIENT", type=str, help="The recipient (cryptocurrency address or bank account number")
 
     parser_broker_accept = subparsers.add_parser("broker_accept", help="Accept a brokerage order")
-    parser_broker_accept.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_broker_accept.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_accept.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_broker_accept.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_broker_accept.add_argument("token", metavar="TOKEN", type=str, help="the brokerage order token")
 
     parser_broker_status = subparsers.add_parser("broker_status", help="Check a brokerage order")
-    parser_broker_status.add_argument("device_key", metavar="DEVICE_KEY", type=str, help="the device key")
-    parser_broker_status.add_argument("device_secret", metavar="DEVICE_SECRET", type=str, help="the device secret")
+    parser_broker_status.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_broker_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_broker_status.add_argument("token", metavar="TOKEN", type=str, help="the brokerage order token")
 
     return parser
 
-def create_sig(device_key, device_secret, message):
-    _hmac = hmac.new(device_secret.encode('latin-1'), msg=message.encode('latin-1'), digestmod=hashlib.sha256)
+def create_sig(api_key, api_secret, message):
+    _hmac = hmac.new(api_secret.encode('latin-1'), msg=message.encode('latin-1'), digestmod=hashlib.sha256)
     signature = _hmac.digest()
     signature = base64.b64encode(signature).decode("utf-8")
     return signature
 
-def req(endpoint, params=None, device_key=None, device_secret=None):
-    if device_key:
+def req(endpoint, params=None, api_key=None, api_secret=None):
+    if api_key:
         if not params:
             params = {}
         params["nonce"] = int(time.time())
-        params["key"] = device_key
+        params["key"] = api_key
     url = URL_BASE + endpoint
     if params:
         headers = {"Content-type": "application/json"}
         body = json.dumps(params)
-        if device_key:
-            headers["X-Signature"] = create_sig(device_key, device_secret, body)
+        if api_key:
+            headers["X-Signature"] = create_sig(api_key, api_secret, body)
         print("   POST - " + url)
         r = requests.post(url, headers=headers, data=body)
     else:
@@ -220,8 +220,8 @@ def account_create_status(args):
     print(":: calling account creation status..")
     r = req("AccountCreateStatus", {"token": args.token})
     check_request_status(r)
-    api_device = r.json()
-    print(api_device)
+    api_key = r.json()
+    print(api_key)
 
 def account_create_cancel(args):
     print(":: calling account creation cancel..")
@@ -229,60 +229,60 @@ def account_create_cancel(args):
     check_request_status(r)
     print("ok")
 
-def device_create(args):
-    print(":: calling device create..")
-    r = req("DeviceCreate", {"email": args.email, "deviceName": args.device_name})
+def apikey_create(args):
+    print(":: calling api key create..")
+    r = req("ApiKeyCreate", {"email": args.email, "deviceName": args.device_name})
     check_request_status(r)
     token = r.json()["token"]
     print("token: %s" % token)
 
-def device_create_status(args):
-    print(":: calling device creation status..")
-    r = req("DeviceCreateStatus", {"token": args.token})
+def apikey_create_status(args):
+    print(":: calling api key creation status..")
+    r = req("ApiKeyCreateStatus", {"token": args.token})
     check_request_status(r)
-    api_device = r.json()
-    print(api_device)
+    api_key = r.json()
+    print(api_key)
 
-def device_create_cancel(args):
-    print(":: calling device creation cancel..")
-    r = req("DeviceCreateCancel", {"token": args.token})
-    check_request_status(r)
-    print("ok")
-
-def device_destroy(args):
-    print(":: calling device destroy..")
-    r = req("DeviceDestroy", None, args.device_key, args.device_secret)
+def apikey_create_cancel(args):
+    print(":: calling api key creation cancel..")
+    r = req("ApiKeyCreateCancel", {"token": args.token})
     check_request_status(r)
     print("ok")
 
-def device_validate(args):
-    print(":: calling device validate..")
-    r = req("DeviceValidate", None, args.device_key, args.device_secret)
+def apikey_destroy(args):
+    print(":: calling api key destroy..")
+    r = req("ApiKeyDestroy", None, args.key, args.secret)
+    check_request_status(r)
+    print("ok")
+
+def apikey_validate(args):
+    print(":: calling api key validate..")
+    r = req("ApiKeyValidate", None, args.key, args.secret)
     check_request_status(r)
     print("ok")
 
 def account_balance(args):
     print(":: calling account balance..")
-    r = req("AccountBalance", None, args.device_key, args.device_secret)
+    r = req("AccountBalance", None, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def account_kyc(args):
     print(":: calling account kyc..")
-    r = req("AccountKyc", None, args.device_key, args.device_secret)
+    r = req("AccountKyc", None, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def account_kyc_upgrade(args):
     print(":: calling account kyc upgrade..")
-    r = req("AccountKycUpgrade", None, args.device_key, args.device_secret)
+    r = req("AccountKycUpgrade", None, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def account_kyc_upgrade_status(args):
     print(":: calling account kyc upgrade status..")
     params = {"token": args.token}
-    r = req("AccountKycUpgradeStatus", params, args.device_key, args.device_secret)
+    r = req("AccountKycUpgradeStatus", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
@@ -331,7 +331,7 @@ def order_limit(args):
         print("ERROR: invalid 'side' parameter")
         sys.exit(EXIT_INVALID_SIDE)
     params = {"market": args.market, "side": args.side, "amount": args.amount, "price": args.price}
-    r = req("OrderLimit", params, args.device_key, args.device_secret)
+    r = req("OrderLimit", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
@@ -341,49 +341,49 @@ def order_market(args):
         print("ERROR: invalid 'side' parameter")
         sys.exit(EXIT_INVALID_SIDE)
     params = {"market": args.market, "side": args.side, "amount": args.amount}
-    r = req("OrderMarket", params, args.device_key, args.device_secret)
+    r = req("OrderMarket", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def orders_pending(args):
     print(":: calling orders pending..")
     params = {"market": args.market, "offset": args.offset, "limit": args.limit}
-    r = req("OrdersPending", params, args.device_key, args.device_secret)
+    r = req("OrdersPending", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def orders_executed(args):
     print(":: calling orders executed..")
     params = {"market": args.market, "offset": args.offset, "limit": args.limit}
-    r = req("OrdersExecuted", params, args.device_key, args.device_secret)
+    r = req("OrdersExecuted", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def order_pending_status(args):
     print(":: calling order pending status..")
     params = {"market": args.market, "id": args.id}
-    r = req("OrderPendingStatus", params, args.device_key, args.device_secret)
+    r = req("OrderPendingStatus", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def order_executed_status(args):
     print(":: calling order executed status..")
     params = {"id": args.id}
-    r = req("OrderExecutedStatus", params, args.device_key, args.device_secret)
+    r = req("OrderExecutedStatus", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def order_cancel(args):
     print(":: calling order cancel..")
     params = {"id": args.id}
-    r = req("OrderCancel", params, args.device_key, args.device_secret)
+    r = req("OrderCancel", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def trades_executed(args):
     print(":: calling trades executed..")
     params = {"market": args.market, "offset": args.offset, "limit": args.limit}
-    r = req("TradesExecuted", params, args.device_key, args.device_secret)
+    r = req("TradesExecuted", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
@@ -396,28 +396,28 @@ def broker_markets(args):
 def broker_quote(args):
     print(":: calling broker quote..")
     params = {"market": args.market, "side": args.side, "amount": args.amount}
-    r = req("BrokerQuote", params, args.device_key, args.device_secret)
+    r = req("BrokerQuote", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def broker_create(args):
     print(":: calling broker create..")
     params = {"market": args.market, "side": args.side, "amount": args.amount, "recipient": args.recipient}
-    r = req("BrokerCreate", params, args.device_key, args.device_secret)
+    r = req("BrokerCreate", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def broker_accept(args):
     print(":: calling broker accept..")
     params = {"token": args.token}
-    r = req("BrokerAccept", params, args.device_key, args.device_secret)
+    r = req("BrokerAccept", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def broker_status(args):
     print(":: calling broker status..")
     params = {"token": args.token}
-    r = req("BrokerStatus", params, args.device_key, args.device_secret)
+    r = req("BrokerStatus", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
     print(" - payment address: %s" % r.json()["paymentAddress"])
@@ -437,16 +437,16 @@ if __name__ == "__main__":
         function = account_create_status
     elif args.command == "account_create_cancel":
         function = account_create_cancel
-    elif args.command == "device_create":
-        function = device_create
-    elif args.command == "device_create_status":
-        function = device_create_status
-    elif args.command == "device_create_cancel":
-        function = device_create_cancel
-    elif args.command == "device_destroy":
-        function = device_destroy
-    elif args.command == "device_validate":
-        function = device_validate
+    elif args.command == "apikey_create":
+        function = apikey_create
+    elif args.command == "apikey_create_status":
+        function = apikey_create_status
+    elif args.command == "apikey_create_cancel":
+        function = apikey_create_cancel
+    elif args.command == "apikey_destroy":
+        function = apikey_destroy
+    elif args.command == "apikey_validate":
+        function = apikey_validate
     elif args.command == "account_balance":
         function = account_balance
     elif args.command == "account_kyc":

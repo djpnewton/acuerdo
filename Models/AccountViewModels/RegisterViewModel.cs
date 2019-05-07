@@ -34,7 +34,7 @@ namespace viafront3.Models.AccountViewModels
         public string Token { get; set; }    
     }
 
-    public class ConfirmDeviceCreationViewModel : BaseViewModel
+    public class ConfirmApiKeyCreationViewModel : BaseViewModel
     {
         [Required]
         public string Token { get; set; } 

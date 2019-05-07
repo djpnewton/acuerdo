@@ -115,10 +115,10 @@ namespace viafront3.Services
                 $"Someone has requested to create an account for this email address. Only click the link if it was you who created this request.<br/>Confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a> (expires in {expiryMins} minutes)");
         }
 
-        public static Task SendEmailApiDeviceCreationRequest(this IEmailSender emailSender, string email, int expiryMins, string link)
+        public static Task SendEmailApiKeyCreationRequest(this IEmailSender emailSender, string email, int expiryMins, string link)
         {
-            return emailSender.SendEmailAsync(email, "Confirm device creation",
-                $"Someone has requested to create an device for your account. Only click the link if it was you who created this request.<br/>Confirm your new device creation by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a> (expires in {expiryMins} minutes)");
+            return emailSender.SendEmailAsync(email, "Confirm API KEY creation",
+                $"Someone has requested to create an API KEY for your account. Only click the link if it was you who created this request.<br/>Confirm your new API KEY creation by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a> (expires in {expiryMins} minutes)");
         }
     }
 }

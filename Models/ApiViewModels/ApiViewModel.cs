@@ -10,11 +10,11 @@ namespace viafront3.Models.ApiViewModels
         public string Token;
     }
 
-    public struct ApiDevice
+    public struct ApiKey
     {
         public bool Completed;
-        public string DeviceKey;
-        public string DeviceSecret;
+        public string Key;
+        public string Secret;
     }
 
     public class ApiAccountCreate
@@ -23,7 +23,7 @@ namespace viafront3.Models.ApiViewModels
         public string DeviceName { get; set; }
     }
 
-    public class ApiDeviceCreate
+    public class ApiKeyCreate
     {
         public string Email { get; set; }
         public string DeviceName { get; set; }

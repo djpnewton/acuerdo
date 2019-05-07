@@ -435,33 +435,33 @@ namespace viafront3.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmDeviceCreation(string token)
+        public async Task<IActionResult> ConfirmApiKeyCreation(string token)
         {
             if (token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == token);
-            if (deviceReq != null && !deviceReq.Completed)
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token);
+            if (apiKeyReq != null && !apiKeyReq.Completed)
             {
-                var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
-                var model = new ConfirmDeviceCreationViewModel { Token = token, DeviceName = deviceReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
+                var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
+                var model = new ConfirmApiKeyCreationViewModel { Token = token, DeviceName = apiKeyReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
                 return View(model);
             }
 
-            this.FlashError("Invalid device code");
+            this.FlashError("Invalid API KEY code");
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmDeviceCreation(ConfirmDeviceCreationViewModel model)
+        public async Task<IActionResult> ConfirmApiKeyCreation(ConfirmApiKeyCreationViewModel model)
         {
             if (model.Token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var deviceReq = _context.DeviceCreationRequests.SingleOrDefault(r => r.Token == model.Token);
-            if (deviceReq != null && !deviceReq.Completed)
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == model.Token);
+            if (apiKeyReq != null && !apiKeyReq.Completed)
             {
                 // check 2fa authentication
-                var user = await _userManager.FindByIdAsync(deviceReq.ApplicationUserId);
+                var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
                 if (user.TwoFactorEnabled)
                 {
                     var authenticated = false;
@@ -482,17 +482,17 @@ namespace viafront3.Controllers
                     }
                 }
 
-                _logger.LogInformation("User confrimed a new device with api.");
+                _logger.LogInformation("User confrimed a new apikey with api.");
 
-                deviceReq.Completed = true;
-                _context.DeviceCreationRequests.Update(deviceReq);
+                apiKeyReq.Completed = true;
+                _context.ApiKeyCreationRequests.Update(apiKeyReq);
                 _context.SaveChanges();
 
-                this.FlashSuccess($"Device ({model.DeviceName}) confirmed");
+                this.FlashSuccess($"API KEY ({model.DeviceName}) confirmed");
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
-            this.FlashError("Invalid device code");
+            this.FlashError("Invalid API KEY code");
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
