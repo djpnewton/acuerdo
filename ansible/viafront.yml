@@ -42,25 +42,25 @@
     - name: set mysql host for asp.net db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("DefaultConnection": "Server=)10\.50\.1\.2(;Database)'
+        regexp: '("DefaultConnection": "Server=)localhost(;Database)'
         replace: '\1{{backend_host}}\2'
 
     - name: set mysql host for viaxch db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("Host": ")10\.50\.1\.2(")'
+        regexp: '("Host": ")localhost(")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accesshttp url 
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessHttpUrl": "http:\/\/)10\.50\.1\.2(:8080")'
+        regexp: '("AccessHttpUrl": "http:\/\/)localhost(:8080")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accessws url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.2(:8090")'
+        regexp: '("AccessWsUrl": "ws:\/\/)localhost(:8090")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accessws ip
