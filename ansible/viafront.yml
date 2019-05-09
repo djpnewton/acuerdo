@@ -51,6 +51,12 @@
         regexp: '("Host": ")localhost(")'
         replace: '\1{{backend_host}}\2'
 
+    - name: set mysql host for wallets db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("Host": ")localhost(")'
+        replace: '\1{{backend_host}}\2'
+
     - name: set accesshttp url 
       replace:
         path: /opt/viafront/appsettings.json
@@ -158,21 +164,10 @@
       become: yes
       become_user: viafront
 
-    - name: init db for blockchain wallets
-      shell: cd /opt/viafront; export DB_TYPE=sqlite; export CONNECTION_STRING="Data Source={{item}}"; dotnet ef database update --project xchwallet/xchwallet/xchwallet.csproj --context WalletContext
+    - name: init wallet dbs
+      shell: python /opt/viafront/init_wallet_dbs.py /opt/viafront/appsettings.json /opt/viafront/xchwallet/xchwallet/ /opt/viafront
       become: yes
       become_user: viafront
-      with_items:
-        - waves_wallet.db
-        - zap_wallet.db
-        - btc_wallet.db
-
-    - name: init db for fiat wallets
-      shell: cd /opt/viafront; export DB_TYPE=sqlite; export CONNECTION_STRING="Data Source={{item}}"; dotnet ef database update --project xchwallet/xchwallet/xchwallet.csproj --context FiatWalletContext
-      become: yes
-      become_user: viafront
-      with_items:
-        - nzd_wallet.db
 
     - name: start viafront service
       service: 

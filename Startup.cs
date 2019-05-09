@@ -76,7 +76,8 @@ namespace viafront3
     {
         public bool Mainnet { get; set; } = false;
         public string ConsolidatedFundsTag { get; set; } = "Consolidate";
-        public Dictionary<string, string> DbFiles { get; set; } = new Dictionary<string, string>();
+        public MySqlSettings MySql { get; set; } = new MySqlSettings();
+        public Dictionary<string, string> DbNames { get; set; } = new Dictionary<string, string>();
         public Dictionary<string, ChainAssetSettings> ChainAssetSettings { get; set; } = new Dictionary<string, ChainAssetSettings>();
         public Dictionary<string, xchwallet.BankAccount> BankAccounts { get; set; } = new Dictionary<string, xchwallet.BankAccount>();
     }

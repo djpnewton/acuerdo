@@ -50,14 +50,14 @@ namespace viafront3.Services
             if (_wallets.ContainsKey(asset))
                 return _wallets[asset];
 
-            string dbFile = null;
-            if (_walletSettings.DbFiles.ContainsKey(asset))
-                dbFile = _walletSettings.DbFiles[asset];
+            string dbName = null;
+            if (_walletSettings.DbNames.ContainsKey(asset))
+                dbName = _walletSettings.DbNames[asset];
             ChainAssetSettings cas = null;
             if (_walletSettings.ChainAssetSettings.ContainsKey(asset))
                 cas = _walletSettings.ChainAssetSettings[asset];
             IWallet wallet = null;
-            var db = WalletContext.CreateSqliteWalletContext<WalletContext>(dbFile, false);
+            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false);
             switch (asset)
             {
                 case "WAVES":
@@ -85,13 +85,13 @@ namespace viafront3.Services
             if (_fiatWallets.ContainsKey(asset))
                 return _fiatWallets[asset];
 
-            string dbFile = null;
-            if (_walletSettings.DbFiles.ContainsKey(asset))
-                dbFile = _walletSettings.DbFiles[asset];
+            string dbName = null;
+            if (_walletSettings.DbNames.ContainsKey(asset))
+                dbName = _walletSettings.DbNames[asset];
             BankAccount account = null;
             if (_walletSettings.BankAccounts.ContainsKey(asset))
                 account = _walletSettings.BankAccounts[asset];
-            var wallet = new FiatWallet(_logger, WalletContext.CreateSqliteWalletContext<FiatWalletContext>(dbFile, false), asset, account);
+            var wallet = new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false), asset, account);
             _fiatWallets[asset] = wallet;
             return wallet;
         } 
