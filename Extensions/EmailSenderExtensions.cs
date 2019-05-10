@@ -36,7 +36,7 @@ namespace viafront3.Services
         public static Task SendEmailChainWithdrawalConfirmedAsync(this IEmailSender emailSender, string email, string asset, string amount, string txid)
         {
             return emailSender.SendEmailAsync(email, "Withdrawal Confirmed",
-                $"A blockchain deposit has confirmed, {amount} {asset} ({txid})");
+                $"A blockchain withdrawal has confirmed, {amount} {asset} ({txid})");
         }
 
         public static Task SendEmailFiatDepositCreatedAsync(this IEmailSender emailSender, string email, string asset, string amount, string depositCode, xchwallet.BankAccount account)
