@@ -364,6 +364,9 @@ namespace viafront3.Controllers
                 if (!await _userManager.IsInRoleAsync(user, role.Name))
                     await _userManager.AddToRoleAsync(user, role.Name);
 
+                // refresh users cookie (so they dont have to log out/ log in)
+                await _signInManager.RefreshSignInAsync(user);
+
                 // grant email kyc
                 for (var i = 0; i < _kycSettings.Levels.Count(); i++)
                 {
