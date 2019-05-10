@@ -18,6 +18,7 @@ namespace viafront3.Data
         public DbSet<Withdrawal> Withdrawals { get; set; }
         public DbSet<KycRequest> KycRequests { get; set; }
         public DbSet<BrokerOrder> BrokerOrders { get; set; }
+        public DbSet<AuthenticationTicket> AuthenticationTickets { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
