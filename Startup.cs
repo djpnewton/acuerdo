@@ -127,7 +127,18 @@ namespace viafront3
         public string KycServerApiSecret { get; set; }
     }
 
-    public class Startup
+    public class TripwireSettings
+    {
+        public string AlertEmail { get; set; }
+        public int TimePeriodInMinutes { get; set; }
+        public int LoginAttempsMax { get; set; }
+        public int LoginsMax { get; set; }
+        public int ResetPasswordAttempsMax { get; set; }
+        public int WithdrawalAttempsMax { get; set; }
+        public int WithdrawalsMax { get; set; }
+    }
+
+public class Startup
     {
         public Startup(IConfiguration configuration)
         {
@@ -145,6 +156,7 @@ namespace viafront3
             services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));
             services.Configure<ApiSettings>(options => Configuration.GetSection("Api").Bind(options));
             services.Configure<KycSettings>(options => Configuration.GetSection("Kyc").Bind(options));
+            services.Configure<TripwireSettings>(options => Configuration.GetSection("Tripwire").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()
@@ -170,6 +182,8 @@ namespace viafront3
             services.AddSingleton<IWebsocketTokens, WebsocketTokens>();
             services.AddSingleton<IWalletProvider, WalletProvider>();
             services.AddTransient<IBroker, viafront3.Services.Broker>();
+            services.AddSingleton<ITripwire, Tripwire>();
+            services.AddSingleton<IDepositsWithdrawals, DepositsWithdrawals>();
 
             services.AddMvc();
         }
@@ -202,6 +216,10 @@ namespace viafront3
             app.UseHangfireServer();
             RecurringJob.AddOrUpdate<IBroker>(
                 broker => broker.ProcessOrders(), "0 */5 * ? * *"); // every 5 minutes
+            RecurringJob.AddOrUpdate<IDepositsWithdrawals>(
+                depositsWithdrawals => depositsWithdrawals.ProcessChainDeposits(), "0 */10 * ? * *"); // every 10 minutes
+            RecurringJob.AddOrUpdate<IDepositsWithdrawals>(
+                depositsWithdrawals => depositsWithdrawals.ProcessChainWithdrawals(), "0 */10 * ? * *"); // every 10 minutes
 
             loggerFactory.AddFile("logs/viafront-{Date}.txt");
         }

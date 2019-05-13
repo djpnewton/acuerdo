@@ -25,6 +25,7 @@ namespace viafront3.Controllers
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly KycSettings _kycSettings;
+        private readonly ITripwire _tripwire;
 
         public AccountController(
             ILogger<AccountController> logger,
@@ -34,12 +35,14 @@ namespace viafront3.Controllers
             IEmailSender emailSender,
             IOptions<ExchangeSettings> settings,
             RoleManager<IdentityRole> roleManager,
-            IOptions<KycSettings> kycSettings) : base(logger, userManager, context, settings)
+            IOptions<KycSettings> kycSettings,
+            ITripwire tripwire) : base(logger, userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _kycSettings = kycSettings.Value;
+            _tripwire = tripwire;
         }
 
         [TempData]
@@ -73,6 +76,7 @@ namespace viafront3.Controllers
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    await _tripwire.RegisterEvent(TripwireEventType.Login);
                     this.FlashSuccess("Logged in");
                     return RedirectToLocal(returnUrl);
                 }
@@ -87,6 +91,7 @@ namespace viafront3.Controllers
                 }
                 else
                 {
+                    await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                     ModelState.AddModelError(string.Empty, "Invalid login attempt.");
                     return View(model);
                 }
@@ -138,16 +143,19 @@ namespace viafront3.Controllers
 
             if (result.Succeeded)
             {
+                await _tripwire.RegisterEvent(TripwireEventType.Login);
                 _logger.LogInformation("User with ID {UserId} logged in with 2fa.", user.Id);
                 return RedirectToLocal(returnUrl);
             }
             else if (result.IsLockedOut)
             {
+                await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
                 return RedirectToAction(nameof(Lockout));
             }
             else
             {
+                await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                 _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}.", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
                 return View();
@@ -194,16 +202,19 @@ namespace viafront3.Controllers
 
             if (result.Succeeded)
             {
+                await _tripwire.RegisterEvent(TripwireEventType.Login);
                 _logger.LogInformation("User with ID {UserId} logged in with a recovery code.", user.Id);
                 return RedirectToLocal(returnUrl);
             }
             if (result.IsLockedOut)
             {
+                await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                 _logger.LogWarning("User with ID {UserId} account locked out.", user.Id);
                 return RedirectToAction(nameof(Lockout));
             }
             else
             {
+                await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                 _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
                 ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
                 return View(new LoginWithRecoveryCodeViewModel{ User = null });
@@ -288,10 +299,12 @@ namespace viafront3.Controllers
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in with {Name} provider.", info.LoginProvider);
+                await _tripwire.RegisterEvent(TripwireEventType.Login);
                 return RedirectToLocal(returnUrl);
             }
             if (result.IsLockedOut)
             {
+                await _tripwire.RegisterEvent(TripwireEventType.LoginAttempt);
                 return RedirectToAction(nameof(Lockout));
             }
             else
@@ -562,6 +575,7 @@ namespace viafront3.Controllers
             {
                 return View(model);
             }
+            await _tripwire.RegisterEvent(TripwireEventType.ResetPasswordAttempt);
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
             {

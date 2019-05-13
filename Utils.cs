@@ -229,7 +229,6 @@ namespace viafront3
             asset = asset.ToUpper();
             var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
             var wallet = walletProvider.GetChain(asset);
-            var assetSettings = walletProvider.ChainAssetSettings(asset);
 
             // show pending spends
             var spends = wallet.PendingSpendsGet(null, new PendingSpendState[]{ PendingSpendState.Pending, PendingSpendState.Error });

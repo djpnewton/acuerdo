@@ -180,21 +180,3 @@
         name: viafront_order_emails
         state: started
         enabled: yes
-
-    - name: set cron shell
-      cron:
-        name: SHELL
-        env: yes
-        value: /bin/bash
-
-    - name: copy the deposit and withdrawal script
-      template:
-        src: templates/process_deposits_and_withdrawals.sh
-        dest: /opt/viafront/process_deposits_and_withdrawals.sh
-        mode: 0755
-
-    - name: run the deposit and withdrawal script
-      cron:
-        name: viafront deposits and withdrawal script
-        minute: "*/10"
-        job: /opt/viafront/process_deposits_and_withdrawals.sh

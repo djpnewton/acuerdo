@@ -75,7 +75,7 @@ namespace viafront3
             public string BankMetadata { get; set; }
         }
 
-        [Verb("process_chain_withdrawal", HelpText = "Process a blockchain withdrawal")]
+        [Verb("__process_chain_withdrawal", HelpText = "Process a blockchain withdrawal")]
         class ProcessChainWithdrawal
         { 
             [Option('a', "asset", Required = true, HelpText = "Asset")]
@@ -91,7 +91,7 @@ namespace viafront3
             public string Asset { get; set; }
         }
 
-        [Verb("check_chain_deposits", HelpText = "Check all users for deposits")]
+        [Verb("__check_chain_deposits", HelpText = "Check all users for deposits")]
         class CheckChainDeposits
         { 
             [Option('a', "asset", Required = true, HelpText = "Asset")]

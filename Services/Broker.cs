@@ -28,13 +28,15 @@ namespace viafront3.Services
         private readonly ApiSettings _apiSettings;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ExchangeSettings _settings;
+        private readonly ITripwire _tripwire;
 
         public Broker(ILogger<Broker> logger,
             ApplicationDbContext context,
             IWalletProvider walletProvider,
             IOptions<ApiSettings> apiSettings,
             UserManager<ApplicationUser> userManager,
-            IOptions<ExchangeSettings> settings)
+            IOptions<ExchangeSettings> settings,
+            ITripwire tripwire)
         {
             _logger = logger;
             _context = context;
@@ -42,6 +44,7 @@ namespace viafront3.Services
             _apiSettings = apiSettings.Value;
             _userManager = userManager;
             _settings = settings.Value;
+            _tripwire = tripwire;
         }
 
         bool DepositAndCreateTrade(ApplicationUser brokerUser, IWallet wallet, BrokerOrder order, WalletTx tx)
@@ -153,6 +156,12 @@ namespace viafront3.Services
 
         public void ProcessOrders()
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting ProcessOrders()");
+                return;
+            }
             // get lock - ensure that this function ends before it is started again
             lock(lockObj)
             {

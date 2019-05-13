@@ -10,6 +10,7 @@ using Microsoft.Extensions.Options;
 using viafront3.Models;
 using viafront3.Models.TradeViewModels;
 using viafront3.Data;
+using viafront3.Services;
 using via_jsonrpc;
 
 namespace viafront3.Controllers
@@ -17,12 +18,17 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class TradeController : BaseSettingsController
     {
+        readonly ITripwire _tripwire;
+
         public TradeController(
           ILogger<TradeController> logger,
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings)
-        { }
+          IOptions<ExchangeSettings> settings,
+          ITripwire tripwire) : base(logger, userManager, context, settings)
+        {
+            _tripwire = tripwire;
+        }
 
         public IActionResult Index()
         {
@@ -63,6 +69,13 @@ namespace viafront3.Controllers
         [HttpPost] 
         public async Task<IActionResult> LimitOrder(TradeViewModel model)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting LimitOrder()");
+                this.FlashError($"Trading not enabled");
+                return RedirectToAction("Trade", new { market = model.Market });
+            }
             (var success, var error) = Utils.ValidateOrderParams(_settings, model.Order, model.Order.Price);
             if (!success)
                 return FlashErrorAndRedirect("Trade", model.Market, error);
@@ -97,6 +110,13 @@ namespace viafront3.Controllers
         [HttpPost] 
         public async Task<IActionResult> MarketOrder(TradeViewModel model)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting MarketOrder()");
+                this.FlashError($"Trading not enabled");
+                return RedirectToAction("Trade", new { market = model.Market });
+            }
             (var success, var error) = Utils.ValidateOrderParams(_settings, model.Order, null, marketOrder: true);
             if (!success)
                 return FlashErrorAndRedirect("Trade", model.Market, error);

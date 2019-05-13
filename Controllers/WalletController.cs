@@ -25,6 +25,7 @@ namespace viafront3.Controllers
     public class WalletController : BaseWalletController
     {
         private readonly IEmailSender _emailSender;
+        private readonly ITripwire _tripwire;
 
         public WalletController(
           ILogger<WalletController> logger,
@@ -33,9 +34,11 @@ namespace viafront3.Controllers
           IOptions<ExchangeSettings> settings,
           IWalletProvider walletProvider,
           IOptions<KycSettings> kycSettings,
-          IEmailSender emailSender) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+          IEmailSender emailSender,
+          ITripwire tripwire) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _emailSender = emailSender;
+            _tripwire = tripwire;
         }
 
         [HttpGet]
@@ -250,6 +253,15 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Withdraw(WithdrawViewModel model)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting Withdraw()");
+                this.FlashError($"Withdrawals not enabled");
+                return View(model);
+            }
+            await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
+
             var user = await GetUser(required: true);
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -327,6 +339,9 @@ namespace viafront3.Controllers
                 user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
                 _context.SaveChanges();
 
+                // register withdrawal with tripwire
+                await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
+
                 this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
                 // send email: withdrawal created
                 await _emailSender.SendEmailChainWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString());
@@ -386,6 +401,15 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> WithdrawFiat(WithdrawFiatViewModel model)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting WithdrawFiat()");
+                this.FlashError($"Withdrawals not enabled");
+                return View(model);
+            }
+            await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
+
             var user = await GetUser(required: true);
 
             var wallet = _walletProvider.GetFiat(model.Asset);
@@ -445,6 +469,9 @@ namespace viafront3.Controllers
             // register withdrawal with kyc limits
             user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
             _context.SaveChanges();
+
+            // register withdrawal with tripwire
+            await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
 
             // send email: withdrawal created
             await _emailSender.SendEmailFiatWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString(), tx.DepositCode);

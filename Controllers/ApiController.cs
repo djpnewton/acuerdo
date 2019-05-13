@@ -31,6 +31,7 @@ namespace viafront3.Controllers
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApiSettings _apiSettings;
+        private readonly ITripwire _tripwire;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -42,12 +43,14 @@ namespace viafront3.Controllers
             IOptions<ApiSettings> apiSettings,
             RoleManager<IdentityRole> roleManager,
             IOptions<KycSettings> kycSettings,
-            IWalletProvider walletProvider) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IWalletProvider walletProvider,
+            ITripwire tripwire) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _apiSettings = apiSettings.Value;
+            _tripwire = tripwire;
         }
 
         [HttpPost]
@@ -906,6 +909,12 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiBrokerQuoteResponse> BrokerQuote([FromBody] ApiBrokerQuote req) 
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting BrokerQuote()");
+                return BadRequest();
+            }
             // validate market
             OrderSide side;
             if (!ValidateBrokerMarket(req.Market, req.Side, out side))
@@ -964,6 +973,12 @@ namespace viafront3.Controllers
         [HttpPost]
         public async Task<ActionResult<ApiBrokerOrder>> BrokerCreate([FromBody] ApiBrokerCreate req)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting BrokerCreate()");
+                return BadRequest();
+            }
             // validate market
             OrderSide side;
             if (!ValidateBrokerMarket(req.Market, req.Side, out side))
@@ -1054,6 +1069,12 @@ namespace viafront3.Controllers
         [HttpPost]
         public async Task<ActionResult<ApiBrokerOrder>> BrokerAccept([FromBody] ApiBrokerStatus req)
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting BrokerAccept()");
+                return BadRequest();
+            }
             // validate auth
             string error;
             var apikey = AuthKey(req.Key, req.Nonce, out error);

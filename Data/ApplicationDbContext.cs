@@ -19,6 +19,7 @@ namespace viafront3.Data
         public DbSet<KycRequest> KycRequests { get; set; }
         public DbSet<BrokerOrder> BrokerOrders { get; set; }
         public DbSet<AuthenticationTicket> AuthenticationTickets { get; set; }
+        public DbSet<TripwireEvent> TripwireEvents { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -60,5 +61,22 @@ namespace viafront3.Data
                 .HasIndex(r => r.InvoiceId)
                 .IsUnique();
         }
+    }
+
+    public enum TripwireEventType
+    {
+        LoginAttempt,
+        Login,
+        ResetPasswordAttempt,
+        WithdrawalAttempt,
+        Withdrawal,
+    }
+
+    public class TripwireEvent
+    {
+        public int Id { get; set; }
+        public DateTimeOffset? Date { get; set; }
+        public TripwireEventType Type { get; set; }
+        public string RemoteIpAddress { get; set; }
     }
 }
