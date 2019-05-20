@@ -42,67 +42,67 @@
     - name: set mysql host for asp.net db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("DefaultConnection": "Server=)localhost(;Database)'
+        regexp: '("DefaultConnection": "Server=)10\.50\.1\.100(;Database)'
         replace: '\1{{backend_host}}\2'
 
     - name: set mysql host for viaxch db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("Host": ")localhost(")'
+        regexp: '("Host": ")10\.50\.1\.100(")'
         replace: '\1{{backend_host}}\2'
 
     - name: set mysql host for wallets db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("Host": ")localhost(")'
+        regexp: '("Host": ")10\.50\.1\.100(")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accesshttp url 
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessHttpUrl": "http:\/\/)localhost(:8080")'
+        regexp: '("AccessHttpUrl": "http:\/\/)10\.50\.1\.100(:8080")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accessws url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessWsUrl": "ws:\/\/)localhost(:8090")'
+        regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.100(:8090")'
         replace: '\1{{backend_host}}\2'
 
     - name: set accessws ip
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessWsIp": ")127\.0\.0\.1(")'
+        regexp: '("AccessWsIp": ")10\.50\.1\.100(")'
         replace: '\1{{backend_ip}}\2'
 
     - name: set websocket url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("WebsocketUrl": ")ws:\/\/localhost\/ws(")'
+        regexp: '("WebsocketUrl": ")ws:\/\/10\.50\.1\.100\/ws(")'
         replace: '\1wss:\/\/{{deploy_host}}\/ws\/\2'
 
     - name: set kafka host
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("KafkaHost": ")127\.0\.0\.1(:9092")'
+        regexp: '("KafkaHost": ")10\.50\.1\.100(:9092")'
         replace: '\1{{backend_host}}\2'
 
     - name: set waves node url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)localhost(:6869")'
+        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:6869")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: set zap node url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)localhost(:6869")'
+        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:6869")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: set nbxexplorer url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)localhost(:24444")'
+        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:24444")'
         replace: '\1{{blockchain_host}}\2'
 
     - name: set from email

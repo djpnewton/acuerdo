@@ -34,3 +34,6 @@ logs/
 
 # visual studio stuff
 .vs/
+
+# vagrant
+.vagrant

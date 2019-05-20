@@ -2,12 +2,13 @@
 
 DEPLOY_TEST=test
 DEPLOY_PRODUCTION=production
+DEPLOY_LOCAL=local
 DEPLOY_TYPE=$1
 
 display_usage() { 
     echo -e "\nUsage:
 
-    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION)> 
+    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> 
 
     "
 } 
@@ -27,7 +28,7 @@ then
 fi 
 
 # check whether user has a valid DEPLOY_TYPE
-if [[ ( $DEPLOY_TYPE != "test" ) &&  ( $DEPLOY_TYPE != "production" ) ]] 
+if [[ ( $DEPLOY_TYPE != "$DEPLOY_TEST" ) &&  ( $DEPLOY_TYPE != "$DEPLOY_PRODUCTION" ) && ( $DEPLOY_TYPE != "$DEPLOY_LOCAL" ) ]] 
 then 
     display_usage
     echo !!\"$DEPLOY_TYPE\" is not valid
@@ -45,11 +46,20 @@ KAFKA_ADVERTISED_LISTENER=backend-internal.bronze.exchange
 DEPLOY_USER=root
 TESTNET=
 # set deploy variables for test
-if [[ ( $DEPLOY_TYPE == "test" ) ]]
+if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then 
     DEPLOY_HOST=backend.test.bronze.exchange
     FRONTEND_HOST=test-internal.bronze.exchange
     KAFKA_ADVERTISED_LISTENER=backend-internal.test.bronze.exchange
+    DEPLOY_USER=root
+    TESTNET=true
+fi 
+# set deploy variables for local
+if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
+then 
+    DEPLOY_HOST=10.50.1.100
+    FRONTEND_HOST=10.0.2.2 # https://gist.github.com/lsloan/6f4307a2cab2aaa16feb323adf8d7959
+    KAFKA_ADVERTISED_LISTENER=10.50.1.100
     DEPLOY_USER=root
     TESTNET=true
 fi 
@@ -96,6 +106,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST mysql_host=$MYSQL_HOST redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST mysql_host=$MYSQL_HOST redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi
