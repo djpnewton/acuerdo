@@ -20,17 +20,21 @@ namespace viafront3.Services
 
         public Task SendEmailAsync(string email, string subject, string message)
         {
-            return Execute(_settings.SmtpHost, _settings.From, subject, message, email);
+            return Execute(subject, message, email);
         }
 
-        public Task Execute(string smtpHost, string from, string subject, string message, string email)
+        public Task Execute(string subject, string message, string email)
         { 
             // create smtp client
             var smtp = new SmtpClient();
-            smtp.Host = smtpHost;
+            smtp.Host = _settings.SmtpHost;
+            smtp.Port = _settings.SmtpPort;
+            smtp.EnableSsl = _settings.SmtpSsl;
+            if (_settings.SmtpUser != null)
+                smtp.Credentials = new System.Net.NetworkCredential(_settings.SmtpUser, _settings.SmtpPass);
             // create mail
             var mail = new MailMessage();
-            mail.From = new System.Net.Mail.MailAddress(from);
+            mail.From = new System.Net.Mail.MailAddress(_settings.From);
             mail.To.Add(new MailAddress(email));
             mail.Subject = subject;
             mail.IsBodyHtml = true;

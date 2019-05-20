@@ -84,8 +84,12 @@ namespace viafront3
 
     public class EmailSenderSettings
     {
-        public string SmtpHost { get; set; }
         public string From { get; set; }
+        public string SmtpHost { get; set; }
+        public string SmtpUser { get; set; }
+        public string SmtpPass { get; set; }
+        public int SmtpPort { get; set; }
+        public bool SmtpSsl { get; set; }
     }
 
     public class Broker

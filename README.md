@@ -27,8 +27,25 @@ Clone the repo including submodules: `git clone --recurse-submodules https://git
 ## Create the wallet databases
  - `python init_wallet_dbs.py appsettings.json xchwallet/xchwallet/ .`
 
+## Init roles
+ - `dotnet run -- console initroles`
+
 ## Run Acuerdo
  - `dotnet run`
 
 ## Mail server
- - a mail server is created, but it will probably have trouble getting its mail delivered
+
+A mail server is created, but it will probably have trouble getting its mail delivered.
+
+To use another authorised mail relay (like gmail) change the 'EmailSender' settings in 'appsettings.json':
+
+```
+    "EmailSender": {
+        "From": "myusername@gmail.com",
+        "SmtpHost": "smtp.gmail.com",
+        "SmtpUser": "myusername",
+        "SmtpPass": "mypassword",
+        "SmtpPort": 587,
+        "SmtpSsl":  true
+    },
+```
