@@ -28,4 +28,11 @@ Vagrant.configure(2) do |config|
     sudo systemctl restart sshd.service
     echo "finished"
   EOC
+
+  ansible_vars = { deploy_host: "viafront3.com", admin_email: "test@viafront3.com", local: true }
+  config.vm.provision :ansible_local do |ansible|
+    ansible.playbook = "postfix.yml"
+    ansible.extra_vars = ansible_vars
+  end
+
 end

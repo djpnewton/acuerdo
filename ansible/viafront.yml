@@ -111,6 +111,12 @@
         regexp: '("From": ")admin@viafront3.com(")'
         replace: '\1{{admin_email}}\2'
 
+    - name: set smtp host
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("SmtpHost": ")10\.50\.1\.100(")'
+        replace: '\1{{backend_host}}\2'
+
     - name: copy viafront.service
       template:
         src: templates/viafront.service

@@ -11,6 +11,7 @@ Clone the repo including submodules: `git clone --recurse-submodules https://git
  - ansible
  - vagrant
  - mysql command line client
+ - python
  - dotnet core
 
 ## Create backend servers
@@ -23,8 +24,11 @@ Clone the repo including submodules: `git clone --recurse-submodules https://git
  - Create database `mysql --host=10.50.1.100 -uviaxch -pnot_production --execute="create database viafront;"`
  - Init schema using Entity Framework Core `dotnet ef database update`
 
-## Mail server
-At this point you will need to manually configure a mail server on the vagrant backend server.
+## Create the wallet databases
+ - `python init_wallet_dbs.py appsettings.json xchwallet/xchwallet/ .`
 
 ## Run Acuerdo
  - `dotnet run`
+
+## Mail server
+ - a mail server is created, but it will probably have trouble getting its mail delivered
