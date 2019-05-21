@@ -46,7 +46,19 @@
                                     @user.UserName
                                 </td>
                                 <td>
-                                    @userInfo.ExchangeId
+                                    @user.Exchange?.Id
+                                    @{
+                                        if (user.Exchange == null)
+                                        {
+                                            <form method="post" asp-action="UserExchangeCreate">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" asp-for="UserId" value="@user.Id" />
+                                                <button type="submit" class="btn btn-warning btn-xs">
+                                                    Create Exchange
+                                                </button>
+                                            </form>
+                                            }
+                                        }
                                 </td>
                                 <td>
                                     @string.Join(",", roles)

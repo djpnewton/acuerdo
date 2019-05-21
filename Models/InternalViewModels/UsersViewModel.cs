@@ -12,13 +12,13 @@ namespace viafront3.Models.InternalViewModels
     public class UserInfo
     {
         public ApplicationUser User { set; get; }
-        public int ExchangeId { set; get; } 
         public List<string> Roles { set; get; } 
     }
 
     public class UsersViewModel : BaseViewModel
     {
         public List<UserInfo> UserInfos { get; set; }
+        public string UserId { get; set; }
     }
 
     public class UserViewModel : BaseViewModel
