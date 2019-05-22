@@ -2,6 +2,7 @@
 *~
 *.swp
 *.swo
+*.swn
 
 # mac turds
 .DS_Store
@@ -37,3 +38,6 @@ logs/
 
 # vagrant
 .vagrant
+
+# geckodriver
+geckodriver*
