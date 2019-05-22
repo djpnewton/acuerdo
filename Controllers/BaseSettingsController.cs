@@ -58,6 +58,29 @@ namespace viafront3.Controllers
             }
             return (result, user);
         }
+
+        protected async Task PostUserEmailConfirmed(RoleManager<IdentityRole> roleManager, SignInManager<ApplicationUser> signInManager, KycSettings kycSettings, ApplicationUser user)
+        {
+            // add email confirmed role
+            var role = await roleManager.FindByNameAsync(Utils.EmailConfirmedRole);
+            System.Diagnostics.Debug.Assert(role != null);
+            if (!await _userManager.IsInRoleAsync(user, role.Name))
+                await _userManager.AddToRoleAsync(user, role.Name);
+
+            // refresh users cookie (so they dont have to log out/ log in)
+            await signInManager.RefreshSignInAsync(user);
+
+            // grant email kyc
+            for (var i = 0; i < kycSettings.Levels.Count(); i++)
+            {
+                if (kycSettings.Levels[i].Name == "Email Confirmed")
+                {
+                    user.UpdateKyc(_logger, _context, kycSettings, i);
+                    _context.SaveChanges();
+                    break;
+                }
+            }
+        }
     }
 
     public class BaseWalletController : BaseSettingsController
