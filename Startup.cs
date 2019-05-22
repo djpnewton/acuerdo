@@ -174,7 +174,7 @@ public class Startup
             {
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.SlidingExpiration = true;
-                options.SessionStore = new EfTicketStore(services);
+                options.SessionStore = new EfTicketStore(services.BuildServiceProvider());
             });
 
             var storage = new MySqlStorage(Configuration.GetConnectionString("DefaultConnection"), new MySqlStorageOptions { TablePrefix = "Hangfire" });

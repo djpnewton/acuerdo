@@ -15,16 +15,16 @@ namespace viafront3.Services
 {
     public class EfTicketStore : ITicketStore
     {
-        private readonly IServiceCollection _services;
+        private readonly IServiceProvider _serviceProvider;
 
-        public EfTicketStore(IServiceCollection services)
+        public EfTicketStore(IServiceProvider serviceProvider)
         {
-            _services = services;
+            _serviceProvider = serviceProvider;
         }
 
         public async Task RemoveAsync(string key)
         {
-            using (var scope = _services.BuildServiceProvider().CreateScope())
+            using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
                 if (Guid.TryParse(key, out var id))
@@ -41,7 +41,7 @@ namespace viafront3.Services
 
         public async Task RenewAsync(string key, AuthenticationTicket ticket)
         {
-            using (var scope = _services.BuildServiceProvider().CreateScope())
+            using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
                 if (Guid.TryParse(key, out var id))
@@ -60,7 +60,7 @@ namespace viafront3.Services
 
         public async Task<AuthenticationTicket> RetrieveAsync(string key)
         {
-            using (var scope = _services.BuildServiceProvider().CreateScope())
+            using (var scope = _serviceProvider.CreateScope())
             {
                 var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
                 if (Guid.TryParse(key, out var id))
@@ -81,7 +81,7 @@ namespace viafront3.Services
 
         public async Task<string> StoreAsync(AuthenticationTicket ticket)
         {
-            using (var scope = _services.BuildServiceProvider().CreateScope())
+            using (var scope = _serviceProvider.CreateScope())
             {
                 var userId = string.Empty;
                 var nameIdentifier = ticket.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
