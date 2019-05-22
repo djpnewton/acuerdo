@@ -66,8 +66,16 @@ namespace viafront3.Controllers
                 interval = 3600;
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var klines = via.KlineQuery(market, start, end, interval);
-            return Json(klines);
+            try
+            {
+                var klines = via.KlineQuery(market, start, end, interval);
+                return Json(klines);
+            }
+            catch (ViaJsonException ex)
+            {
+                _logger.LogError(ex, "exception getting klines");
+                return BadRequest();
+            }
         }
     }
 }
