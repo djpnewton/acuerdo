@@ -100,21 +100,35 @@ namespace viafront3.Controllers
             _kycSettings = kycSettings.Value;
         }
 
-        protected decimal CalculateWithdrawalAssetEquivalent(ILogger logger, ExchangeSettings settings, KycSettings kyc, string asset, decimal amount)
+        protected decimal CalculateWithdrawalAssetEquivalent(ILogger logger, KycSettings kyc, string asset, decimal amount)
         {
             if (asset == kyc.WithdrawalAsset)
                 return amount;
 
-            foreach (var market in settings.Markets.Keys)
+            foreach (var market in _settings.Markets.Keys)
             {
                 if (market.StartsWith(asset) && market.EndsWith(kyc.WithdrawalAsset))
                 {
-                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                    var price = via.MarketPriceQuery(market);
-                    return amount * decimal.Parse(price);
+                    try
+                    {
+                        //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                        var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                        var price = via.MarketPriceQuery(market);
+                        var priceDec = decimal.Parse(price);
+                        if (priceDec <= 0)
+                            continue;
+                        return amount * priceDec;
+                    }
+                    catch (ViaJsonException ex)
+                    {
+                        _logger.LogError(ex, $"Error getting market price for asset '{market}'");
+                    }
                 }
             };
+
+            if (kyc.WithdrawalAssetBaseRates.ContainsKey(asset))
+                return amount * kyc.WithdrawalAssetBaseRates[asset];
+
             logger.LogError($"no price found for asset {asset}");
             throw new Exception($"no price found for asset {asset}");
         }
@@ -122,7 +136,7 @@ namespace viafront3.Controllers
         protected (bool success, decimal withdrawalAssetAmount, string error) ValidateWithdrawlLimit(ApplicationUser user, string asset, decimal amount)
         {
             var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
-            var withdrawalAssetAmount = CalculateWithdrawalAssetEquivalent(_logger, _settings, _kycSettings, asset, amount);
+            var withdrawalAssetAmount = CalculateWithdrawalAssetEquivalent(_logger, _kycSettings, asset, amount);
             var newWithdrawalTotal = withdrawalTotalThisPeriod + withdrawalAssetAmount;
             var kycLevel = _kycSettings.Levels[0];
             if (user.Kyc != null && user.Kyc.Level < _kycSettings.Levels.Count)

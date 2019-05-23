@@ -127,6 +127,7 @@ namespace viafront3
         public List<KycLevel> Levels { get; set; }
         public WithdrawalPeriod WithdrawalPeriod { get; set; }
         public string WithdrawalAsset { get; set; }
+        public Dictionary<string, decimal> WithdrawalAssetBaseRates { get; set; } = new Dictionary<string, decimal>();
         public string KycServerUrl { get; set; }
         public string KycServerApiKey { get; set; }
         public string KycServerApiSecret { get; set; }
