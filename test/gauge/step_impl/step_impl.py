@@ -44,6 +44,7 @@ def login_with_email_and_password(email, password):
 @step("Check all forms for CSRF protection")
 def check_all_forms_for_CSRF_protection():
     driver = Driver.driver
+    driver.set_page_load_timeout(10)
     base_url = driver.current_url
     urls = []
     urls_visited = []
@@ -58,6 +59,8 @@ def check_all_forms_for_CSRF_protection():
         if urls:
             url = urls.pop(0)
             driver.get(url)
+            import time
+            time.sleep(0.1)
             urls_visited.append(url)
 
             # check for forms
