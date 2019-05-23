@@ -12,6 +12,7 @@ using Microsoft.Extensions.Logging;
 using Pomelo.EntityFrameworkCore.MySql;
 using Hangfire;
 using Hangfire.MySql.Core;
+using Hangfire.Dashboard;
 using viafront3.Data;
 using viafront3.Models;
 using viafront3.Services;
@@ -142,7 +143,19 @@ namespace viafront3
         public int WithdrawalsMax { get; set; }
     }
 
-public class Startup
+    public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
+    {
+        public bool Authorize(DashboardContext context)
+        {
+            var httpContext = context.GetHttpContext();
+
+            // Allow all authenticated users with the admin role to see the Dashboard.
+            return httpContext.User.Identity.IsAuthenticated &&
+                   httpContext.User.IsInRole(Utils.AdminRole);
+        }
+    }
+
+    public class Startup
     {
         public Startup(IConfiguration configuration)
         {
@@ -216,7 +229,11 @@ public class Startup
                     template: "{controller=Home}/{action=Index}/{id?}");
             });
 
-            app.UseHangfireDashboard();
+            var options = new DashboardOptions
+            {
+                Authorization = new[] { new HangfireAuthorizationFilter() }
+            };
+            app.UseHangfireDashboard("/hangfire", options);
             app.UseHangfireServer();
             RecurringJob.AddOrUpdate<IBroker>(
                 broker => broker.ProcessOrders(), "0 */5 * ? * *"); // every 5 minutes
