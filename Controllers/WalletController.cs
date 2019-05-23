@@ -107,7 +107,7 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> TransactionCheck(string asset, string address)
+        public async Task<IActionResult> Transactions(string asset, string address, int offset=0, int limit=10)
         {
             var user = await GetUser(required: true);
 
@@ -120,26 +120,26 @@ namespace viafront3.Controllers
             else
                 addr = wallet.NewAddress(user.Id);
 
-            // update wallet from blockchain
-            wallet.UpdateFromBlockchain();
-            wallet.Save();
-
             var chainAssetSettings = _walletProvider.ChainAssetSettings(asset);
-            var addrTxs = await Utils.CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(_emailSender, _settings, asset, wallet, chainAssetSettings, user, addr);
-            var newDepositsHuman = wallet.AmountToString(addrTxs.NewDeposits);
 
-            var model = new TransactionCheckViewModel
+            var incommingTxs = wallet.GetAddrTransactions(addr.Address);
+            if (incommingTxs != null)
+                incommingTxs = incommingTxs.Where(t => t.Direction == WalletDirection.Incomming).OrderByDescending(t => t.ChainTx.Date);
+            else
+                incommingTxs = new List<WalletTx>();
+
+            var model = new UserTransactionsViewModel
             {
                 User = user,
                 Asset = asset,
-                AssetSettings = _settings.Assets[asset],
-                ChainAssetSettings = chainAssetSettings,
                 DepositAddress = addr.Address,
+                ChainAssetSettings = _walletProvider.ChainAssetSettings(asset),
+                AssetSettings = _settings.Assets[asset],
                 Wallet = wallet,
-                TransactionsIncomming = addrTxs.IncommingTxs,
-                NewTransactionsIncomming = addrTxs.JustAckedTxs,
-                NewDeposits = addrTxs.NewDeposits,
-                NewDepositsHuman = newDepositsHuman,
+                TransactionsIncomming = incommingTxs.Skip(offset).Take(limit),
+                TxsIncommingOffset = offset,
+                TxsIncommingLimit = limit,
+                TxsIncommingCount = incommingTxs.Count(),
             };
 
             return View(model);

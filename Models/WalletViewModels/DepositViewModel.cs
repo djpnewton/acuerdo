@@ -17,18 +17,14 @@ namespace viafront3.Models.WalletViewModels
 
     public class UserTransactionsViewModel : DepositViewModel
     {
+        public ChainAssetSettings ChainAssetSettings { get; set; }
         public AssetSettings AssetSettings { get; set; }
         public IWallet Wallet { get; set; }
         public IEnumerable<WalletTx> TransactionsIncomming { get; set; }
+        public int TxsIncommingOffset { get; set; }
+        public int TxsIncommingLimit { get; set; }
+        public int TxsIncommingCount { get; set; }
         public IEnumerable<WalletTx> TransactionsOutgoing { get; set; }
-    }
-
-    public class TransactionCheckViewModel : UserTransactionsViewModel
-    {
-        public ChainAssetSettings ChainAssetSettings { get; set; }
-        public IEnumerable<WalletTx> NewTransactionsIncomming { get; set; }
-        public BigInteger NewDeposits { get; set; }
-        public string NewDepositsHuman { get; set; }
     }
 
     public class DepositFiatViewModel : BaseViewModel

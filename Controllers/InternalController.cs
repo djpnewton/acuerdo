@@ -220,9 +220,13 @@ namespace viafront3.Controllers
                 User = user,
                 Asset = asset,
                 DepositAddress = null,
+                ChainAssetSettings = _walletProvider.ChainAssetSettings(asset),
                 AssetSettings = _settings.Assets[asset],
                 Wallet = wallet,
                 TransactionsIncomming = txsIn,
+                TxsIncommingOffset = 0,
+                TxsIncommingLimit = txsIn.Count(),
+                TxsIncommingCount = txsIn.Count(),
                 TransactionsOutgoing = txsOutOnBehalf
             };
             return View(model);

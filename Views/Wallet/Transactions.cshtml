@@ -1,0 +1,90 @@
+﻿@using viafront3.Models.WalletViewModels
+@using viafront3.Views.Wallet
+@using viafront3.Views
+@using xchwallet;
+@model UserTransactionsViewModel
+@{
+    ViewData["Title"] = "Transaction View";
+    ViewData.AddActivePage(WalletNavPages.Deposits);
+}
+
+<h4>@ViewData["Title"]</h4>
+<div class="row">
+    <div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">@Model.Asset Deposit Address</div>
+            <div class="panel-body">
+                @Model.DepositAddress
+            </div>
+        </div>
+        <table class="table table-bordered table-responsive table-hover">
+            <tr>
+                <th>
+                    Date
+                </th>
+                <th>
+                    TX ID
+                </th>
+                <th>
+                    From
+                </th>
+                <th class="pad-decimals">
+                    Amount
+                </th>
+                <th>
+                    Confirmations
+                </th>
+            </tr>
+            <tbody>
+                @{
+                    foreach (var item in Model.TransactionsIncomming)
+                    {
+                        <tr>
+                            <td>
+                                <nobr>@ViewUtils.FormatUnixTime(@item.ChainTx.Date)</nobr>
+                            </td>
+                            <td>
+                                <input type="text" value="@item.ChainTx.TxId" size="30" readonly>
+                            </td>
+                            <td>
+                                @item.ChainTx.From
+                            </td>
+                            <td>
+                                <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
+                                        Model.AssetSettings.Decimals)
+                                </span>
+                            </td>
+                            <td>
+                                @(item.ChainTx.Confirmations >= Model.ChainAssetSettings.MinConf ? "confirmed" : item.ChainTx.Confirmations.ToString())
+                            </td>
+                        </tr>
+                    }
+            }
+        </tbody>
+    </table>
+    @{
+        var count = Model.TxsIncommingCount;
+        var offset = Model.TxsIncommingOffset;
+        var limit = Model.TxsIncommingLimit;
+        if (offset >= limit)
+        {
+            <a asp-action="Transactions" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress" asp-route-offset="@(offset-limit)" asp-route-limit="@limit">prev</a>
+        }
+        else if (offset > 0)
+        {
+            <a asp-action="Transactions" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress" asp-route-offset="0" asp-route-limit="@limit">prev</a>
+        }
+        if (count - offset >= limit)
+        {
+            <a asp-action="Transactions" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
+        }
+    }
+    </ul>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}
