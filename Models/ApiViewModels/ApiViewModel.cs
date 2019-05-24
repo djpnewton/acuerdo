@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel.DataAnnotations;
 using via_jsonrpc;
 
 namespace viafront3.Models.ApiViewModels
@@ -134,11 +135,15 @@ namespace viafront3.Models.ApiViewModels
     {
         public string Market { get; set; }
         public string Side { get; set; }
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
         public string Amount { get; set; }
     }
 
     public class ApiOrderCreateLimit : ApiOrderCreateMarket
     {
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
         public string Price { get; set; }
     }
 

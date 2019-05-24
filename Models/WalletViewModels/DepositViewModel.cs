@@ -30,6 +30,8 @@ namespace viafront3.Models.WalletViewModels
     public class DepositFiatViewModel : BaseViewModel
     {
         public string Asset { get; set; }
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
         public decimal Amount { get; set; } 
         public FiatWalletTx PendingTx { get; set; }
         public BankAccount Account { get; set; }
@@ -41,5 +43,8 @@ namespace viafront3.Models.WalletViewModels
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public IFiatWallet Wallet { get; set; }
         public IEnumerable<FiatWalletTx> Transactions { get; set; }
+        public int TxsOffset { get; set; }
+        public int TxsLimit { get; set; }
+        public int TxsCount { get; set; }
     }
 }

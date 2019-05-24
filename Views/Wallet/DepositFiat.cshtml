@@ -13,23 +13,50 @@
         <div class="panel panel-default">
             <div class="panel-heading">@Model.Asset Deposit</div>
             <div class="panel-body">
-                <form asp-action="DepositFiat" method="post" class="form-group">
+                <form id="deposit-form" asp-action="DepositFiat" method="post" class="form-group" x-unit="@Model.Asset">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     <input type="hidden" asp-for="Asset" value="@Model.Asset" />
                     <div class="form-group">
                         <label asp-for="Amount"></label>
-                        <input asp-for="Amount" class="form-control" />
+                        <input asp-for="Amount" class="form-control"/>
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-default">Create @Model.Asset deposit</button>
+                        <button type="button" class="btn btn-default form-deposit-button">Create @Model.Asset deposit</button>
                     </div>
                 </form>
             </div>
             <div class="panel-footer">
                 <a asp-action="FiatTransactionView" asp-route-asset="@Model.Asset">View transactions</a>
             </div>
-        </div> 
+        </div>
     </div>
 </div>
+
+<div class="modal fade" id="confirm-deposit-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Withdrawal
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to create the following deposit?
+                </p>
+                <p id="modal-deposit-create-p">
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-deposit" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_FiatDepositCreationScriptPartial")
+}
 

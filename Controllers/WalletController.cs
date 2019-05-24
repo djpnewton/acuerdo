@@ -195,13 +195,13 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> FiatTransactionView(string asset)
+        public async Task<IActionResult> FiatTransactionView(string asset, int offset=0, int limit=10)
         {
             var user = await GetUser(required: true);
 
             // get wallet address
             var wallet = _walletProvider.GetFiat(asset);
-            var txs = wallet.GetTransactions(user.Id);
+            var txs = wallet.GetTransactions(user.Id).OrderByDescending(t => t.Date);
            
             var model = new FiatTransactionsViewModel
             {
@@ -209,7 +209,10 @@ namespace viafront3.Controllers
                 Asset = asset,
                 AssetSettings = _settings.Assets,
                 Wallet = wallet,
-                Transactions = txs,
+                Transactions = txs.Skip(offset).Take(limit),
+                TxsOffset = offset,
+                TxsLimit = limit,
+                TxsCount = txs.Count(),
             };
 
             return View(model);

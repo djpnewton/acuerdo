@@ -13,7 +13,10 @@ namespace viafront3.Models.WalletViewModels
     {
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
+        [Required]
         public string WithdrawalAddress { get; set; }
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
         public decimal Amount { get; set; }
     }
 
@@ -36,7 +39,10 @@ namespace viafront3.Models.WalletViewModels
     {
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
+        [Required]
         public string WithdrawalAccount { get; set; }
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
         public decimal Amount { get; set; }
         public FiatWalletTx PendingTx { get; set; }
     }

@@ -41,7 +41,7 @@
                             var accountStr = item.Direction == WalletDirection.Incomming ? "" : item.AccountNumber;
                             <tr>
                                 <td>
-                                    @item.Date
+                                    <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
                                 </td>
                                 <td>
                                     @typeStr
@@ -65,6 +65,23 @@
                         }
                     }</tbody>
                 </table>
+                @{
+                    var count = Model.TxsCount;
+                    var offset = Model.TxsOffset;
+                    var limit = Model.TxsLimit;
+                    if (offset >= limit)
+                    {
+                        <a asp-action="FiatTransactionView" asp-route-asset="@Model.Asset" asp-route-offset="@(offset-limit)" asp-route-limit="@limit">prev</a>
+                    }
+                    else if (offset > 0)
+                    {
+                        <a asp-action="FiatTransactionView" asp-route-asset="@Model.Asset" asp-route-offset="0" asp-route-limit="@limit">prev</a>
+                    }
+                    if (count - offset >= limit)
+                    {
+                        <a asp-action="FiatTransactionView" asp-route-asset="@Model.Asset" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
+                    }
+                }
             </div>
         </div> 
     </div>
