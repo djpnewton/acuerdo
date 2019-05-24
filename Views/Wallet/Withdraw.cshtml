@@ -13,7 +13,7 @@
         <div class="panel panel-default">
             <div class="panel-heading"><strong>@Model.BalanceAvailable @Model.Asset Available</strong></div>
             <div class="panel-body">
-                <form asp-action="Withdraw" method="post" class="form-group">
+                <form asp-action="Withdraw" method="post" class="form-group" x-unit="@Model.Asset" id="withdraw-form">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     <input type="hidden" asp-for="Asset" value="@Model.Asset" />
                     <div class="form-group">
@@ -27,17 +27,40 @@
                         <span asp-validation-for="Amount" class="text-danger"></span>
                     </div>
                     <div class="form-group">
-                        <button type="submit" class="btn btn-default">Withdraw @Model.Asset</button>
+                        <button type="button" class="btn btn-default form-withdrawal-button">Withdraw @Model.Asset</button>
                     </div>
                 </form>
             </div>
             <div class="panel-footer">
                 <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset">View withdrawal history</a>
             </div>
-        </div> 
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-withdrawal-submit" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                Confirm Withdrawal
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure you want to create the following withdrawal?
+                </p>
+                <p id="modal-withdrawal-create-p">
+                </p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">No</button>
+                <a href="#" id="confirm-withdrawal" class="btn btn-success success">Yes</a>
+            </div>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    @await Html.PartialAsync("_WithdrawalCreationScriptPartial")
 }

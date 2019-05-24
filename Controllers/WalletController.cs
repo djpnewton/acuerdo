@@ -354,7 +354,7 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> WithdrawalHistory(string asset)
+        public async Task<IActionResult> WithdrawalHistory(string asset, int pendingOffset=0, int pendingLimit=10, int outgoingOffset=0, int outgoingLimit=10)
         {
             var user = await GetUser(required: true);
 
@@ -363,7 +363,7 @@ namespace viafront3.Controllers
             var spends = wallet.PendingSpendsGet(_walletProvider.ConsolidatedFundsTag(), new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error } )
                 .Where(s => s.Meta.TagOnBehalfOf == user.Id);
             var outgoingTxs = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.Meta.TagOnBehalfOf == user.Id);
+                .Where(t => t.Meta.TagOnBehalfOf == user.Id).OrderByDescending(t => t.ChainTx.Date);
 
             var model = new WithdrawalHistoryViewModel
             {
@@ -371,8 +371,14 @@ namespace viafront3.Controllers
                 Wallet = wallet,
                 Asset = asset,
                 AssetSettings = _settings.Assets[asset],
-                PendingWithdrawals = spends,
-                OutgoingTransactions = outgoingTxs
+                PendingWithdrawals = spends.Skip(pendingOffset).Take(pendingLimit),
+                PendingOffset = pendingOffset,
+                PendingLimit = pendingLimit,
+                PendingCount = spends.Count(),
+                OutgoingTransactions = outgoingTxs.Skip(outgoingOffset).Take(outgoingLimit),
+                OutgoingOffset = outgoingOffset,
+                OutgoingLimit = outgoingLimit,
+                OutgoingCount = outgoingTxs.Count(),
             };
 
             return View(model);

@@ -6,6 +6,13 @@
 @{
     ViewData["Title"] = "Withdrawal History - " + Model.Asset;
     ViewData.AddActivePage(WalletNavPages.Withdrawals);
+
+    var pcount = Model.PendingCount;
+    var poffset = Model.PendingOffset;
+    var plimit = Model.PendingLimit;
+    var ocount = Model.OutgoingCount;
+    var ooffset = Model.OutgoingOffset;
+    var olimit = Model.OutgoingLimit;
 }
 
 <h4>@ViewData["Title"]</h4>
@@ -24,59 +31,97 @@
                     Amount
                 </th>
             </tr>
-            <tbody>@{
-                foreach (var item in Model.PendingWithdrawals)
-                {
-                    <tr>
-                        <td>
-                            @ViewUtils.FormatUnixTime(@item.Date)
-                        </td>
-                        <td>
-                            @item.To
-                        </td>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
-                                Model.AssetSettings.Decimals)
-                            </span>
-                        </td>
-                    </tr>
-                }
-            }</tbody>
-        </table>
-        <h4>Processed</h4>
-        <table class="table table-bordered table-responsive table-hover">
-            <tr>
-                <th>
-                    TX ID
-                </th>
-                <th>
-                    Withdrawal Address
-                </th>
-                <th class="pad-decimals">
-                    Amount
-                </th>
-            </tr>
-            <tbody>@{
+            <tbody>
+                @{
+                    foreach (var item in Model.PendingWithdrawals)
+                    {
+                        <tr>
+                            <td>
+                                <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
+                            </td>
+                            <td>
+                                @item.To
+                            </td>
+                            <td>
+                                <span class="pad-decimals-data">
+                                    @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.Amount),
+                                        Model.AssetSettings.Decimals)
+                                </span>
+                            </td>
+                        </tr>
+                    }
+            }
+        </tbody>
+    </table>
+    @{
+        if (poffset >= plimit)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-pendingOffset="@(poffset-plimit)" asp-route-pendingLimit="@plimit" asp-route-outgoingOffset="@ooffset" asp-route-outgoingLimit="@olimit">prev</a>
+        }
+        else if (poffset > 0)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-pendingOffset="0" asp-route-pendingLimit="@plimit" asp-route-outgoingOffset="@ooffset" asp-route-outgoingLimit="@olimit">prev</a>
+        }
+        if (pcount - poffset >= plimit)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-pendingOffset="@(poffset+plimit)" asp-route-pendingLimit="@plimit" asp-route-outgoingOffset="@ooffset" asp-route-outgoingLimit="@olimit">next</a>
+        }
+    }
+    <h4>Processed</h4>
+    <table class="table table-bordered table-responsive table-hover">
+        <tr>
+            <th>
+                Date
+            </th>
+            <th>
+                TX ID
+            </th>
+            <th>
+                Withdrawal Address
+            </th>
+            <th class="pad-decimals">
+                Amount
+            </th>
+        </tr>
+        <tbody>
+            @{
                 foreach (var item in Model.OutgoingTransactions)
                 {
                     <tr>
                         <td>
-                            @item.ChainTx.TxId
+                            <nobr>@ViewUtils.FormatUnixTime(@item.ChainTx.Date)</nobr>
+                        </td>
+                        <td>
+                            <input type="text" value="@item.ChainTx.TxId" size="30" readonly>
                         </td>
                         <td>
                             @item.ChainTx.To
                         </td>
                         <td>
                             <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings.Decimals)
+                                @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
+                                    Model.AssetSettings.Decimals)
                             </span>
                         </td>
                     </tr>
                 }
-            }</tbody>
-        </table>
+        }
+    </tbody>
+    </table>
+    @{
+        if (ooffset >= olimit)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-outgoingOffset="@(ooffset-olimit)" asp-route-outgoingLimit="@olimit" asp-route-pendingOffset="@poffset" asp-route-pendingLimit="@plimit">prev</a>
+        }
+        else if (ooffset > 0)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-outgoingOffset="0" asp-route-outgoingLimit="@olimit" asp-route-pendingOffset="@poffset" asp-route-pendingLimit="@plimit">prev</a>
+        }
+        if (ocount - ooffset >= olimit)
+        {
+            <a asp-action="WithdrawalHistory" asp-route-asset="@Model.Asset" asp-route-outgoingOffset="@(ooffset+olimit)" asp-route-outgoingLimit="@olimit" asp-route-pendingOffset="@poffset" asp-route-pendingLimit="@plimit">next</a>
+        }
+    }
     </div>
 </div>
 

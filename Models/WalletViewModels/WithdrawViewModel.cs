@@ -23,7 +23,13 @@ namespace viafront3.Models.WalletViewModels
         public string Asset { get; set; }
         public AssetSettings AssetSettings { get; set; }
         public IEnumerable<WalletPendingSpend> PendingWithdrawals { get; set; }
+        public int PendingOffset { get; set; }
+        public int PendingLimit { get; set; }
+        public int PendingCount { get; set; }
         public IEnumerable<WalletTx> OutgoingTransactions { get; set; }
+        public int OutgoingOffset { get; set; }
+        public int OutgoingLimit { get; set; }
+        public int OutgoingCount { get; set; }
     }
 
     public class WithdrawFiatViewModel : BaseViewModel
