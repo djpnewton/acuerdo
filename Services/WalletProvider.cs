@@ -23,9 +23,6 @@ namespace viafront3.Services
         private readonly ILogger _logger;
         private readonly WalletSettings _walletSettings;
 
-        private Dictionary<string, IWallet> _wallets = new Dictionary<string, IWallet>();
-        private Dictionary<string, IFiatWallet> _fiatWallets = new Dictionary<string, IFiatWallet>();
-
         public WalletProvider(ILogger<WalletProvider> logger, IOptions<WalletSettings> walletSettings)
         {
             _logger = logger;
@@ -46,9 +43,6 @@ namespace viafront3.Services
         {
             if (!IsChain(asset))
                 throw new Exception($"Wallet '{asset}' not supported");
-
-            if (_wallets.ContainsKey(asset))
-                return _wallets[asset];
 
             string dbName = null;
             if (_walletSettings.DbNames.ContainsKey(asset))
@@ -73,7 +67,6 @@ namespace viafront3.Services
                     throw new Exception($"Wallet '{asset}' not supported");
             }
 
-            _wallets[asset] = wallet;
             return wallet;
         }
 
@@ -82,9 +75,6 @@ namespace viafront3.Services
             if (!IsFiat(asset))
                 throw new Exception($"Wallet '{asset}' not supported");
 
-            if (_fiatWallets.ContainsKey(asset))
-                return _fiatWallets[asset];
-
             string dbName = null;
             if (_walletSettings.DbNames.ContainsKey(asset))
                 dbName = _walletSettings.DbNames[asset];
@@ -92,7 +82,6 @@ namespace viafront3.Services
             if (_walletSettings.BankAccounts.ContainsKey(asset))
                 account = _walletSettings.BankAccounts[asset];
             var wallet = new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false), asset, account);
-            _fiatWallets[asset] = wallet;
             return wallet;
         } 
 
