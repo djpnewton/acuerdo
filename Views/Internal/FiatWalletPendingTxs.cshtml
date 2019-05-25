@@ -12,6 +12,18 @@
                 Pending Txs - @Model.Asset
             </div>
             <div class="panel-body">
+                <form asp-action="FiatWalletPendingTxs" method="get" class="form-group">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="Asset" value="@Model.Asset" />
+                    <input type="hidden" asp-for="Offset" value="@Model.Offset" />
+                    <input type="hidden" asp-for="Limit" value="@Model.Limit" />
+                    <div class="form-group">
+                        <select asp-for="OnlyIncomplete" onchange="this.form.submit()">
+                            <option value="true" selected="@(Model.OnlyIncomplete ? "selected" : null)">Incomplete</option>
+                            <option value="false" selected="@(!Model.OnlyIncomplete ? "selected" : null)">All</option>
+                        </select>
+                    </div>
+                </form>
                 <table class="table table-condensed table-responsive table-hover">
                     <tr>
                         <th>
@@ -26,39 +38,63 @@
                         <th>
                             Tag
                         </th>
+                        <th>
+                            State
+                        </th>
                         <th class="pad-decimals">
                             Amount
                         </th>
                     </tr>
-                    <tbody>@{
-                        foreach (var item in Model.PendingTxs)
-                        {
-                            var amount = Model.Wallet.AmountToString(item.Amount);
-                            amount = ViewUtils.FormatStrDec(amount, Model.AssetSettings.Decimals);
+                    <tbody>
+                        @{
+                            foreach (var item in Model.PendingTxs)
+                            {
+                                var amount = Model.Wallet.AmountToString(item.Amount);
+                                amount = ViewUtils.FormatStrDec(amount, Model.AssetSettings.Decimals);
 
-                            <tr>
-                                <td>
-                                    @ViewUtils.FormatUnixTime(@item.Date)
-                                </td>
-                                <td>
-                                    @item.DepositCode
-                                </td>
-                                <td>
-                                    @item.Direction
-                                </td>
-                                <td>
-                                    @item.Tag.Tag
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                        @amount
-                                    </span>
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
-            </div>
+                                <tr>
+                                    <td>
+                                        <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
+                                    </td>
+                                    <td>
+                                        @item.DepositCode
+                                    </td>
+                                    <td>
+                                        @item.Direction
+                                    </td>
+                                    <td>
+                                        @item.Tag.Tag
+                                    </td>
+                                    <td>
+                                        @(item.BankTx == null ? "Incomplete" : "Complete")
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @amount
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                    }
+                </tbody>
+            </table>
+            @{
+                var count = Model.Count;
+                var offset = Model.Offset;
+                var limit = Model.Limit;
+                if (offset >= limit)
+                {
+                    <a asp-action="FiatWalletPendingTxs" asp-route-asset="@Model.Asset" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-onlyIncomplete="@Model.OnlyIncomplete">prev</a>
+                }
+                else if (offset > 0)
+                {
+                    <a asp-action="FiatWalletPendingTxs" asp-route-asset="@Model.Asset" asp-route-offset="0" asp-route-limit="@limit" asp-route-onlyIncomplete="@Model.OnlyIncomplete">prev</a>
+                }
+                if (count - offset > limit)
+                {
+                    <a asp-action="FiatWalletPendingTxs" asp-route-asset="@Model.Asset" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-onlyIncomplete="@Model.OnlyIncomplete">next</a>
+                }
+            }
         </div>
     </div>
 </div>

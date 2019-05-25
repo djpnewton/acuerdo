@@ -107,38 +107,52 @@ namespace viafront3.Controllers
             return View(model);
         }
 
-        public IActionResult WalletPendingSpends(string asset)
+        public IActionResult WalletPendingSpends(string asset, int offset=0, int limit=10, bool onlyIncomplete=true)
         {
             var user = GetUser(required: true).Result;
 
             var wallet = _walletProvider.GetChain(asset);
             var spends = wallet.PendingSpendsGet();
+            if (onlyIncomplete)
+                spends = spends.Where(s => s.State != PendingSpendState.Complete);
+            spends = spends.OrderByDescending(t => t.Date);
 
             var model = new WalletPendingSpendsViewModel
             {
                 User = user,
-                Wallet = wallet,
                 Asset = asset,
                 AssetSettings = _settings.Assets[asset],
-                PendingSpends = spends
+                Offset = offset,
+                Limit = limit,
+                Count = spends.Count(),
+                OnlyIncomplete = onlyIncomplete,
+                PendingSpends = spends.Skip(offset).Take(limit),
+                Wallet = wallet,
             };
             return View(model);
         }
 
-        public IActionResult FiatWalletPendingTxs(string asset)
+        public IActionResult FiatWalletPendingTxs(string asset, int offset = 0, int limit = 10, bool onlyIncomplete = true)
         {
             var user = GetUser(required: true).Result;
 
             var wallet = _walletProvider.GetFiat(asset);
-            var pendingTxs = wallet.GetTransactions().Where(t => t.BankTx == null);
+            var pendingTxs = wallet.GetTransactions();
+            if (onlyIncomplete)
+                pendingTxs = pendingTxs.Where(t => t.BankTx == null);
+            pendingTxs = pendingTxs.OrderByDescending(t => t.Date);
 
             var model = new FiatWalletPendingTxsViewModel
             {
                 User = user,
-                Wallet = wallet,
                 Asset = asset,
                 AssetSettings = _settings.Assets[asset],
-                PendingTxs = pendingTxs
+                Offset = offset,
+                Limit = limit,
+                Count = pendingTxs.Count(),
+                OnlyIncomplete = onlyIncomplete,
+                PendingTxs = pendingTxs.Skip(offset).Take(limit),
+                Wallet = wallet,
             };
             return View(model);
         }

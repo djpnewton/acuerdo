@@ -28,19 +28,25 @@ namespace viafront3.Models.InternalViewModels
         public Dictionary<string, FiatWalletBalance> FiatBalances { get; set; }
     }
 
-    public class WalletPendingSpendsViewModel : BaseViewModel
+    public class PendingSpendsBaseViewModel : BaseViewModel
     {
-        public IWallet Wallet { get; set; }
         public string Asset { get; set; }
         public AssetSettings AssetSettings { get; set; }
+        public int Offset { get; set; }
+        public int Limit { get; set; }
+        public int Count { get; set; }
+        public bool OnlyIncomplete { get; set; }
+    }
+
+    public class WalletPendingSpendsViewModel : PendingSpendsBaseViewModel
+    {
+        public IWallet Wallet { get; set; }
         public IEnumerable<WalletPendingSpend> PendingSpends { get; set; }
     }
 
-    public class FiatWalletPendingTxsViewModel : BaseViewModel
+    public class FiatWalletPendingTxsViewModel : PendingSpendsBaseViewModel
     {
         public IFiatWallet Wallet { get; set; }
-        public string Asset { get; set; }
-        public AssetSettings AssetSettings { get; set; }
         public IEnumerable<FiatWalletTx> PendingTxs { get; set; }
     }
 }
