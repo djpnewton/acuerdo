@@ -12,6 +12,24 @@
                 Users
             </div>
             <div class="panel-body">
+                <form asp-action="Users" method="get" class="form-group form-inline">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="Offset" value="@Model.Offset" />
+                    <input type="hidden" asp-for="Limit" value="@Model.Limit" />
+                    <div class="form-group">
+                        <label for="Role" class="col-2 col-form-label">Role</label>
+                        <select asp-for="Role" onchange="this.form.submit()">
+                            <option value="@(Utils.AdminRole)" selected="@(Model.Role == Utils.AdminRole ? "selected" : null)">@Utils.AdminRole</option>
+                            <option value="@(Utils.EmailConfirmedRole)" selected="@(Model.Role == Utils.EmailConfirmedRole ? "selected" : null)">@Utils.EmailConfirmedRole</option>
+                            <option value="" selected="@(Model.Role == null ? "selected" : null)">All</option>
+                        </select>
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        <label for="EmailSearch" class="col-2 col-form-label">Email</label>
+                        <input class="form-control input-sm" asp-for="EmailSearch" value="@Model.EmailSearch">
+                    </div>
+                </form>
                 <table class="table table-condensed table-responsive table-hover">
                     <tr>
                         <th>
@@ -30,43 +48,62 @@
                             Roles
                         </th>
                     </tr>
-                    <tbody>@{
-                        foreach (var userInfo in Model.UserInfos)
-                        {
-                            var user = userInfo.User;
-                            var roles = userInfo.Roles;
-                            <tr>
-                                <td>
-                                    <a href="UserInspect?id=@user.Id">@user.Id</a>
-                                </td>
-                                <td>
-                                    @user.Email
-                                </td>
-                                <td>
-                                    @user.UserName
-                                </td>
-                                <td>
-                                    @user.Exchange?.Id
-                                    @{
-                                        if (user.Exchange == null)
-                                        {
-                                            <form method="post" asp-action="UserExchangeCreate">
-                                                @Html.AntiForgeryToken()
-                                                <input type="hidden" asp-for="UserId" value="@user.Id" />
-                                                <button type="submit" class="btn btn-warning btn-xs">
-                                                    Create Exchange
-                                                </button>
-                                            </form>
+                    <tbody>
+                        @{
+                            foreach (var userInfo in Model.UserInfos)
+                            {
+                                var user = userInfo.User;
+                                var roles = userInfo.Roles;
+                                <tr>
+                                    <td>
+                                        <a href="UserInspect?id=@user.Id">@user.Id</a>
+                                    </td>
+                                    <td>
+                                        @user.Email
+                                    </td>
+                                    <td>
+                                        @user.UserName
+                                    </td>
+                                    <td>
+                                        @user.Exchange?.Id
+                                        @{
+                                            if (user.Exchange == null)
+                                            {
+                                                <form method="post" asp-action="UserExchangeCreate">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" asp-for="UserId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-warning btn-xs">
+                                                        Create Exchange
+                                                    </button>
+                                                </form>
                                             }
                                         }
-                                </td>
-                                <td>
-                                    @string.Join(",", roles)
-                                </td>
-                            </tr>
-                        }
-                    }</tbody>
-                </table>
+                                    </td>
+                                    <td>
+                                        @string.Join(",", roles)
+                                    </td>
+                                </tr>
+                            }
+                    }
+                </tbody>
+            </table>
+            @{
+                var count = Model.Count;
+                var offset = Model.Offset;
+                var limit = Model.Limit;
+                if (offset >= limit)
+                {
+                    <a asp-action="Users" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">prev</a>
+                }
+                else if (offset > 0)
+                {
+                    <a asp-action="Users" asp-route-offset="0" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">prev</a>
+                }
+                if (count - offset > limit)
+                {
+                    <a asp-action="Users" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">next</a>
+                }
+            }
             </div>
         </div>
     </div>

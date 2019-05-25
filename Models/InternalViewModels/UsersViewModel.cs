@@ -17,7 +17,12 @@ namespace viafront3.Models.InternalViewModels
 
     public class UsersViewModel : BaseViewModel
     {
-        public List<UserInfo> UserInfos { get; set; }
+        public IEnumerable<UserInfo> UserInfos { get; set; }
+        public int Offset { get; set; }
+        public int Limit { get; set; }
+        public int Count { get; set; }
+        public string Role { get; set; }
+        public string EmailSearch { get; set; }
         public string UserId { get; set; }
     }
 

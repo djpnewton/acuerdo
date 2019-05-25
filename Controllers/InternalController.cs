@@ -157,7 +157,7 @@ namespace viafront3.Controllers
             return View(model);
         }
 
-        public IActionResult Users()
+        public IActionResult Users(int offset=0, int limit=10, string role=null, string emailSearch=null)
         {
             var user = GetUser(required: true).Result;
 
@@ -165,13 +165,25 @@ namespace viafront3.Controllers
                         let query = (from ur in _context.Set<IdentityUserRole<string>>()
                             where ur.UserId.Equals(u.Id)
                             join r in _context.Roles on ur.RoleId equals r.Id select r.Name)
-                        select new UserInfo() {User = u, Roles = query.ToList<string>()})
-                        .ToList();
+                        select new UserInfo() {User = u, Roles = query.ToList<string>()});
+            if (role == "")
+                role = null;
+            if (role != null)
+                userInfos = userInfos.Where(ui => ui.Roles.Contains(role));
+            if (emailSearch == "")
+                emailSearch = null;
+            if (emailSearch != null)
+                userInfos = userInfos.Where(ui => ui.User.NormalizedEmail.Contains(emailSearch.ToUpper()));
 
             var model = new UsersViewModel
             {
                 User = user,
-                UserInfos = userInfos
+                UserInfos = userInfos.Skip(offset).Take(limit),
+                Offset = offset,
+                Limit = limit,
+                Count = userInfos.Count(),
+                Role = role,
+                EmailSearch = emailSearch,
             };
             return View(model);
         }
