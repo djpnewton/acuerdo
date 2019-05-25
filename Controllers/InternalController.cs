@@ -313,16 +313,25 @@ namespace viafront3.Controllers
             return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
 
-        public IActionResult Broker()
+        public IActionResult Broker(int offset=0, int limit=20, string orderStatus=null)
         {
             var user = GetUser(required: true).Result;
 
-            var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Confirmed.ToString());
+            var orders = _context.BrokerOrders.AsEnumerable();
+            if (orderStatus == "")
+                orderStatus = null;
+            if (orderStatus != null)
+                orders = orders.Where(o => o.Status == orderStatus);
+            orders = orders.OrderByDescending(o => o.Date);
 
             var model = new BrokerViewModel
             {
                 User = user,
-                OrdersConfirmed = orders,
+                Orders = orders.Skip(offset).Take(limit),
+                Offset = offset,
+                Limit = limit,
+                Count = orders.Count(),
+                OrderStatus = orderStatus,
                 AssetSettings = _settings.Assets,
             };
             return View(model);

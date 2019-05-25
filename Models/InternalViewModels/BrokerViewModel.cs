@@ -11,7 +11,11 @@ namespace viafront3.Models.InternalViewModels
 {
     public class BrokerViewModel : BaseViewModel
     {
-        public IEnumerable<BrokerOrder> OrdersConfirmed { set; get; }
+        public IEnumerable<BrokerOrder> Orders { set; get; }
+        public int Offset { get; set; }
+        public int Limit { get; set; }
+        public int Count { get; set; }
+        public string OrderStatus { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
 }

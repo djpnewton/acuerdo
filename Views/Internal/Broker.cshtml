@@ -10,9 +10,22 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Confirmed Orders (customer awaiting funds)
+                Broker Orders
             </div>
             <div class="panel-body">
+                <form asp-action="Broker" method="get" class="form-group">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="Offset" value="@Model.Offset" />
+                    <input type="hidden" asp-for="Limit" value="@Model.Limit" />
+                    <div class="form-group">
+                        <select asp-for="OrderStatus" onchange="this.form.submit()">
+                            <option value="@(BrokerOrderStatus.Confirmed)" selected="@(Model.OrderStatus == BrokerOrderStatus.Confirmed.ToString() ? "selected" : null)">@BrokerOrderStatus.Confirmed</option>
+                            <option value="@(BrokerOrderStatus.Sent)" selected="@(Model.OrderStatus == BrokerOrderStatus.Sent.ToString() ? "selected" : null)">@BrokerOrderStatus.Sent</option>
+                            <option value="@(BrokerOrderStatus.Error)" selected="@(Model.OrderStatus == BrokerOrderStatus.Error.ToString() ? "selected" : null)">@BrokerOrderStatus.Error</option>
+                            <option value="" selected="@(Model.OrderStatus == null ? "selected" : null)">All</option>
+                        </select>
+                    </div>
+                </form>
                 <table class="table table-condensed table-responsive table-hover">
                     <tr>
                         <th>
@@ -27,34 +40,64 @@
                         <th class="pad-decimals">
                             Amount Receive
                         </th>
+                        <th>
+                            Recipient
+                        </th>
+                        <th>
+                            Status
+                        </th>
                     </tr>
                     <tbody>
                         @{
-                        foreach (var item in Model.OrdersConfirmed)
-                        {
-                            var amount = ViewUtils.FormatStrDec(item.AmountReceive.ToString(), Model.AssetSettings[item.AssetReceive].Decimals);
+                            foreach (var item in Model.Orders)
+                            {
+                                var amount = ViewUtils.FormatStrDec(item.AmountReceive.ToString(), Model.AssetSettings[item.AssetReceive].Decimals);
 
-                            <tr>
-                                <td>
-                                    @ViewUtils.FormatUnixTime(@item.Date)
-                                </td>
-                                <td>
-                                    @item.Market
-                                </td>
-                                <td>
-                                    @item.AssetReceive
-                                </td>
-                                <td>
-                                    <span class="pad-decimals-data">
-                                        @item.AmountReceive
-                                    </span>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td>
+                                        <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
+                                    </td>
+                                    <td>
+                                        @item.Market
+                                    </td>
+                                    <td>
+                                        @item.AssetReceive
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.AmountReceive
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @item.Recipient
+                                        @(item.TxIdRecipient != null ? $"&nbsp;({item.TxIdRecipient}" : "")
+                                    </td>
+                                    <td>
+                                        @item.Status
+                                    </td>
+                                </tr>
+                            }
                         }
+                    </tbody>
+                </table>
+                @{
+                    var count = Model.Count;
+                    var offset = Model.Offset;
+                    var limit = Model.Limit;
+                    if (offset >= limit)
+                    {
+                        <a asp-action="Broker" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">prev</a>
                     }
-                </tbody>
-            </table>
-        </div>
+                    else if (offset > 0)
+                    {
+                        <a asp-action="Broker" asp-route-offset="0" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">prev</a>
+                    }
+                    if (count - offset > limit)
+                    {
+                        <a asp-action="Broker" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">next</a>
+                    }
+                }
+            </div>
     </div>
 </div>
 </div>
