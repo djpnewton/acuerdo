@@ -63,7 +63,17 @@ namespace viafront3.Services
             var source = new Dictionary<string, object>();
             source["txid"] = tx.ChainTx.TxId;
             var businessId = tx.Meta.Id;
-            via.BalanceUpdateQuery(brokerUser.Exchange.Id, order.AssetSend, "deposit", businessId, amount, source);
+            try
+            {
+                via.BalanceUpdateQuery(brokerUser.Exchange.Id, order.AssetSend, "deposit", businessId, amount, source);
+            }
+            catch (ViaJsonException ex)
+            {
+                if (ex.Err == ViaError.BALANCE_UPDATE__REPEAT_UPDATE)
+                    _logger.LogError(ex, $"broker already made this exchange update - exch id: {brokerUser.Exchange.Id}, business id: {businessId}");
+                else
+                    throw;
+            }
             // make trade
             string tradeAmount;
             if (order.Side == OrderSide.Bid)

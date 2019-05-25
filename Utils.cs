@@ -263,7 +263,8 @@ namespace viafront3
                     // send email: deposit detected
                     wallet.SetNote(tx, "seen");
                     newlySeenTxs.Add(tx);
-                    await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+                    if (!string.IsNullOrEmpty(user.Email))
+                        await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
                 }
             var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
             if (unackedTxs != null)
