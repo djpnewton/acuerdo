@@ -4,6 +4,7 @@ set -e
 
 DEPLOY_TEST=test
 DEPLOY_PRODUCTION=production
+DEPLOY_LOCAL=local
 DEPLOY_TYPE=$1
 DEPLOY_LEVEL_VIAFRONT_ONLY=viafront_only
 DEPLOY_LEVEL=$2
@@ -11,9 +12,9 @@ DEPLOY_LEVEL=$2
 display_usage() { 
     echo -e "\nUsage:
 
-    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION)> 
+    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> 
 
-    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION)> <DEPLOY_LEVEL ($DEPLOY_LEVEL_VIAFRONT_ONLY)>
+    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> <DEPLOY_LEVEL ($DEPLOY_LEVEL_VIAFRONT_ONLY)>
 
         This is a lesser deploy scenario:
 
@@ -36,7 +37,7 @@ then
 fi 
 
 # check whether user has a valid DEPLOY_TYPE
-if [[ ( $DEPLOY_TYPE != "test" ) &&  ( $DEPLOY_TYPE != "production" ) ]] 
+if [[ ( $DEPLOY_TYPE != "$DEPLOY_TEST" ) &&  ( $DEPLOY_TYPE != "$DEPLOY_PRODUCTION" ) && ( $DEPLOY_TYPE != "$DEPLOY_LOCAL" ) ]] 
 then 
     display_usage
     echo !!\"$DEPLOY_TYPE\" is not valid
@@ -68,10 +69,11 @@ BLOCKCHAIN_HOST=blockchain-internal.bronze.exchange
 INTERNAL_HOST=internal.bronze.exchange
 DEPLOY_USER=root
 TESTNET=
+LOCAL=
 ADMIN_HOST=123.123.123.123
 
 # set deploy variables for test
-if [[ ( $DEPLOY_TYPE == "test" ) ]]
+if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then 
     DEPLOY_HOST=test.bronze.exchange
     BACKEND_HOST=backend-internal.test.bronze.exchange
@@ -82,6 +84,20 @@ then
 fi 
 INTERNAL_IP=`dig +short $INTERNAL_HOST`
 BACKEND_IP=`dig +short $BACKEND_HOST`
+# set deploy variables for local
+if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
+then 
+    DEPLOY_HOST=10.50.1.100
+    BACKEND_HOST=10.50.1.100
+    BLOCKCHAIN_HOST=10.50.1.100
+    INTERNAL_HOST=10.50.1.100
+    DEPLOY_USER=root
+    TESTNET=true
+    LOCAL=true
+
+    INTERNAL_IP=$INTERNAL_HOST
+    BACKEND_IP=$BACKEND_HOST
+fi 
 
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
@@ -98,7 +114,7 @@ echo "   - BACKEND_HOST:    $BACKEND_HOST"
 echo "   - BACKEND_IP:      $BACKEND_IP"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
 echo "   - INTERNAL_IP:     $INTERNAL_IP"
-echo "   - CODE ARCHIVE:    viafront3.zip"
+echo "   - CODE ARCHIVE:    acuerdo.zip"
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
@@ -107,7 +123,12 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
     # do dangerous stuff
     echo ok lets go!!!
-    ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+    INVENTORY_HOST=$DEPLOY_HOST
+    if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
+    then 
+        DEPLOY_HOST=acuerdo.local
+    fi 
+    ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
         deploy.yml
 fi

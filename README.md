@@ -17,8 +17,8 @@ Clone the repo including submodules: `git clone --recurse-submodules https://git
 ## Create backend servers
  - Go to the ansible directory `cd ansible`
  - Use vagrant to provision a local server for the exchange backend and blockchain clients `vagrant up`
- - Use ansible to initialise the exchange backend `./ansible_deploy_viaxch.sh`
- - Use ansible to initialse the blockchain clients `./ansible_deploy_blockchains.sh`
+ - Use ansible to initialise the exchange backend `./ansible_deploy_viaxch.sh local`
+ - Use ansible to initialse the blockchain clients `./ansible_deploy_blockchains.sh local`
 
 ## Create Acuerdo database
  - Create database `mysql --host=10.50.1.100 -uviaxch -pnot_production --execute="create database viafront;"`
@@ -49,3 +49,9 @@ To use another authorised mail relay (like gmail) change the 'EmailSender' setti
         "SmtpSsl":  true
     },
 ```
+
+## Extra
+
+If you dont want to debug the front end on your host pc but want to run it in your local virtual machine you can do that as well (`./ansible_deploy.sh local`)
+
+You can then access the site at `http://10.50.1.100` and you will not have to manually create the database, wallet dbs, roles etc (but changes to 'appsettings.json' will not be replicated into the virtual machine unless comitted to git so your emails probably wont work by default).

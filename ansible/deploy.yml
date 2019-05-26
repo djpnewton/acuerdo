@@ -48,7 +48,7 @@
       ignore_errors: yes
 
 - include: firewall.yml
-  when: full_deploy
+  when: full_deploy and deploy_type != "local"
 - include: postfix.yml
   when: full_deploy
 - include: nginx.yml

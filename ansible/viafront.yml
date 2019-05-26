@@ -5,7 +5,7 @@
   become_user: root
 
   vars:
-    dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development' if DEPLOY_TYPE == 'test' else '' }}"
+    dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development;' if DEPLOY_TYPE == 'test' else '' }}"
   tasks:
     - name: ansible group
       group: 
@@ -20,13 +20,13 @@
         system: yes
         state: present
 
-    - name: copy viafront3.zip
+    - name: copy acuerdo.zip
       copy:
-        src: ../viafront3.zip
-        dest: /opt/viafront3.zip
+        src: ../acuerdo.zip
+        dest: /opt/acuerdo.zip
 
-    - name: extract viafront3.zip
-      shell: unzip -o /opt/viafront3.zip -d /opt/viafront
+    - name: extract acuerdo.zip
+      shell: unzip -o /opt/acuerdo.zip -d /opt/viafront
 
     - name: extract submodule zip files
       shell: cd /opt/viafront; unzip -o '*.zip'
@@ -42,68 +42,68 @@
     - name: set mysql host for asp.net db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("DefaultConnection": "Server=)10\.50\.1\.100(;Database)'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("DefaultConnection": "Server)=10\.50\.1\.100;(Database)'
+        replace: '\1={{backend_host}};\2'
 
     - name: set mysql host for viaxch db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("Host": ")10\.50\.1\.100(")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("Host": )"10\.50\.1\.100"'
+        replace: '\1"{{backend_host}}"'
 
     - name: set mysql host for wallets db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("Host": ")10\.50\.1\.100(")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("Host": )"10\.50\.1\.100"'
+        replace: '\1"{{backend_host}}"'
 
     - name: set accesshttp url 
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessHttpUrl": "http:\/\/)10\.50\.1\.100(:8080")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("AccessHttpUrl": )"http:\/\/10\.50\.1\.100:8080"'
+        replace: '\1"http://{{backend_host}}:8080"'
 
     - name: set accessws url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessWsUrl": "ws:\/\/)10\.50\.1\.100(:8090")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("AccessWsUrl": )"ws:\/\/10\.50\.1\.100:8090"'
+        replace: '\1"ws://{{backend_host}}:8090"'
 
     - name: set accessws ip
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("AccessWsIp": ")10\.50\.1\.100(")'
-        replace: '\1{{backend_ip}}\2'
+        regexp: '("AccessWsIp": )"10\.50\.1\.100"'
+        replace: '\1"{{backend_ip}}"'
 
     - name: set websocket url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("WebsocketUrl": ")ws:\/\/10\.50\.1\.100\/ws(")'
-        replace: '\1wss:\/\/{{deploy_host}}\/ws\/\2'
+        regexp: '("WebsocketUrl": )"ws:\/\/10\.50\.1\.100\/ws"'
+        replace: '\1"wss://{{deploy_host}}/ws/"'
 
     - name: set kafka host
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("KafkaHost": ")10\.50\.1\.100(:9092")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("KafkaHost": )"10\.50\.1\.100:9092"'
+        replace: '\1"{{backend_host}}:9092"'
 
     - name: set waves node url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:6869")'
-        replace: '\1{{blockchain_host}}\2'
+        regexp: '("NodeUrl": )"http:\/\/10\.50\.1\.100:6869"'
+        replace: '\1"http://{{blockchain_host}}:6869"'
 
     - name: set zap node url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:6869")'
-        replace: '\1{{blockchain_host}}\2'
+        regexp: '("NodeUrl": )"http:\/\/10\.50\.1\.100:6869"'
+        replace: '\1"http://{{blockchain_host}}:6869"'
 
     - name: set nbxexplorer url
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("NodeUrl": "http:\/\/)10\.50\.1\.100(:24444")'
-        replace: '\1{{blockchain_host}}\2'
+        regexp: '("NodeUrl": )"http:\/\/10\.50\.1\.100:24444"'
+        replace: '\1"http://{{blockchain_host}}:24444"'
 
     - name: set from email
       replace:
@@ -114,8 +114,8 @@
     - name: set smtp host
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("SmtpHost": ")10\.50\.1\.100(")'
-        replace: '\1{{backend_host}}\2'
+        regexp: '("SmtpHost": )"10\.50\.1\.100"'
+        replace: '\1"{{backend_host}}"'
 
     - name: copy viafront.service
       template:
