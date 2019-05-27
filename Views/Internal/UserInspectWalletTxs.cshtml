@@ -14,55 +14,74 @@
             </div>
             <div class="panel-body">
                 <table class="table table-bordered table-responsive table-hover">
-            <tr>
-                <th>
-                    Date
-                </th>
-                <th>
-                    TX ID
-                </th>
-                <th>
-                    From
-                </th>
-                <th>
-                    To
-                </th>
-                <th class="pad-decimals">
-                    Amount
-                </th>
-                <th>
-                    Id
-                </th>
-            </tr>
-            <tbody>@{
-                foreach (var item in Model.TransactionsIncomming)
-                {
                     <tr>
-                        <td>
-                            @ViewUtils.FormatUnixTime(item.ChainTx.Date)
-                        </td>
-                        <td>
-                            @item.ChainTx.TxId
-                        </td>
-                        <td>
-                            <span class="truncate">@item.ChainTx.From</span>
-                        </td>
-                        <td>
-                            @item.ChainTx.To
-                        </td>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings.Decimals)
-                            </span>
-                        </td>
-                        <td>
-                            @item.Meta.Id
-                        </td>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            TX ID
+                        </th>
+                        <th>
+                            From
+                        </th>
+                        <th>
+                            To
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                        <th>
+                            Id
+                        </th>
                     </tr>
-                }
-            }</tbody>
+                    <tbody>
+                        @{
+                            foreach (var item in Model.TransactionsIncomming)
+                            {
+                                <tr>
+                                    <td>
+                                        <nobr>@ViewUtils.FormatUnixTime(item.ChainTx.Date)</nobr>
+                                    </td>
+                                    <td>
+                                        <input type="text" value="@item.ChainTx.TxId" size="30" readonly>
+                                    </td>
+                                    <td>
+                                        <span class="truncate">@item.ChainTx.From</span>
+                                    </td>
+                                    <td>
+                                        @item.ChainTx.To
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
+                                                Model.AssetSettings.Decimals)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @item.Meta.Id
+                                    </td>
+                                </tr>
+                            }
+                    }
+                </tbody>
             </table>
+            @{
+                var icount = Model.TxsIncommingCount;
+                var ioffset = Model.TxsIncommingOffset;
+                var ilimit = Model.TxsIncommingLimit;
+                if (ioffset >= ilimit)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-inoffset="@(ioffset-ilimit)" asp-route-inlimit="@ilimit">prev</a>
+                }
+                else if (ioffset > 0)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-inoffset="0" asp-route-inlimit="@ilimit">prev</a>
+                }
+                if (icount - ioffset > ilimit)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-inoffset="@(ioffset+ilimit)" asp-route-inlimit="@ilimit">next</a>
+                }
+            }
             </div>
         </div>
     </div>
@@ -76,55 +95,74 @@
             </div>
             <div class="panel-body">
                 <table class="table table-bordered table-responsive table-hover">
-            <tr>
-                <th>
-                    Date
-                </th>
-                <th>
-                    TX ID
-                </th>
-                <th>
-                    From
-                </th>
-                <th>
-                    To
-                </th>
-               <th class="pad-decimals">
-                    Amount
-                </th>
-                <th>
-                    Id
-                </th>
-            </tr>
-            <tbody>@{
-                foreach (var item in Model.TransactionsOutgoing)
-                {
                     <tr>
-                        <td>
-                            @ViewUtils.FormatUnixTime(item.ChainTx.Date)
-                        </td>
-                        <td>
-                            @item.ChainTx.TxId
-                        </td>
-                        <td>
-                            <span class="truncate">@item.ChainTx.From</span>
-                        </td>
-                        <td>
-                            @item.ChainTx.To
-                        </td>
-                        <td>
-                            <span class="pad-decimals-data">
-                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
-                                Model.AssetSettings.Decimals)
-                            </span>
-                        </td>
-                        <td>
-                            @item.Meta.Id
-                        </td>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            TX ID
+                        </th>
+                        <th>
+                            From
+                        </th>
+                        <th>
+                            To
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                        <th>
+                            Id
+                        </th>
                     </tr>
-                }
-            }</tbody>
+                    <tbody>
+                        @{
+                            foreach (var item in Model.TransactionsOutgoing)
+                            {
+                                <tr>
+                                    <td>
+                                        <nobr>@ViewUtils.FormatUnixTime(item.ChainTx.Date)</nobr>
+                                    </td>
+                                    <td>
+                                        <input type="text" value="@item.ChainTx.TxId" size="30" readonly>
+                                    </td>
+                                    <td>
+                                        <span class="truncate">@item.ChainTx.From</span>
+                                    </td>
+                                    <td>
+                                        @item.ChainTx.To
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
+                                                Model.AssetSettings.Decimals)
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @item.Meta.Id
+                                    </td>
+                                </tr>
+                            }
+                    }
+                </tbody>
             </table>
+            @{
+                var ocount = Model.TxsOutgoingCount;
+                var ooffset = Model.TxsOutgoingOffset;
+                var olimit = Model.TxsOutgoingLimit;
+                if (ooffset >= olimit)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-outoffset="@(ooffset-olimit)" asp-route-outlimit="@olimit">prev</a>
+                }
+                else if (ooffset > 0)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-outoffset="0" asp-route-outlimit="@olimit">prev</a>
+                }
+                if (ocount - ooffset > olimit)
+                {
+                    <a asp-action="UserInspectWalletTxs" asp-route-id="@ViewData["userid"]" asp-route-asset="@Model.Asset" asp-route-outoffset="@(ooffset+olimit)" asp-route-outlimit="@olimit">next</a>
+                }
+            }
             </div>
         </div>
     </div>

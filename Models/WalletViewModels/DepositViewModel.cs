@@ -25,6 +25,9 @@ namespace viafront3.Models.WalletViewModels
         public int TxsIncommingLimit { get; set; }
         public int TxsIncommingCount { get; set; }
         public IEnumerable<WalletTx> TransactionsOutgoing { get; set; }
+        public int TxsOutgoingOffset { get; set; }
+        public int TxsOutgoingLimit { get; set; }
+        public int TxsOutgoingCount { get; set; }
     }
 
     public class DepositFiatViewModel : BaseViewModel

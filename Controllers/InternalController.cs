@@ -226,7 +226,7 @@ namespace viafront3.Controllers
             return View(TradeViewModel.Construct(user, userInspect, market, _settings));
         }
 
-        public IActionResult UserInspectWalletTxs(string id, string asset)
+        public IActionResult UserInspectWalletTxs(string id, string asset, int inOffset=0, int inLimit=10, int outOffset=0, int outLimit=10)
         {
             var user = GetUser(required: true).Result;
 
@@ -236,9 +236,9 @@ namespace viafront3.Controllers
             // get wallet transactions
             var wallet = _walletProvider.GetChain(asset);
             var txsIn = wallet.GetTransactions(id)
-                .Where(t => t.Direction == WalletDirection.Incomming);
+                .Where(t => t.Direction == WalletDirection.Incomming).OrderByDescending(t => t.ChainTx.Date);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.Meta.TagOnBehalfOf == id);
+                .Where(t => t.Meta.TagOnBehalfOf == id).OrderByDescending(t => t.ChainTx.Date);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel
@@ -249,22 +249,25 @@ namespace viafront3.Controllers
                 ChainAssetSettings = _walletProvider.ChainAssetSettings(asset),
                 AssetSettings = _settings.Assets[asset],
                 Wallet = wallet,
-                TransactionsIncomming = txsIn,
-                TxsIncommingOffset = 0,
-                TxsIncommingLimit = txsIn.Count(),
+                TransactionsIncomming = txsIn.Skip(inOffset).Take(inLimit),
+                TxsIncommingOffset = inOffset,
+                TxsIncommingLimit = inLimit,
                 TxsIncommingCount = txsIn.Count(),
-                TransactionsOutgoing = txsOutOnBehalf
+                TransactionsOutgoing = txsOutOnBehalf.Skip(outOffset).Take(outLimit),
+                TxsOutgoingOffset = outOffset,
+                TxsOutgoingLimit = outLimit,
+                TxsOutgoingCount = txsOutOnBehalf.Count(),
             };
             return View(model);
         }
 
-        public IActionResult UserInspectFiatWalletTxs(string id, string asset)
+        public IActionResult UserInspectFiatWalletTxs(string id, string asset, int offset=0, int limit=20)
         {
             var user = GetUser(required: true).Result;
 
             // get wallet transactions
             var wallet = _walletProvider.GetFiat(asset);
-            var txs = wallet.GetTransactions(id);
+            var txs = wallet.GetTransactions(id).OrderByDescending(t => t.Date);
 
             ViewData["userid"] = id;
             var model = new FiatTransactionsViewModel
@@ -273,19 +276,22 @@ namespace viafront3.Controllers
                 Asset = asset,
                 AssetSettings = _settings.Assets,
                 Wallet = wallet,
-                Transactions = txs,
+                Transactions = txs.Skip(offset).Take(limit),
+                TxsOffset = offset,
+                TxsLimit = limit,
+                TxsCount = txs.Count(),
             };
             return View(model);
         }
 
-        public IActionResult UserInspectExchangeBalanceHistory(string id, string asset, int offset=0)
+        public IActionResult UserInspectExchangeBalanceHistory(string id, string asset, int offset=0, int limit=20)
         {
             var user = GetUser(required: true).Result;
             var userInspect = _userManager.FindByIdAsync(id).Result;
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var history = via.BalanceHistoryQuery(userInspect.Exchange.Id, asset, "", 0, 0, offset, 50);
+            var history = via.BalanceHistoryQuery(userInspect.Exchange.Id, asset, "", 0, 0, offset, limit);
 
             ViewData["userid"] = id;
             var model = new UserBalanceHistoryViewModel

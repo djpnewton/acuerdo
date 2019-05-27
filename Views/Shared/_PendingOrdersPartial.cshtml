@@ -92,7 +92,7 @@
     }</tbody>
 </table>
 @{
-    var count = Model.OrdersPending.records.Count;
+    var count = Model.OrdersPending.total;
     var offset = Model.OrdersPending.offset;
     var limit = Model.OrdersPending.limit;
     if ((bool)ViewData["use_pagination"])
@@ -105,12 +105,12 @@
         {
             <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="0" asp-route-limit="@limit">prev</a>
         }
-        if (count >= limit)
+        if (count - offset > limit)
         {
             <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
         }
     }
-    else if (count >= limit)
+    else if (count - offset > limit)
     {
         <a asp-action="OrdersPending" asp-route-userid="@userid" asp-route-market="@market">more</a>
     }
