@@ -17,8 +17,6 @@ using viafront3.Models.ApiViewModels;
 using viafront3.Data;
 using viafront3.Services;
 using via_jsonrpc;
-using RestSharp;
-using Newtonsoft.Json;
 
 namespace viafront3.Controllers
 {
@@ -169,15 +167,6 @@ namespace viafront3.Controllers
             return Ok();
         }
 
-        string HMacWithSha256(string secret, string message)
-        {
-            using (var hmac = new HMACSHA256(ASCIIEncoding.ASCII.GetBytes(secret)))
-            {
-                var hash = hmac.ComputeHash(ASCIIEncoding.ASCII.GetBytes(message));
-                return Convert.ToBase64String(hash);
-            }
-        }
-
         bool CompareDigest(string sig1Base64, string sig2Base64)
         {
             var sig1 = Convert.FromBase64String(sig1Base64);
@@ -312,91 +301,26 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiAccountKycRequest> AccountKycUpgrade([FromBody] ApiAuth req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             // call kyc server to create request
-            var token = Utils.CreateToken();
-            var client = new RestClient(_kycSettings.KycServerUrl);
-            var request = new RestRequest("request", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = _kycSettings.KycServerApiKey, token = token });
-            request.AddParameter("application/json", jsonBody, ParameterType.RequestBody);
-            var sig = HMacWithSha256(_kycSettings.KycServerApiSecret, jsonBody);
-            request.AddHeader("X-Signature", sig);
-            var response = client.Execute(request);
-            if (response.IsSuccessful)
-            {
-                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
-                if (json.ContainsKey("status"))
-                {
-                    var status = json["status"];
-                    // save to database
-                    var date = DateTimeOffset.Now.ToUnixTimeSeconds();
-                    var kycReq = new KycRequest { ApplicationUserId = apikey.ApplicationUserId, Date = date, Token = token };
-                    _context.KycRequests.Add(kycReq);
-                    _context.SaveChanges();
-                    // return to user
-                    var model = new ApiAccountKycRequest
-                    {
-                        Token = token,
-                        ServiceUrl = $"{_kycSettings.KycServerUrl}/request/{token}",
-                        Status = status,
-                    };
-                    return model;
-                }
-            }
+            var model = CreateKycRequest(_kycSettings, apikey.ApplicationUserId);
+            if (model != null)
+                return model;
             return BadRequest();
         }
 
         [HttpPost]
         public async Task<ActionResult<ApiAccountKycRequest>> AccountKycUpgradeStatus([FromBody] ApiAccountKycRequestStatus req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
-            // call kyc server to create request
-            var client = new RestClient(_kycSettings.KycServerUrl);
-            var request = new RestRequest("status", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddJsonBody(new { token = req.Token });
-            var response = client.Execute(request);
-            if (response.IsSuccessful)
-            {
-                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
-                if (json.ContainsKey("status"))
-                {
-                    var status = json["status"];
-                    // update kyc level if complete
-                    var newLevel = 2;
-                    var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
-                    if (user == null)
-                        return BadRequest();
-                    var userKyc = user.Kyc;
-                    if (userKyc != null)
-                    {
-                        userKyc = new Kyc { ApplicationUserId = user.Id, Level = newLevel };
-                        _context.Kycs.Add(userKyc);
-                    }
-                    else if (userKyc.Level < newLevel)
-                    {
-
-                        userKyc.Level = newLevel;
-                        _context.Kycs.Update(userKyc);
-                    }
-                    _context.SaveChanges();;
-                    // return to user
-                    var model = new ApiAccountKycRequest
-                    {
-                        Token = req.Token,
-                        ServiceUrl = $"{_kycSettings.KycServerUrl}/request/{req.Token}",
-                        Status = status,
-                    };
-                    return model;
-                }
-            }
+            // call kyc server to check request
+            var model = await CheckKycRequest(_kycSettings, apikey.ApplicationUserId, req.Token);
+            if (model != null)
+                return model;
             return BadRequest();
         }
 

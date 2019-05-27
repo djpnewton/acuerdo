@@ -27,6 +27,8 @@ namespace viafront3.Controllers
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly UrlEncoder _urlEncoder;
+        private readonly GeneralSettings _genSettings;
+        private readonly KycSettings _kycSettings;
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -37,11 +39,15 @@ namespace viafront3.Controllers
           ILogger<ManageController> logger,
           UrlEncoder urlEncoder,
           ApplicationDbContext context,
-          IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings)
+          IOptions<ExchangeSettings> settings,
+          IOptions<GeneralSettings> gen,
+          IOptions<KycSettings> kyc) : base(logger, userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _urlEncoder = urlEncoder;
+            _genSettings = gen.Value;
+            _kycSettings = kyc.Value;
         }
 
         [TempData]
@@ -485,6 +491,55 @@ namespace viafront3.Controllers
             return RedirectToAction(nameof(Api));
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Kyc()
+        {
+            var user = await GetUser(required: true);
+
+            // get kyc request url and check the status
+            string kycRequestUrl = null;
+            string kycRequestStatus = null;
+            var kycRequest = _context.KycRequests.Where(r => r.ApplicationUserId == user.Id).OrderByDescending(r => r.Date).FirstOrDefault();
+            if (kycRequest != null)
+            {
+                kycRequestUrl = $"{_kycSettings.KycServerUrl}/request/{kycRequest.Token}";
+                var _model = await CheckKycRequest(_kycSettings, user.Id, kycRequest.Token);
+                if (_model != null)
+                    kycRequestStatus = _model.Status;
+            }
+            // get users kyc level
+            var levelNum = user.Kyc != null ? user.Kyc.Level : 0;
+            KycLevel level = null;
+            if (_kycSettings.Levels.Count > levelNum)
+                level = _kycSettings.Levels[levelNum];
+            var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
+
+            var model = new KycViewModel
+            {
+                User = user,
+                LevelNum = levelNum,
+                Level = level,
+                WithdrawalTotalThisPeriod = withdrawalTotalThisPeriod,
+                KycSettings = _kycSettings,
+                KycRequestUrl = kycRequestUrl,
+                KycRequestStatus = kycRequestStatus,
+            };
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> KycUpgrade()
+        {
+            var user = await GetUser(required: true);
+
+            var _model = CreateKycRequest(_kycSettings, user.Id);
+            if (_model != null)
+                this.FlashSuccess("Created KYC upgrade request");
+
+            return RedirectToAction(nameof(Kyc));
+        }
+
         #region Helpers
 
         private void AddErrors(IdentityResult result)
@@ -516,7 +571,7 @@ namespace viafront3.Controllers
         {
             return string.Format(
                 AuthenicatorUriFormat,
-                _urlEncoder.Encode("viafront3"),
+                _urlEncoder.Encode(_genSettings.SiteName),
                 _urlEncoder.Encode(email),
                 unformattedKey);
         }

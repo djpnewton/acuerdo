@@ -19,6 +19,11 @@ using viafront3.Services;
 
 namespace viafront3
 {
+    public class GeneralSettings
+    {
+        public string SiteName { get; set; }
+    }
+
     public class MySqlSettings
     {
         public string Host { get; set; }
@@ -169,6 +174,7 @@ namespace viafront3
         public void ConfigureServices(IServiceCollection services)
         {
             // Add ExchangeSettings so it can be injected in controllers
+            services.Configure<GeneralSettings>(options => Configuration.GetSection("General").Bind(options));
             services.Configure<ExchangeSettings>(options => Configuration.GetSection("Exchange").Bind(options));
             services.Configure<WalletSettings>(options => Configuration.GetSection("Wallet").Bind(options));
             services.Configure<EmailSenderSettings>(options => Configuration.GetSection("EmailSender").Bind(options));

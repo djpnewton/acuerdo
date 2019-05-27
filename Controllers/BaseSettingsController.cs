@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
@@ -13,6 +14,8 @@ using viafront3.Services;
 using viafront3.Models;
 using viafront3.Models.TradeViewModels;
 using viafront3.Data;
+using RestSharp;
+using Newtonsoft.Json;
 using via_jsonrpc;
 
 namespace viafront3.Controllers
@@ -80,6 +83,102 @@ namespace viafront3.Controllers
                     break;
                 }
             }
+        }
+
+        protected string HMacWithSha256(string secret, string message)
+        {
+            using (var hmac = new HMACSHA256(ASCIIEncoding.ASCII.GetBytes(secret)))
+            {
+                var hash = hmac.ComputeHash(ASCIIEncoding.ASCII.GetBytes(message));
+                return Convert.ToBase64String(hash);
+            }
+        }
+
+        protected viafront3.Models.ApiViewModels.ApiAccountKycRequest CreateKycRequest(KycSettings kycSettings, string applicationUserId)
+        {
+            // check request does not already exist
+            var kycReq = _context.KycRequests.Where(r => r.ApplicationUserId == applicationUserId).FirstOrDefault();
+            if (kycReq != null)
+                return null;
+            // call kyc server to create request
+            var token = Utils.CreateToken();
+            var client = new RestClient(kycSettings.KycServerUrl);
+            var request = new RestRequest("request", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token });
+            request.AddParameter("application/json", jsonBody, ParameterType.RequestBody);
+            var sig = HMacWithSha256(kycSettings.KycServerApiSecret, jsonBody);
+            request.AddHeader("X-Signature", sig);
+            var response = client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    // save to database
+                    var date = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    kycReq = new KycRequest { ApplicationUserId = applicationUserId, Date = date, Token = token };
+                    _context.KycRequests.Add(kycReq);
+                    _context.SaveChanges();
+                    // return to user
+                    var model = new viafront3.Models.ApiViewModels.ApiAccountKycRequest
+                    {
+                        Token = token,
+                        ServiceUrl = $"{kycSettings.KycServerUrl}/request/{token}",
+                        Status = status,
+                    };
+                    return model;
+                }
+            }
+            return null;
+        }
+
+        protected async Task<viafront3.Models.ApiViewModels.ApiAccountKycRequest> CheckKycRequest(KycSettings kycSettings, string applicationUserId, string token)
+        {
+            var client = new RestClient(kycSettings.KycServerUrl);
+            var request = new RestRequest("status", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddJsonBody(new { token = token });
+            var response = client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    // update kyc level if complete
+                    if (status == "completed")
+                    {
+                        var newLevel = 2;
+                        var user = await _userManager.FindByIdAsync(applicationUserId);
+                        if (user == null)
+                            return null;
+                        var userKyc = user.Kyc;
+                        if (userKyc == null)
+                        {
+                            userKyc = new Kyc { ApplicationUserId = user.Id, Level = newLevel };
+                            _context.Kycs.Add(userKyc);
+                        }
+                        else if (userKyc.Level < newLevel)
+                        {
+
+                            userKyc.Level = newLevel;
+                            _context.Kycs.Update(userKyc);
+                        }
+                        _context.SaveChanges();
+                    }
+                    // return to user
+                    var model = new viafront3.Models.ApiViewModels.ApiAccountKycRequest
+                    {
+                        Token = token,
+                        ServiceUrl = $"{kycSettings.KycServerUrl}/request/{token}",
+                        Status = status,
+                    };
+                    return model;
+                }
+            }
+            return null;
         }
     }
 

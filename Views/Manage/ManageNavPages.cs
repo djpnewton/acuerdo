@@ -21,6 +21,8 @@ namespace viafront3.Views.Manage
 
         public static string Api => "Api";
 
+        public static string Kyc => "Kyc";
+
         public static string IndexNavClass(ViewContext viewContext) => PageNavClass(viewContext, Index);
 
         public static string ChangePasswordNavClass(ViewContext viewContext) => PageNavClass(viewContext, ChangePassword);
@@ -30,6 +32,8 @@ namespace viafront3.Views.Manage
         public static string TwoFactorAuthenticationNavClass(ViewContext viewContext) => PageNavClass(viewContext, TwoFactorAuthentication);
     
         public static string ApiNavClass(ViewContext viewContext) => PageNavClass(viewContext, Api);
+
+        public static string KycNavClass(ViewContext viewContext) => PageNavClass(viewContext, Kyc);
 
         public static string PageNavClass(ViewContext viewContext, string page)
         {
