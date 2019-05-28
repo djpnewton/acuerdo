@@ -11,8 +11,14 @@ using viafront3.Data;
 
 namespace viafront3.Services
 {
+    public class TripwireStats
+    {
+        public Dictionary<TripwireEventType, int> Events;
+    }
+
     public interface ITripwire
     {
+        TripwireStats Stats(TripwireSettings settings, ApplicationDbContext context);
         Task RegisterEvent(TripwireEventType type);
         bool TradingEnabled();
         bool WithdrawalsEnabled();
@@ -32,6 +38,18 @@ namespace viafront3.Services
             _logger = logger;
         }
 
+        public TripwireStats Stats(TripwireSettings settings, ApplicationDbContext context)
+        {
+            var stats = new TripwireStats { Events = new Dictionary<TripwireEventType, int>() };
+            var start = DateTimeOffset.Now.Subtract(TimeSpan.FromMinutes(settings.TimePeriodInMinutes));
+            foreach (var eventType in Enum.GetValues(typeof(TripwireEventType)).Cast<TripwireEventType>())
+            {
+                var count = context.TripwireEvents.Count(e => e.Date >= start && e.Type == eventType);
+                stats.Events.Add(eventType, count);
+            }
+            return stats;
+        }
+
         void UpdateTripwire(IServiceScope scope, ApplicationDbContext context)
         {
             var emailSender = scope.ServiceProvider.GetService<IEmailSender>();
@@ -40,25 +58,7 @@ namespace viafront3.Services
             var start = DateTimeOffset.Now.Subtract(TimeSpan.FromMinutes(settings.TimePeriodInMinutes));
             foreach (var eventType in Enum.GetValues(typeof(TripwireEventType)).Cast<TripwireEventType>())
             {
-                var max = 0;
-                switch (eventType)
-                {
-                    case TripwireEventType.LoginAttempt:
-                        max = settings.LoginAttempsMax;
-                        break;
-                    case TripwireEventType.Login:
-                        max = settings.LoginsMax;
-                        break;
-                    case TripwireEventType.WithdrawalAttempt:
-                        max = settings.WithdrawalAttempsMax;
-                        break;
-                    case TripwireEventType.Withdrawal:
-                        max = settings.WithdrawalsMax;
-                        break;
-                    case TripwireEventType.ResetPasswordAttempt:
-                        max = settings.ResetPasswordAttempsMax;
-                        break;
-                }
+                var max = settings.Maximum[eventType];
                 var count = context.TripwireEvents.Count(e => e.Date >= start && e.Type == eventType);
                 if (count > max)
                 {

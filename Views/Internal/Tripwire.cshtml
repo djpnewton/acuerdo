@@ -1,0 +1,67 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model TripwireViewModel
+@{
+    ViewData["Title"] = "Tripwire";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Tripwire
+            </div>
+            <div class="panel-body">
+                <ul>
+                    <li>
+                        <span @Html.Raw(!Model.Tripwire.TradingEnabled() ? "style=\"background-color: OrangeRed; font-weight: bolder\"" : "")>
+                            Trading enabled: @Model.Tripwire.TradingEnabled()
+                        </span>
+                    </li>
+                    <li>
+                        <span @Html.Raw(!Model.Tripwire.WithdrawalsEnabled() ? "style=\"background-color: OrangeRed; font-weight: bolder\"" : "")>
+                            Withdrawals enabled: @Model.Tripwire.WithdrawalsEnabled()
+                        </span>
+                    </li>
+                </ul>
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Action
+                        </th>
+                        <th>
+                            Count
+                        </th>
+                        <th>
+                            Timeframe
+                        </th>
+                        <th>
+                            Maximum
+                        </th>
+                    </tr>
+                    <tbody>
+                        @{
+                            foreach ((var key, var value) in Model.Stats.Events)
+                            {
+                            <tr>
+                                <td>
+                                    @key
+                                </td>
+                                <td>
+                                    @value
+                                </td>
+                                <td>
+                                    @Model.Settings.TimePeriodInMinutes minutes
+                                </td>
+                                <td>
+                                    @Model.Settings.Maximum[key]
+                                </td>
+                            </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

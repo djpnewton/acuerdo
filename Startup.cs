@@ -142,11 +142,7 @@ namespace viafront3
     {
         public string AlertEmail { get; set; }
         public int TimePeriodInMinutes { get; set; }
-        public int LoginAttempsMax { get; set; }
-        public int LoginsMax { get; set; }
-        public int ResetPasswordAttempsMax { get; set; }
-        public int WithdrawalAttempsMax { get; set; }
-        public int WithdrawalsMax { get; set; }
+        public Dictionary<TripwireEventType, int> Maximum { get; set; }
     }
 
     public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter

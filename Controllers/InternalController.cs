@@ -29,6 +29,8 @@ namespace viafront3.Controllers
         private readonly IWebsocketTokens _websocketTokens;
         private readonly WalletSettings _walletSettings;
         private readonly IWalletProvider _walletProvider;
+        private readonly ITripwire _tripwire;
+        private readonly TripwireSettings _tripwireSettings;
 
         public InternalController(
             ILogger<InternalController> logger,
@@ -37,11 +39,15 @@ namespace viafront3.Controllers
             IOptions<ExchangeSettings> settings,
             IOptions<WalletSettings> walletSettings,
             IWalletProvider walletProvider,
-            IWebsocketTokens websocketTokens) : base(logger, userManager, context, settings)
+            IWebsocketTokens websocketTokens,
+            ITripwire tripwire,
+            IOptions<TripwireSettings> tripwireSettings) : base(logger, userManager, context, settings)
         {
             _walletSettings = walletSettings.Value;
             _walletProvider = walletProvider;
             _websocketTokens = websocketTokens;
+            _tripwire = tripwire;
+            _tripwireSettings = tripwireSettings.Value;
         }
 
         public IActionResult Index()
@@ -382,6 +388,21 @@ namespace viafront3.Controllers
                 WebsocketUrl = _settings.WebsocketUrl,
             };
 
+            return View(model);
+        }
+
+        public IActionResult Tripwire()
+        {
+            var user = GetUser(required: true).Result;
+
+            var stats = _tripwire.Stats(_tripwireSettings, _context);
+            var model = new TripwireViewModel
+            {
+                User = user,
+                Tripwire = _tripwire,
+                Settings = _tripwireSettings,
+                Stats = stats,
+            };
             return View(model);
         }
     }
