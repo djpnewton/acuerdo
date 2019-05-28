@@ -54,6 +54,7 @@ then
     DEPLOY_USER=root
     TESTNET=true
 fi 
+ADMIN_HOST=`dig +short $FRONTEND_HOST`
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then 
@@ -62,9 +63,9 @@ then
     KAFKA_ADVERTISED_LISTENER=10.50.1.100
     DEPLOY_USER=root
     TESTNET=true
+    ADMIN_HOST=$FRONTEND_HOST
 fi 
 
-ADMIN_HOST=`dig +short $FRONTEND_HOST`
 AUTH_URL=http://$FRONTEND_HOST:5000/Internal/WebsocketAuth
 
 MYSQL_HOST=127.0.0.1
