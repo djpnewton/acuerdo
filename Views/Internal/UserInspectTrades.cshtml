@@ -14,7 +14,7 @@
                 Pending Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_PendingOrdersPartial", Model.OrdersPending,
+                @await Html.PartialAsync("_PendingOrdersPartial", Model.OrdersPending,
                     new ViewDataDictionary(this.ViewData) { { "use_pagination", false }, { "trade_model", Model }, { "cancellation", false } })
             </div>
         </div>
@@ -28,7 +28,7 @@
                 Completed Bid Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_CompletedOrdersPartial", Model.BidOrdersCompleted,
+                @await Html.PartialAsync("_CompletedOrdersPartial", Model.BidOrdersCompleted,
                     new ViewDataDictionary(this.ViewData) { { "type", "Bid" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
@@ -42,7 +42,7 @@
                 Completed Ask Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_CompletedOrdersPartial", Model.AskOrdersCompleted,
+                @await Html.PartialAsync("_CompletedOrdersPartial", Model.AskOrdersCompleted,
                     new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>

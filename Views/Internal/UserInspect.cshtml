@@ -61,7 +61,7 @@
                 Current Balances
             </div>
             <div class="panel-body">
-                @Html.Partial("_UserBalancesPartial", Model.Balances,
+                @await Html.PartialAsync("_UserBalancesPartial", Model.Balances,
                     new ViewDataDictionary(this.ViewData) { { "asset_settings", Model.AssetSettings } })
             </div>
         </div>

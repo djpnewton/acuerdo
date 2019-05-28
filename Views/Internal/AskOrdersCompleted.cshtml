@@ -14,7 +14,7 @@
                 Completed Ask Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_CompletedOrdersPartial", Model.OrdersCompleted,
+                @await Html.PartialAsync("_CompletedOrdersPartial", Model.OrdersCompleted,
                     new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", true }, { "trade_model", Model } })
             </div>
         </div>

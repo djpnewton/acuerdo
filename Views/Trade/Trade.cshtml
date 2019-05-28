@@ -15,7 +15,7 @@
                 Order Book
             </div>
             <div class="panel-body">
-                @Html.Partial("_OrderbookPartial", Model.OrderBook)
+                @await Html.PartialAsync("_OrderbookPartial", Model.OrderBook)
             </div>
         </div>
     </div>
@@ -97,7 +97,7 @@
                 Pending Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_PendingOrdersPartial", Model.OrdersPending,
+                @await Html.PartialAsync("_PendingOrdersPartial", Model.OrdersPending,
                     new ViewDataDictionary(this.ViewData) { { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
@@ -111,7 +111,7 @@
                 Completed Bid Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_CompletedOrdersPartial", Model.BidOrdersCompleted,
+                @await Html.PartialAsync("_CompletedOrdersPartial", Model.BidOrdersCompleted,
                     new ViewDataDictionary(this.ViewData) { { "type", "Bid" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
@@ -125,7 +125,7 @@
                 Completed Ask Orders
             </div>
             <div class="panel-body">
-                @Html.Partial("_CompletedOrdersPartial", Model.AskOrdersCompleted,
+                @await Html.PartialAsync("_CompletedOrdersPartial", Model.AskOrdersCompleted,
                     new ViewDataDictionary(this.ViewData) { { "type", "Ask" }, { "use_pagination", false }, { "trade_model", Model } })
             </div>
         </div>
@@ -139,7 +139,7 @@
                 Current Balances
             </div>
             <div class="panel-body">
-                @Html.Partial("_UserBalancesPartial", Model.Balances,
+                @await Html.PartialAsync("_UserBalancesPartial", Model.Balances,
                     new ViewDataDictionary(this.ViewData) { { "asset_settings", Model.AssetSettings } })
             </div>
         </div>
