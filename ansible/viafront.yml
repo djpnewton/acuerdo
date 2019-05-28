@@ -140,10 +140,8 @@
         enabled: no
 
     - name: install npm & node
-      action: apt pkg={{item}} state=installed
-      with_items:
-        - nodejs-legacy
-        - npm
+      apt:
+        name: ['nodejs-legacy', 'npm']
 
     - name: install bower
       shell: cd /opt/viafront; npm install bower

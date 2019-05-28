@@ -15,10 +15,8 @@
       debconf: name=postifx question="postfix/mailname" value="{{domain_name}}" vtype="string"
 
     - name: Install Postfix
-      apt: package={{ item }} state=present
-      with_items:
-        - postfix
-        - mailutils
+      apt:
+        name: ['postfix', 'mailutils']
 
     - name: Copy postfix config
       template: src=templates/main.cf.j2 dest=/etc/postfix/main.cf

@@ -26,14 +26,8 @@
       when: full_deploy
 
     - name: Install Required Packages
-      action: apt pkg={{item}} state=installed
-      with_items:
-        - git
-        - vim
-        - jq
-        - parted
-        - e2fsprogs
-        - unzip
+      apt:
+        name: ['git', 'vim', 'jq', 'parted', 'e2fsprogs', 'unzip']
       when: full_deploy
 
     # https://github.com/ansible/ansible/issues/23914      
@@ -47,12 +41,12 @@
       when: vagrant
       ignore_errors: yes
 
-- include: firewall.yml
+- import_playbook: firewall.yml
   when: full_deploy and deploy_type != "local"
-- include: postfix.yml
+- import_playbook: postfix.yml
   when: full_deploy
-- include: nginx.yml
+- import_playbook: nginx.yml
   when: full_deploy
-- include: dotnetcore.yml
+- import_playbook: dotnetcore.yml
   when: full_deploy
-- include: viafront.yml
+- import_playbook: viafront.yml
