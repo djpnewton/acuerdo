@@ -45,7 +45,7 @@ ADMIN_HOST=123.123.123.123
 
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
-then 
+then
     DEPLOY_HOST=blockchain.test.bronze.exchange
     DEPLOY_USER=root
     TESTNET=true
@@ -53,11 +53,14 @@ fi
 
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
-then 
+then
     DEPLOY_HOST=10.50.1.100
     DEPLOY_USER=root
     TESTNET=true
 fi 
+
+IF_EXTERNAL=eth0
+IF_INTERNAL=eth1
 
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
@@ -66,6 +69,9 @@ echo "   - ADMIN_EMAIL: $ADMIN_EMAIL"
 echo "   - ADMIN_HOST: $ADMIN_HOST"
 echo "   - DEPLOY_HOST: $DEPLOY_HOST"
 echo "   - DEPLOY_USER: $DEPLOY_USER"
+echo "   - IF_INTERNAL: $IF_INTERNAL"
+echo "   - IF_EXTERNAL: $IF_EXTERNAL"
+
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
@@ -75,6 +81,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
         ../xchwallet/ansible/deploy.yml
 fi
