@@ -68,8 +68,10 @@ namespace viafront3.Controllers
                     if (_walletProvider.IsChain(asset))
                     {
                         var wallet = _walletProvider.GetChain(asset);
-                        wallet.UpdateFromBlockchain(); // get updated data
+                        var dbtx = wallet.BeginDbTransaction();
+                        wallet.UpdateFromBlockchain(dbtx); // get updated data
                         wallet.Save();
+                        dbtx.Commit();
 
                         var tags = wallet.GetTags();
                         var balance = new ChainWalletBalance{ Total = 0, Consolidated = 0};
@@ -241,10 +243,12 @@ namespace viafront3.Controllers
 
             // get wallet transactions
             var wallet = _walletProvider.GetChain(asset);
+            var tag = wallet.GetTag(id);
+            var tagId = tag != null ? tag.Id : -1;
             var txsIn = wallet.GetTransactions(id)
                 .Where(t => t.Direction == WalletDirection.Incomming).OrderByDescending(t => t.ChainTx.Date);
             var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.Meta.TagOnBehalfOf == id).OrderByDescending(t => t.ChainTx.Date);
+                .Where(t => t.TagOnBehalfOfId == tagId).OrderByDescending(t => t.ChainTx.Date);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel

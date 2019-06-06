@@ -59,10 +59,10 @@ namespace viafront3.Services
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             via.BalanceQuery(1);
             // register new deposit with the exchange backend
-            var amount = wallet.AmountToString(tx.ChainTx.Amount);
+            var amount = wallet.AmountToString(tx.AmountOutputs());
             var source = new Dictionary<string, object>();
             source["txid"] = tx.ChainTx.TxId;
-            var businessId = tx.Meta.Id;
+            var businessId = tx.Id;
             try
             {
                 via.BalanceUpdateQuery(brokerUser.Exchange.Id, order.AssetSend, "deposit", businessId, amount, source);
@@ -104,8 +104,10 @@ namespace viafront3.Services
             else
             {
                 wallet = _walletProvider.GetChain(order.AssetSend);
-                wallet.UpdateFromBlockchain();
+                var dbtx = wallet.BeginDbTransaction();
+                wallet.UpdateFromBlockchain(dbtx);
                 wallet.Save();
+                dbtx.Commit();
                 wallets[order.AssetSend] = wallet;
             }
 
@@ -130,7 +132,7 @@ namespace viafront3.Services
                         wallet.GetLedgerModel() == xchwallet.LedgerModel.UTXO)
                     {
                         // check amount matches
-                        var amount = wallet.AmountToString(tx.ChainTx.Amount);
+                        var amount = wallet.AmountToString(tx.AmountOutputs());
                         if (order.AmountSend <= decimal.Parse(amount))
                         {
                             // bingo!
@@ -154,7 +156,7 @@ namespace viafront3.Services
                     }
                 }
             }
-            wallet.AcknowledgeTransactions(brokerUser.Id, ackTxs);
+            wallet.AcknowledgeTransactions(ackTxs);
             wallet.Save();
         }
 

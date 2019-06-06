@@ -98,9 +98,10 @@ namespace viafront3
                     }
                 }
             Console.WriteLine();
+            var dbtx = wallet.BeginDbTransaction();
             // update wallet from the blockchain
             Console.WriteLine("Updating txs from blockchain..");
-            wallet.UpdateFromBlockchain();
+            wallet.UpdateFromBlockchain(dbtx);
             Console.WriteLine("Saving wallet..");
             wallet.Save();
             Console.WriteLine();
@@ -121,6 +122,7 @@ namespace viafront3
                 Console.WriteLine(tx.ChainTx.TxId);
             Console.WriteLine("Saving wallet..");
             wallet.Save();
+            dbtx.Commit();
             return res;
         }
 
@@ -198,9 +200,8 @@ namespace viafront3
             var assetSettings = walletProvider.ChainAssetSettings(asset);
 
             // process withdrawal
-            WalletTx wtx;
             Console.WriteLine($"Actioning pending spend: {spendCode}, asset: {asset}");
-            var err = wallet.PendingSpendAction(spendCode, assetSettings.FeeMax, assetSettings.FeeUnit, out wtx);
+            var err = wallet.PendingSpendAction(spendCode, assetSettings.FeeMax, assetSettings.FeeUnit, out IEnumerable<WalletTx> wtxs);
             Console.WriteLine($"Result: {err}");
 
             // save wallet
@@ -209,17 +210,20 @@ namespace viafront3
 
             if (err == WalletError.Success)
             {
-                // get user
-                var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                var task = userManager.FindByIdAsync(wtx.Meta.TagOnBehalfOf);
-                task.Wait();
-                var user = task.Result;
-                System.Diagnostics.Debug.Assert(user != null);
+                foreach (var wtx in wtxs)
+                {
+                    // get user
+                    var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var task = userManager.FindByIdAsync(wtx.TagOnBehalfOf.Tag);
+                    task.Wait();
+                    var user = task.Result;
+                    System.Diagnostics.Debug.Assert(user != null);
 
-                // send email
-                var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.ChainTx.Amount), wtx.ChainTx.TxId).Wait();
-                Console.WriteLine($"Sent email to {user.Email}");
+                    // send email
+                    var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
+                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs()), wtx.ChainTx.TxId).Wait();
+                    Console.WriteLine($"Sent email to {user.Email}");
+                }
             }
         }
 
@@ -258,13 +262,13 @@ namespace viafront3
             else
                 incommingTxs = new List<WalletTx>();
             foreach (var tx in incommingTxs)
-                if (tx.Meta.Note != "seen")
+                if (tx.State == WalletTxState.None)
                 {
                     // send email: deposit detected
-                    wallet.SetNote(tx, "seen");
+                    wallet.SeenTransaction(tx);
                     newlySeenTxs.Add(tx);
                     if (!string.IsNullOrEmpty(user.Email))
-                        await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+                        await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.AmountOutputs()), tx.ChainTx.TxId);
                 }
             var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
             if (unackedTxs != null)
@@ -274,9 +278,9 @@ namespace viafront3
             BigInteger newDeposits = 0;
             foreach (var tx in unackedTxs)
             {
-                newDeposits += tx.ChainTx.Amount;
+                newDeposits += tx.AmountOutputs();
                 // send email: deposit confirmed
-                await emailSender.SendEmailChainDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.ChainTx.Amount), tx.ChainTx.TxId);
+                await emailSender.SendEmailChainDepositConfirmedAsync(user.Email, asset, wallet.AmountToString(tx.AmountOutputs()), tx.ChainTx.TxId);
             }
 
             // ack txs and save wallet
@@ -284,7 +288,7 @@ namespace viafront3
             if (unackedTxs.Any())
             {
                 justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
-                wallet.AcknowledgeTransactions(user.Id, unackedTxs);
+                wallet.AcknowledgeTransactions(unackedTxs);
                 wallet.Save();
             }
             else if (newlySeenTxs.Any())
@@ -293,10 +297,10 @@ namespace viafront3
             // register new deposits with the exchange backend
             foreach (var tx in justAckedTxs)
             {
-                var amount = wallet.AmountToString(tx.ChainTx.Amount);
+                var amount = wallet.AmountToString(tx.AmountOutputs());
                 var source = new Dictionary<string, object>();
                 source["txid"] = tx.ChainTx.TxId;
-                var businessId = tx.Meta.Id;
+                var businessId = tx.Id;
                 via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             }
 
@@ -315,8 +319,10 @@ namespace viafront3
             var assetSettings = walletProvider.ChainAssetSettings(asset);
 
             // update wallet
-            wallet.UpdateFromBlockchain();
+            var dbtx = wallet.BeginDbTransaction();
+            wallet.UpdateFromBlockchain(dbtx);
             wallet.Save();
+            dbtx.Commit();
 
             // get the user manager & email sender
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
