@@ -46,11 +46,7 @@ ADMIN_HOST=123.123.123.123
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then
-    ### Specify the ADMIN_EMAIL so it doesn't send to admin@bronze.exchange
-    ADMIN_EMAIL=testingzap001@gmail.com
-    ### ADMIN_HOST is the PRIVATE INTERFACE ADDRESS
-    ADMIN_HOST=192.168.2.151
-    DEPLOY_HOST=10.50.0.100
+    DEPLOY_HOST=blockchain.test.bronze.exchange
     DEPLOY_USER=root
     TESTNET=true
 fi 
@@ -58,11 +54,7 @@ fi
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then
-    ### Specify the ADMIN_EMAIL so it doesn't send to admin@bronze.exchange
-    ADMIN_EMAIL=testingzap001@gmail.com
-    ### ADMIN_HOST is the PRIVATE INTERFACE ADDRESS
-    ADMIN_HOST=192.168.2.151    
-    DEPLOY_HOST=10.50.0.100
+    DEPLOY_HOST=10.50.1.100
     DEPLOY_USER=root
     TESTNET=true
 fi 
