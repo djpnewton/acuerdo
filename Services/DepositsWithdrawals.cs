@@ -56,8 +56,10 @@ namespace viafront3.Services
                         var assetSettings = walletProvider.ChainAssetSettings(asset);
 
                         // update wallet
-                        wallet.UpdateFromBlockchain();
+                        var dbtx = wallet.BeginDbTransaction();
+                        wallet.UpdateFromBlockchain(dbtx);
                         wallet.Save();
+                        dbtx.Commit();
 
                         // update for each user
                         foreach (var user in userManager.Users)
@@ -114,9 +116,8 @@ namespace viafront3.Services
 
                             _logger.LogInformation($"SpendCode: {spend.SpendCode}, Date: {spend.Date}, Amount: {spend.Amount}, To: {spend.To}, State: {spend.State}");
                             // process withdrawal
-                            WalletTx wtx;
                             _logger.LogInformation($"Actioning pending spend: {spend.SpendCode}, asset: {asset}");
-                            var err = wallet.PendingSpendAction(spend.SpendCode, assetSettings.FeeMax, assetSettings.FeeUnit, out wtx);
+                            var err = wallet.PendingSpendAction(spend.SpendCode, assetSettings.FeeMax, assetSettings.FeeUnit, out IEnumerable<WalletTx> wtxs);
                             _logger.LogInformation($"Result: {err}");
 
                             // save wallet
@@ -125,15 +126,18 @@ namespace viafront3.Services
 
                             if (err == WalletError.Success)
                             {
-                                // get user
-                                var task = userManager.FindByIdAsync(wtx.Meta.TagOnBehalfOf);
-                                task.Wait();
-                                var user = task.Result;
-                                System.Diagnostics.Debug.Assert(user != null);
+                                foreach (var wtx in wtxs)
+                                {
+                                    // get user
+                                    var task = userManager.FindByIdAsync(wtx.TagOnBehalfOf.Tag);
+                                    task.Wait();
+                                    var user = task.Result;
+                                    System.Diagnostics.Debug.Assert(user != null);
 
-                                // send email
-                                emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.ChainTx.Amount), wtx.ChainTx.TxId).Wait();
-                                _logger.LogInformation($"Sent email to {user.Email}");
+                                    // send email
+                                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).Wait();
+                                    _logger.LogInformation($"Sent email to {user.Email}");
+                                }
                             }
                         }
                     }

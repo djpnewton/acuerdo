@@ -47,11 +47,11 @@
                                 <input type="text" value="@item.ChainTx.TxId" size="30" readonly>
                             </td>
                             <td>
-                                @item.ChainTx.From
+                                @item.ChainTx.InputsAddrs()
                             </td>
                             <td>
                                 <span class="pad-decimals-data">
-                                    @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.ChainTx.Amount),
+                                    @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.AmountOutputs()),
                                         Model.AssetSettings.Decimals)
                                 </span>
                             </td>
@@ -80,7 +80,6 @@
             <a asp-action="Transactions" asp-route-asset="@Model.Asset" asp-route-address="@Model.DepositAddress" asp-route-offset="@(offset+limit)" asp-route-limit="@limit">next</a>
         }
     }
-    </ul>
     </div>
 </div>
 

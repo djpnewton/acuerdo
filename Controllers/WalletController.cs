@@ -307,7 +307,7 @@ namespace viafront3.Controllers
 
                 var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
 
-                using (var transaction = wallet.BeginTransaction())
+                using (var dbtx = wallet.BeginDbTransaction())
                 {
                     // ensure tag exists
                     if (!wallet.HasTag(consolidatedFundsTag))
@@ -317,10 +317,11 @@ namespace viafront3.Controllers
                     }
 
                     // register withdrawal with wallet
+                    var tag = wallet.GetTag(user.Id);
                     var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
-                        model.WithdrawalAddress, amountInt, user.Id);
+                        model.WithdrawalAddress, amountInt, tag);
                     wallet.Save();
-                    var businessId = spend.Meta.Id;
+                    var businessId = spend.Id;
 
                     // register withdrawal with the exchange backend
                     var negativeAmount = -model.Amount;
@@ -335,7 +336,7 @@ namespace viafront3.Controllers
                         throw;
                     }
 
-                    transaction.Commit();
+                    dbtx.Commit();
                 }
 
                 // register withdrawal with kyc limits
@@ -363,10 +364,12 @@ namespace viafront3.Controllers
 
             var wallet = _walletProvider.GetChain(asset);
 
+            var tag = wallet.GetTag(user.Id);
+            var tagId = tag != null ? tag.Id : -1;
             var spends = wallet.PendingSpendsGet(_walletProvider.ConsolidatedFundsTag(), new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error } )
-                .Where(s => s.Meta.TagOnBehalfOf == user.Id);
+                .Where(s => s.TagOnBehalfOfId == tagId);
             var outgoingTxs = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.Meta.TagOnBehalfOf == user.Id).OrderByDescending(t => t.ChainTx.Date);
+                .Where(t => t.TagOnBehalfOfId == tagId).OrderByDescending(t => t.ChainTx.Date);
 
             var model = new WithdrawalHistoryViewModel
             {
