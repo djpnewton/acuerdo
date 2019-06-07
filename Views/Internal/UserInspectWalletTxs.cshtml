@@ -134,7 +134,7 @@
                                     </td>
                                     <td>
                                         <span class="pad-decimals-data">
-                                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.AmountInputs()),
+                                            @ViewUtils.FormatStrDec(Model.Wallet.AmountToString(item.AmountInputs() - item.ChainTx.Fee),
                                                 Model.AssetSettings.Decimals)
                                         </span>
                                     </td>

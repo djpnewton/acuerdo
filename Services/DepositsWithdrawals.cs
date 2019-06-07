@@ -135,7 +135,7 @@ namespace viafront3.Services
                                     System.Diagnostics.Debug.Assert(user != null);
 
                                     // send email
-                                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs()), wtx.ChainTx.TxId).Wait();
+                                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).Wait();
                                     _logger.LogInformation($"Sent email to {user.Email}");
                                 }
                             }
