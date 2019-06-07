@@ -347,6 +347,37 @@ namespace viafront3
             }
         }
 
+        public static void ProcessBrokerOrder(IServiceProvider serviceProvider, string token, decimal amountSent)
+        {
+            // get order
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            var order = context.BrokerOrders.SingleOrDefault(bo => bo.Token == token);
+            if (order == null)
+            {
+                Console.WriteLine($"Order not found");
+                return;
+            }
+
+            // check state
+            if (order.Status != BrokerOrderStatus.Confirmed.ToString())
+            {
+                Console.WriteLine($"Order not in confirmed state");
+                return;
+            }
+
+            // check amount
+            if (order.AmountReceive != amountSent)
+            {
+                Console.WriteLine($"Order amount receive does not match amount sent");
+                return;
+            }
+
+            order.Status = BrokerOrderStatus.Sent.ToString();
+            context.BrokerOrders.Update(order);
+            context.SaveChanges();
+            Console.WriteLine("Order state set to 'sent'");
+        }
+
         public static string CreateToken(int chars = 16)
         {
             const string ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";

@@ -98,6 +98,16 @@ namespace viafront3
             public string Asset { get; set; }
         }
 
+        [Verb("process_broker_order", HelpText = "Mark 'sent' a broker order")]
+        class ProcessBrokerOrder
+        {
+            [Option('t', "token", Required = true, HelpText = "Token")]
+            public string Token { get; set; }
+
+            [Option('a', "amountsent", Required = true, HelpText = "Amount (decimal) sent")]
+            public decimal AmountSent { get; set; }
+        }
+
         [Verb("kafka_order_updates", HelpText = "Run a kafka order message consumer (and email users whose orders have been updated)")]
         class KafkaOrderUpdates
         { }
@@ -158,6 +168,13 @@ namespace viafront3
             return 0;
         }
 
+        static int RunProcessBrokerOrder(ProcessBrokerOrder opts)
+        {
+            var sp = GetServiceProvider();
+            Utils.ProcessBrokerOrder(sp, opts.Token, opts.AmountSent);
+            return 0;
+        }
+
         static int RunKafkaOrderUpdates(KafkaOrderUpdates opts)
         {
             var sp = GetServiceProvider();
@@ -172,7 +189,7 @@ namespace viafront3
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
                 return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole,
-                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits,
+                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits, ProcessBrokerOrder,
                         KafkaOrderUpdates>(argsList)
                     .MapResult(
                     (InitRoles opts) => RunInitRoles(opts),
@@ -183,6 +200,7 @@ namespace viafront3
                     (ProcessChainWithdrawal opts) => RunProcessChainWithdrawal(opts),
                     (ShowPendingChainWithdrawals opts) => RunShowPendingChainWithdrawals(opts),
                     (CheckChainDeposits opts) => RunCheckChainDeposits(opts),
+                    (ProcessBrokerOrder opts) => RunProcessBrokerOrder(opts),
                     (KafkaOrderUpdates opts) => RunKafkaOrderUpdates(opts),
                     errs => 1);
             }
