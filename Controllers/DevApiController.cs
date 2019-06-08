@@ -24,6 +24,7 @@ namespace viafront3.Controllers
     [Produces("application/json")]
     [Route("api/dev/[action]")]
     [ApiController]
+    [IgnoreAntiforgeryToken]
     public class DevApiController : BaseWalletController
     {
         protected readonly IHostingEnvironment _hostingEnvironment;

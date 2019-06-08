@@ -23,6 +23,7 @@ namespace viafront3.Controllers
     [Produces("application/json")]
     [Route("api/v1/[action]")]
     [ApiController]
+    [IgnoreAntiforgeryToken]
     public class ApiController : BaseWalletController
     {
         private readonly SignInManager<ApplicationUser> _signInManager;
