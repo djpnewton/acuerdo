@@ -189,9 +189,14 @@ namespace viafront3
 
             services.ConfigureApplicationCookie(options =>
             {
+                // use our efcore ticket store
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.SlidingExpiration = true;
                 options.SessionStore = new EfTicketStore(services.BuildServiceProvider());
+                // set our cookie security policy
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
             });
 
             var storage = new MySqlStorage(Configuration.GetConnectionString("DefaultConnection"), new MySqlStorageOptions { TablePrefix = "Hangfire" });
