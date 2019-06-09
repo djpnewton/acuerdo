@@ -23,21 +23,4 @@
     @await Html.PartialAsync("_WebsocketScriptsPartial")
 }
 
-<script>
-    function ready(fn) {
-        if (document.readyState != 'loading'){
-            fn();
-        } else if (document.addEventListener) {
-            document.addEventListener('DOMContentLoaded', fn);
-        } else {
-            document.attachEvent('onreadystatechange', function() {
-            if (document.readyState != 'loading')
-                fn();
-            });
-        }
-    }
-
-    ready(function() {
-        ws.start("#wsResult", "@Model.WebsocketUrl", "@Model.WebsocketToken");
-    });
-</script>
+<script src="~/js/testwebsocket.js" data-websocketurl="@Model.WebsocketUrl" data-websockettoken="@Model.WebsocketToken"></script>

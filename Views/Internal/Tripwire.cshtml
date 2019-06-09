@@ -14,12 +14,12 @@
             <div class="panel-body">
                 <ul>
                     <li>
-                        <span @Html.Raw(!Model.Tripwire.TradingEnabled() ? "style=\"background-color: OrangeRed; font-weight: bolder\"" : "")>
+                        <span class="@(!Model.Tripwire.TradingEnabled() ? "trip-alert" : "")">
                             Trading enabled: @Model.Tripwire.TradingEnabled()
                         </span>
                     </li>
                     <li>
-                        <span @Html.Raw(!Model.Tripwire.WithdrawalsEnabled() ? "style=\"background-color: OrangeRed; font-weight: bolder\"" : "")>
+                        <span class="@(!Model.Tripwire.TradingEnabled() ? "trip-alert" : "")">
                             Withdrawals enabled: @Model.Tripwire.WithdrawalsEnabled()
                         </span>
                     </li>

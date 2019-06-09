@@ -228,6 +228,15 @@ namespace viafront3
                 app.UseExceptionHandler("/Home/Error");
             }
 
+            // add CSP header
+            app.Use(async (context, next) =>
+            {
+                context.Response.Headers.Add(
+                    "Content-Security-Policy",
+                    "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self';");
+                await next();
+            });
+
             app.UseStaticFiles();
 
             app.UseAuthentication();

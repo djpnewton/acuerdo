@@ -49,3 +49,11 @@
     width: 75px;
     display: inline-block;
 }
+
+.dev-alert {
+    background: #ffff99;
+}
+
+.trip-alert {
+    background-color: OrangeRed; font-weight: bolder;
+}
