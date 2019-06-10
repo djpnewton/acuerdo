@@ -5,7 +5,7 @@
   become_user: root
 
   vars:
-    letsencrypt_email: "contact@bronze.exchnage"
+    letsencrypt_email: "{{ admin_email }}"
     domain_name: "{{ deploy_host }}"
   tasks:
 
