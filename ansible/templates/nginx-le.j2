@@ -1,7 +1,7 @@
 add_header X-Frame-Options SAMEORIGIN;
 add_header X-Content-Type-Options nosniff;
 add_header X-XSS-Protection "1; mode=block";
-add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google-analytics.com; img-src 'self' data: https://www.google-analytics.com; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src 'none'; object-src 'none'";
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self';";
 
 limit_req_status 429;
 limit_req_zone $binary_remote_addr zone=app_limit:10m rate=10r/s;
