@@ -115,7 +115,7 @@
       replace:
         path: /opt/viafront/appsettings.json
         regexp: '("SmtpHost": )"10\.50\.1\.100"'
-        replace: '\1"{{backend_host}}"'
+        replace: '\1"localhost"'
 
     - name: copy viafront.service
       template:
