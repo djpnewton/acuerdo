@@ -135,6 +135,7 @@ def construct_parser():
     parser_order_cancel = subparsers.add_parser("order_cancel", help="Cancel order")
     parser_order_cancel.add_argument("key", metavar="KEY", type=str, help="the api key")
     parser_order_cancel.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
+    parser_order_cancel.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_order_cancel.add_argument("id", metavar="ID", type=int, help="Order ID")
 
     parser_trades_executed = subparsers.add_parser("trades_executed", help="View executed trades")
@@ -375,7 +376,7 @@ def order_executed_status(args):
 
 def order_cancel(args):
     print(":: calling order cancel..")
-    params = {"id": args.id}
+    params = {"market": args.market, "id": args.id}
     r = req("OrderCancel", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
