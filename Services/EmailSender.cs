@@ -4,11 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
+using Hangfire;
 
 namespace viafront3.Services
 {
     // This class is used by the application to send email for account confirmation and password reset.
-    // For more details see https://go.microsoft.com/fwlink/?LinkID=532713
+    // Also for any other user notifications.
     public class EmailSender : IEmailSender
     {
         readonly EmailSenderSettings _settings;
@@ -20,10 +21,11 @@ namespace viafront3.Services
 
         public Task SendEmailAsync(string email, string subject, string message)
         {
-            return Execute(subject, message, email);
+            BackgroundJob.Enqueue(() => Execute(subject, message, email));
+            return Task.CompletedTask;
         }
 
-        public Task Execute(string subject, string message, string email)
+        public void Execute(string subject, string message, string email)
         { 
             // create smtp client
             var smtp = new SmtpClient();
@@ -41,7 +43,6 @@ namespace viafront3.Services
             mail.Body = message;
             // send mail
             smtp.Send(mail);
-            return Task.CompletedTask;
         }
     }
 }
