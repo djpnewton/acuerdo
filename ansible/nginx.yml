@@ -41,7 +41,7 @@
       when: deploy_type != "local"
 
     - name: Generate dhparams
-      shell: openssl dhparam -out /etc/nginx/dhparams.pem 2048
+      shell: openssl dhparam -out /etc/nginx/dhparams.pem 4096
       args:
         creates: /etc/nginx/dhparams.pem
       when: deploy_type != "local"
