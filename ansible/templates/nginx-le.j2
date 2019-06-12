@@ -51,20 +51,19 @@ server {
 
     # reverse proxy to our app
     location / {
+        limit_req zone=app_limit burst=20 nodelay;
         proxy_set_header  Host $host;
         proxy_set_header  X-Real-IP $remote_addr;
         proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header  X-Forwarded-Proto $scheme;
         proxy_pass        http://localhost:5000;
-
-        limit_req zone=app_limit burst=20 nodelay;
         location /api {
             limit_req zone=api_limit;
             # proxy_pass is not inherited
             proxy_pass http://localhost:5000;
         }
-        location /Account/Login {
-            limit_req zone=login_limit;
+        location = /Account/Login {
+            limit_req zone=login_limit burst=20 nodelay;
             # proxy_pass is not inherited
             proxy_pass http://localhost:5000;
         }
