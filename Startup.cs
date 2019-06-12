@@ -193,7 +193,14 @@ namespace viafront3
                 options.ExpireTimeSpan = TimeSpan.FromDays(14);
                 options.SlidingExpiration = true;
                 options.SessionStore = new EfTicketStore(services.BuildServiceProvider());
-                // set our cookie security policy
+                // set our session cookie security policy
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Lax;
+                options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+            });
+            services.AddAntiforgery(options =>
+            {
+                // set our CSRF cookie security policy
                 options.Cookie.HttpOnly = true;
                 options.Cookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict;
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
