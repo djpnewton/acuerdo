@@ -206,9 +206,18 @@ namespace viafront3
                 options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
             });
 
-            var storage = new MySqlStorage(Configuration.GetConnectionString("DefaultConnection"), new MySqlStorageOptions { TablePrefix = "Hangfire" });
-            services.AddHangfire(x =>
-                x.UseStorage(storage));
+            // catch exception which happens if the database does not yet exist because of migrations still in the process of being applied
+            try
+            {
+                // add hangfire service (using out mysql db)
+                var storage = new MySqlStorage(Configuration.GetConnectionString("DefaultConnection"), new MySqlStorageOptions { TablePrefix = "Hangfire" });
+                services.AddHangfire(x =>
+                    x.UseStorage(storage));
+            }
+            catch
+            {
+                Console.WriteLine("Failed to add hangfire! App will fail unless we are just doing design time stuff (migrations etc)");
+            }
 
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
