@@ -41,3 +41,6 @@ logs/
 
 # geckodriver
 geckodriver*
+
+# deployment credentials
+/ansible/creds/*

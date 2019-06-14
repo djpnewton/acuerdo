@@ -99,6 +99,12 @@ then
     BACKEND_IP=$BACKEND_HOST
 fi 
 
+# read mysql user/pass from local file
+MYSQL_USER_FILE=creds/mysql_user
+MYSQL_PASS_FILE=creds/mysql_pass
+MYSQL_USER=$(cat $MYSQL_USER_FILE)
+MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
+
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
 
@@ -114,6 +120,8 @@ echo "   - BACKEND_HOST:    $BACKEND_HOST"
 echo "   - BACKEND_IP:      $BACKEND_IP"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
 echo "   - INTERNAL_IP:     $INTERNAL_IP"
+echo "   - MYSQL_USER:      $MYSQL_USER"
+echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
 # ask user to continue
@@ -129,6 +137,6 @@ then
         DEPLOY_HOST=acuerdo.local
     fi 
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS" \
         deploy.yml
 fi

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 DEPLOY_TEST=test
 DEPLOY_PRODUCTION=production
 DEPLOY_LOCAL=local
@@ -68,6 +70,12 @@ then
     DEBUG_HOST=10.50.1.1 # dev pc
 fi 
 
+# read mysql user/pass from local file
+MYSQL_USER_FILE=creds/mysql_user
+MYSQL_PASS_FILE=creds/mysql_pass
+MYSQL_USER=$(cat $MYSQL_USER_FILE)
+MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
+
 AUTH_URL=http://$FRONTEND_HOST:5000/Internal/WebsocketAuth
 
 MYSQL_HOST=127.0.0.1
@@ -82,8 +90,6 @@ ALERT_HOST=127.0.0.1
 
 ROOT_DIR=/opt/viabtc
 CONF_DIR=/opt/viabtc_conf
-MYSQL_USER=viaxch
-MYSQL_PASS=not_production
 REDIS_PASS=
 
 IF_EXTERNAL=eth0
@@ -100,6 +106,8 @@ echo "   - ADMIN_HOST: $ADMIN_HOST"
 echo "   - DEBUG_HOST: $DEBUG_HOST"
 echo "   - DEPLOY_HOST: $DEPLOY_HOST"
 echo "   - DEPLOY_USER: $DEPLOY_USER"
+echo "   - MYSQL_USER: $MYSQL_USER"
+echo "   - MYSQL_PASS: *${#MYSQL_PASS} chars*"
 echo "   - CODE ARCHIVE: viabtc_xch.zip"
 
 # ask user to continue
@@ -110,6 +118,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi

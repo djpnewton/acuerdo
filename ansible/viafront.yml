@@ -42,8 +42,8 @@
     - name: set mysql host for asp.net db
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("DefaultConnection": "Server)=10\.50\.1\.100;(Database)'
-        replace: '\1={{backend_host}};\2'
+        regexp: '("DefaultConnection": "Server)=10\.50\.1\.100;(Database=viafront;Uid)=viaxch;(Pwd)=not_production;(Allow)'
+        replace: '\1={{backend_host}};\2={{mysql_user}};\3={{mysql_pass}};\4'
 
     - name: set mysql host for viaxch db
       replace:
@@ -51,11 +51,35 @@
         regexp: '("Host": )"10\.50\.1\.100"'
         replace: '\1"{{backend_host}}"'
 
+    - name: set mysql username for viaxch db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("User": )"viaxch"'
+        replace: '\1"{{mysql_user}}"'
+
+    - name: set mysql password for viaxch db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("Password": )"not_production"'
+        replace: '\1"{{mysql_pass}}"'
+
     - name: set mysql host for wallets db
       replace:
         path: /opt/viafront/appsettings.json
         regexp: '("Host": )"10\.50\.1\.100"'
         replace: '\1"{{backend_host}}"'
+
+    - name: set mysql username for wallets db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("User": )"viaxch"'
+        replace: '\1"{{mysql_user}}"'
+
+    - name: set mysql password for wallets db
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("Password": )"not_production"'
+        replace: '\1"{{mysql_pass}}"'
 
     - name: set accesshttp url 
       replace:
