@@ -76,6 +76,25 @@ MYSQL_PASS_FILE=creds/mysql_pass
 MYSQL_USER=$(cat $MYSQL_USER_FILE)
 MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
 
+# read backblaze b2 creds
+B2_ACCT_ID_FILE=creds/b2_acct_id
+B2_APP_KEY_FILE=creds/b2_app_key
+B2_BUCKET_FILE=creds/b2_bucket
+B2_ACCT_ID=$(cat $B2_ACCT_ID_FILE)
+B2_APP_KEY=$(cat $B2_APP_KEY_FILE)
+B2_BUCKET=$(cat $B2_BUCKET_FILE)
+
+# backup public key
+GPG_PUBLIC_KEY=creds/gpg_pub.key
+if [[ ! -f $GPG_PUBLIC_KEY ]]; then
+    echo '$GPG_PUBLIC_KEY' does not exist
+    exit 3
+fi
+GPG_PUBLIC_KEY=`realpath $GPG_PUBLIC_KEY`
+
+# backup databases
+BACKUP_DBS="viafront trade_log trade_history btc_wallet waves_wallet zap_wallet nzd_wallet"
+
 AUTH_URL=http://$FRONTEND_HOST:5000/Internal/WebsocketAuth
 
 MYSQL_HOST=127.0.0.1
@@ -108,6 +127,9 @@ echo "   - DEPLOY_HOST: $DEPLOY_HOST"
 echo "   - DEPLOY_USER: $DEPLOY_USER"
 echo "   - MYSQL_USER: $MYSQL_USER"
 echo "   - MYSQL_PASS: *${#MYSQL_PASS} chars*"
+echo "   - B2_ACCT_ID: $B2_ACCT_ID"
+echo "   - B2_APP_KEY: *${#B2_APP_KEY} chars*"
+echo "   - B2_BUCKET: $B2_BUCKET"
 echo "   - CODE ARCHIVE: viabtc_xch.zip"
 
 # ask user to continue
@@ -118,6 +140,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$KAFKA_ADVERTISED_LISTENER alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL b2_acct_id=$B2_ACCT_ID b2_app_key=$B2_APP_KEY b2_bucket=$B2_BUCKET gpg_public_key=$GPG_PUBLIC_KEY backup_dbs=$BACKUP_DBS" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi
