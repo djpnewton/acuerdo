@@ -50,12 +50,5 @@
     @await Html.PartialAsync("_ValidationScriptsPartial")
 
     <script type="text/javascript" src="~/lib/qrcode.js/qrcode.js"></script>
-    <script type="text/javascript">
-        new QRCode(document.getElementById("qrCode"),
-            {
-                text: "@Html.Raw(Model.AuthenticatorUri)",
-                width: 150,
-                height: 150
-            });
-    </script>
+    <script type="text/javascript" src="~/js/qrcode.js" data-id="qrCode" data-text="@Html.Raw(Model.AuthenticatorUri)" data-width="150" data-height="150"></script>
 }

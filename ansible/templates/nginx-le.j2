@@ -2,7 +2,7 @@ add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; prelo
 add_header X-Frame-Options DENY;
 add_header X-Content-Type-Options nosniff;
 add_header X-XSS-Protection "1; mode=block";
-add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self';";
+add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self'; img-src 'self' data:;";
 
 limit_req_status 429;
 limit_req_zone $binary_remote_addr zone=app_limit:10m rate=10r/s;

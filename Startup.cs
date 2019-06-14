@@ -249,7 +249,7 @@ namespace viafront3
             {
                 context.Response.Headers.Add(
                     "Content-Security-Policy",
-                    "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self';");
+                    "default-src 'self'; script-src 'self'; style-src 'unsafe-inline' 'self'; img-src 'self' data:;");
                 await next();
             });
 
