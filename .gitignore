@@ -29,6 +29,12 @@ node_modules/
 # minitfied
 wwwroot/css/site.min.css
 wwwroot/js/site.min.js
+wwwroot/css/chart.min.css
+wwwroot/js/chart.min.js
+wwwroot/js/pad-decimals.min.js
+wwwroot/js/order-creation.min.js
+wwwroot/js/order-cancellation.min.js
+wwwroot/js/apikey-deletion.min.js
 
 # logs
 logs/

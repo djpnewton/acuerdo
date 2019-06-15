@@ -20,5 +20,41 @@
     },
     // Optionally generate .map file
     "sourceMap": false
+  },
+  {
+    "outputFileName": "wwwroot/css/chart.min.css",
+    "inputFiles": [
+      "wwwroot/css/chart.css"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/chart.min.js",
+    "inputFiles": [
+      "wwwroot/js/chart.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/pad-decimals.min.js",
+    "inputFiles": [
+      "wwwroot/js/pad-decimals.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/order-creation.min.js",
+    "inputFiles": [
+      "wwwroot/js/order-creation.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/order-cancellation.min.js",
+    "inputFiles": [
+      "wwwroot/js/order-cancellation.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/apikey-deletion.min.js",
+    "inputFiles": [
+      "wwwroot/js/apikey-deletion.js"
+    ]
   }
 ]
