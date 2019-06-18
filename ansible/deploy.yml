@@ -43,6 +43,12 @@
 
 - import_playbook: firewall.yml
   when: full_deploy and deploy_type != "local"
+- import_playbook: updates.yml
+  when: full_deploy and deploy_type != "local"
+- import_playbook: fail2ban.yml
+  when: full_deploy and deploy_type != "local"
+- import_playbook: logwatch.yml
+  when: full_deploy and deploy_type != "local"
 - import_playbook: postfix.yml
   when: full_deploy
 - import_playbook: nginx.yml

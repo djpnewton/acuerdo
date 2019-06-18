@@ -81,6 +81,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST deploy_type=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
         ../xchwallet/ansible/deploy.yml
 fi
