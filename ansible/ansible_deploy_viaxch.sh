@@ -72,21 +72,21 @@ then
 fi 
 
 # read mysql user/pass from local file
-MYSQL_USER_FILE=creds/mysql_user
-MYSQL_PASS_FILE=creds/mysql_pass
+MYSQL_USER_FILE=creds/$DEPLOY_TYPE/mysql_user
+MYSQL_PASS_FILE=creds/$DEPLOY_TYPE/mysql_pass
 MYSQL_USER=$(cat $MYSQL_USER_FILE)
 MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
 
 # read backblaze b2 creds
-B2_ACCT_ID_FILE=creds/b2_acct_id
-B2_APP_KEY_FILE=creds/b2_app_key
-B2_BUCKET_FILE=creds/b2_bucket
+B2_ACCT_ID_FILE=creds/$DEPLOY_TYPE/b2_acct_id
+B2_APP_KEY_FILE=creds/$DEPLOY_TYPE/b2_app_key
+B2_BUCKET_FILE=creds/$DEPLOY_TYPE/b2_bucket
 B2_ACCT_ID=$(cat $B2_ACCT_ID_FILE)
 B2_APP_KEY=$(cat $B2_APP_KEY_FILE)
 B2_BUCKET=$(cat $B2_BUCKET_FILE)
 
 # backup public key
-GPG_PUBLIC_KEY=creds/gpg_pub.key
+GPG_PUBLIC_KEY=creds/$DEPLOY_TYPE/gpg_pub.key
 if [[ ! -f $GPG_PUBLIC_KEY ]]; then
     echo '$GPG_PUBLIC_KEY' does not exist
     exit 3

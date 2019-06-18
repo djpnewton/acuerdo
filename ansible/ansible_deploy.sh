@@ -101,8 +101,8 @@ then
 fi 
 
 # read mysql user/pass from local file
-MYSQL_USER_FILE=creds/mysql_user
-MYSQL_PASS_FILE=creds/mysql_pass
+MYSQL_USER_FILE=creds/$DEPLOY_TYPE/mysql_user
+MYSQL_PASS_FILE=creds/$DEPLOY_TYPE/mysql_pass
 MYSQL_USER=$(cat $MYSQL_USER_FILE)
 MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
 
