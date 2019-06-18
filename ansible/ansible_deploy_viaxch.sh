@@ -37,23 +37,24 @@ then
     exit 2
 fi 
 
-ADMIN_EMAIL=admin@bronze.exchange
-ALERT_EMAIL=alert@bronze.exchange
+DOMAIN=example.com #TODO replace example.com with your domain
+ADMIN_EMAIL=admin@$DOMAIN
+ALERT_EMAIL=alert@$DOMAIN
 VAGRANT=false
 
 # set deploy variables for production
-DEPLOY_HOST=backend.bronze.exchange
-FRONTEND_HOST=internal.bronze.exchange
+DEPLOY_HOST=backend.$DOMAIN
+FRONTEND_HOST=internal.$DOMAIN
 DEBUG_HOST=
-KAFKA_ADVERTISED_LISTENER=backend-internal.bronze.exchange
+KAFKA_ADVERTISED_LISTENER=backend-internal.$DOMAIN
 DEPLOY_USER=root
 TESTNET=
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then 
-    DEPLOY_HOST=backend.test.bronze.exchange
-    FRONTEND_HOST=test-internal.bronze.exchange
-    KAFKA_ADVERTISED_LISTENER=backend-internal.test.bronze.exchange
+    DEPLOY_HOST=backend.test.$DOMAIN
+    FRONTEND_HOST=test-internal.$DOMAIN
+    KAFKA_ADVERTISED_LISTENER=backend-internal.test.$DOMAIN
     DEPLOY_USER=root
     TESTNET=true
 fi 

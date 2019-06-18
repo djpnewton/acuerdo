@@ -35,10 +35,11 @@ then
     exit 2
 fi 
 
-ADMIN_EMAIL=admin@bronze.exchange
+DOMAIN=example.com #TODO replace example.com with your domain
+ADMIN_EMAIL=admin@$DOMAIN
 VAGRANT=false
 # set deploy variables for production
-DEPLOY_HOST=blockchain.bronze.exchange
+DEPLOY_HOST=blockchain.$DOMAIN
 DEPLOY_USER=root
 TESTNET=
 ADMIN_HOST=123.123.123.123
@@ -46,7 +47,7 @@ ADMIN_HOST=123.123.123.123
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then
-    DEPLOY_HOST=blockchain.test.bronze.exchange
+    DEPLOY_HOST=blockchain.test.$DOMAIN
     DEPLOY_USER=root
     TESTNET=true
 fi 

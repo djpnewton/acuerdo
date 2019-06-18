@@ -60,13 +60,14 @@ else
     FULL_DEPLOY=true
 fi 
 
-ADMIN_EMAIL=admin@bronze.exchange
+DOMAIN=example.com #TODO replace example.com with your domain
+ADMIN_EMAIL=admin@$DOMAIN
 VAGRANT=
 # set deploy variables for production
-DEPLOY_HOST=bronze.exchange
-BACKEND_HOST=backend-internal.bronze.exchange
-BLOCKCHAIN_HOST=blockchain-internal.bronze.exchange
-INTERNAL_HOST=internal.bronze.exchange
+DEPLOY_HOST=$DOMAIN
+BACKEND_HOST=backend-internal.$DOMAIN
+BLOCKCHAIN_HOST=blockchain-internal.$DOMAIN
+INTERNAL_HOST=internal.$DOMAIN
 DEPLOY_USER=root
 TESTNET=
 LOCAL=
@@ -75,10 +76,10 @@ ADMIN_HOST=123.123.123.123
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then 
-    DEPLOY_HOST=test.bronze.exchange
-    BACKEND_HOST=backend-internal.test.bronze.exchange
-    BLOCKCHAIN_HOST=blockchain-internal.test.bronze.exchange
-    INTERNAL_HOST=test-internal.bronze.exchange
+    DEPLOY_HOST=test.$DOMAIN
+    BACKEND_HOST=backend-internal.test.$DOMAIN
+    BLOCKCHAIN_HOST=blockchain-internal.test.$DOMAIN
+    INTERNAL_HOST=test-internal.$DOMAIN
     DEPLOY_USER=root
     TESTNET=true
 fi 
