@@ -14,9 +14,6 @@ namespace viafront3.Models.AccountViewModels
         [Display(Name = "Authenticator code")]
         public string TwoFactorCode { get; set; }
 
-        [Display(Name = "Remember this machine")]
-        public bool RememberMachine { get; set; }
-
         public bool RememberMe { get; set; }
     }
 }
