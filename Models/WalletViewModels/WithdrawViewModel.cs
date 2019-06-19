@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using System.Numerics;
 using via_jsonrpc;
 using xchwallet;
+using viafront3.Models.ManageViewModels;
 
 namespace viafront3.Models.WalletViewModels
 {
-    public class WithdrawViewModel : BaseViewModel
+    public class WithdrawViewModel : TwoFactorRequiredViewModel
     {
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
@@ -35,7 +36,7 @@ namespace viafront3.Models.WalletViewModels
         public int OutgoingCount { get; set; }
     }
 
-    public class WithdrawFiatViewModel : BaseViewModel
+    public class WithdrawFiatViewModel : TwoFactorRequiredViewModel
     {
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }

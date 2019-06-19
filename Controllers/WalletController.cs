@@ -247,6 +247,7 @@ namespace viafront3.Controllers
                 User = user,
                 Asset = asset,
                 BalanceAvailable = balance.Available,
+                TwoFactorRequired = user.TwoFactorEnabled,
             };
 
             return View(model);
@@ -266,6 +267,19 @@ namespace viafront3.Controllers
             await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
 
             var user = await GetUser(required: true);
+
+            // check 2fa authentication
+            if (user.TwoFactorEnabled)
+            {
+                if (model.TwoFactorCode == null)
+                    model.TwoFactorCode = "";
+                var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
+                {
+                    this.FlashError($"Invalid authenticator code");
+                    return View(model);
+                }
+            }
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
@@ -404,6 +418,7 @@ namespace viafront3.Controllers
                 User = user,
                 Asset = asset,
                 BalanceAvailable = balance.Available,
+                TwoFactorRequired = user.TwoFactorEnabled,
             };
 
             return View(model);
@@ -423,6 +438,19 @@ namespace viafront3.Controllers
             await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
 
             var user = await GetUser(required: true);
+
+            // check 2fa authentication
+            if (user.TwoFactorEnabled)
+            {
+                if (model.TwoFactorCode == null)
+                    model.TwoFactorCode = "";
+                var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
+                {
+                    this.FlashError($"Invalid authenticator code");
+                    return View(model);
+                }
+            }
 
             var wallet = _walletProvider.GetFiat(model.Asset);
             var amountInt = wallet.StringToAmount(model.Amount.ToString());

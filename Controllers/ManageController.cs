@@ -322,7 +322,7 @@ namespace viafront3.Controllers
                 var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
                 if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
                 {
-                    this.FlashError($"Invalid two factor code");
+                    this.FlashError($"Invalid authenticator code");
                     return RedirectToAction(nameof(TwoFactorAuthentication));
                 }
             }
@@ -496,7 +496,7 @@ namespace viafront3.Controllers
                 var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
                 if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
                 {
-                    this.FlashError($"Invalid two factor code");
+                    this.FlashError($"Invalid authenticator code");
                     model.TwoFactorRequired = true;
                     return View(model);     
                 }
