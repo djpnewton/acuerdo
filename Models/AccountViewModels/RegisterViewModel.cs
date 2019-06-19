@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using viafront3.Models.ManageViewModels;
 
 namespace viafront3.Models.AccountViewModels
 {
@@ -34,16 +35,10 @@ namespace viafront3.Models.AccountViewModels
         public string Token { get; set; }    
     }
 
-    public class ConfirmApiKeyCreationViewModel : BaseViewModel
+    public class ConfirmApiKeyCreationViewModel : TwoFactorRequiredViewModel
     {
         [Required]
         public string Token { get; set; } 
         public string DeviceName { get; set; }
-
-        public bool TwoFactorRequired { get; set; }
-        [StringLength(7, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
-        [DataType(DataType.Text)]
-        [Display(Name = "Authenticator code")]
-        public string TwoFactorCode { get; set; }
     }
 }

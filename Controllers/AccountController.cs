@@ -463,18 +463,10 @@ namespace viafront3.Controllers
                 var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
                 if (user.TwoFactorEnabled)
                 {
-                    var authenticated = false;
                     if (model.TwoFactorCode == null)
                         model.TwoFactorCode = "";
                     var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
-                    var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
-                    foreach (var provider in providers)
-                        if (await _userManager.VerifyTwoFactorTokenAsync(user, provider, authenticatorCode))
-                        {
-                            authenticated = true;
-                            break;
-                        }
-                    if (!authenticated)
+                    if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
                     {
                         this.FlashError($"Invalid two factor code");
                         return View(model);     

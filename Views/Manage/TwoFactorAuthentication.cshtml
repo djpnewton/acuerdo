@@ -33,6 +33,8 @@
     <a asp-action="GenerateRecoveryCodes" class="btn btn-default">Reset recovery codes</a>
 }
 
+@if (!Model.Is2faEnabled)
+{
 <h5>Authenticator app</h5>
 @if (!Model.HasAuthenticator)
 {
@@ -42,6 +44,7 @@ else
 {
     <a asp-action="EnableAuthenticator" class="btn btn-default">Configure authenticator app</a>
     <a asp-action="ResetAuthenticatorWarning" class="btn btn-default">Reset authenticator key</a>
+}
 }
 
 @section Scripts {

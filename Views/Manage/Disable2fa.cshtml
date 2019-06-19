@@ -1,4 +1,5 @@
-﻿@{
+﻿@model TwoFactorRequiredViewModel
+@{
     ViewData["Title"] = "Disable two-factor authentication (2FA)";
     ViewData.AddActivePage(ManageNavPages.TwoFactorAuthentication);
 }
@@ -19,6 +20,17 @@
 
 <div>
     <form asp-action="Disable2fa" method="post" class="form-group">
+        <input type="hidden" asp-for="TwoFactorRequired" />
+        @{
+            if (Model.TwoFactorRequired)
+            {
+                <div class="form-group">
+                    <label asp-for="TwoFactorCode"></label>
+                    <input asp-for="TwoFactorCode" class="form-control" />
+                    <span asp-validation-for="TwoFactorCode" class="text-danger"></span>
+                </div>
+            }
+        }
         <button class="btn btn-danger" type="submit">Disable 2FA</button>
     </form>
 </div>

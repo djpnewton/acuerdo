@@ -305,14 +305,27 @@ namespace viafront3.Controllers
                 throw new ApplicationException($"Unexpected error occured disabling 2FA for user with ID '{user.Id}'.");
             }
 
-            return View(nameof(Disable2fa));
+            return View(nameof(Disable2fa), new TwoFactorRequiredViewModel { User = user, TwoFactorRequired = true });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Disable2fa()
+        public async Task<IActionResult> Disable2fa(TwoFactorRequiredViewModel model)
         {
             var user = await GetUser(required: true);
+
+            // check 2fa authentication
+            if (user.TwoFactorEnabled)
+            {
+                if (model.TwoFactorCode == null)
+                    model.TwoFactorCode = "";
+                var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
+                {
+                    this.FlashError($"Invalid two factor code");
+                    return RedirectToAction(nameof(TwoFactorAuthentication));
+                }
+            }
 
             var disable2faResult = await _userManager.SetTwoFactorEnabledAsync(user, false);
             if (!disable2faResult.Succeeded)
@@ -328,6 +341,9 @@ namespace viafront3.Controllers
         public async Task<IActionResult> EnableAuthenticator()
         {
             var user = await GetUser(required: true);
+
+            if (user.TwoFactorEnabled)
+                return Redirect("/");
 
             var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
             if (string.IsNullOrEmpty(unformattedKey))
@@ -353,6 +369,9 @@ namespace viafront3.Controllers
             var user = await GetUser(required: true);
             model.User = user;
 
+            if (user.TwoFactorEnabled)
+                return Redirect("/");
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -376,8 +395,12 @@ namespace viafront3.Controllers
         }
 
         [HttpGet]
-        public IActionResult ResetAuthenticatorWarning()
+        public async Task<IActionResult> ResetAuthenticatorWarning()
         {
+            var user = await GetUser(required: true);
+            if (user.TwoFactorEnabled)
+                return Redirect("/");
+
             return View(nameof(ResetAuthenticator));
         }
 
@@ -386,6 +409,9 @@ namespace viafront3.Controllers
         public async Task<IActionResult> ResetAuthenticator()
         {
             var user = await GetUser(required: true);
+
+            if (user.TwoFactorEnabled)
+                return Redirect("/");
 
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
@@ -465,18 +491,10 @@ namespace viafront3.Controllers
             // check 2fa authentication
             if (user.TwoFactorEnabled)
             {
-                var authenticated = false;
                 if (model.TwoFactorCode == null)
                     model.TwoFactorCode = "";
                 var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
-                var providers = await _userManager.GetValidTwoFactorProvidersAsync(user);
-                foreach (var provider in providers)
-                    if (await _userManager.VerifyTwoFactorTokenAsync(user, provider, authenticatorCode))
-                    {
-                        authenticated = true;
-                        break;
-                    }
-                if (!authenticated)
+                if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
                 {
                     this.FlashError($"Invalid two factor code");
                     model.TwoFactorRequired = true;
