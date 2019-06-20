@@ -125,12 +125,13 @@ namespace viafront3.Controllers
                 }
             }
 
-            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            var existingUser = await _userManager.FindByEmailAsync(model.NewEmail);
             if (existingUser == null)
             {
-                var code = await _userManager.GenerateChangeEmailTokenAsync(user, model.Email);
-                var callbackUrl = Url.EmailChangeLink(user.Email, model.Email, code, Request.Scheme);
-                await _emailSender.SendEmailChangeAsync(model.Email, callbackUrl);
+                await _emailSender.SendNewEmailChangeAsync(model.NewEmail);
+                var code = await _userManager.GenerateChangeEmailTokenAsync(user, model.NewEmail);
+                var callbackUrl = Url.EmailChangeLink(user.Email, model.NewEmail, code, Request.Scheme);
+                await _emailSender.SendOldEmailChangeAsync(user.Email, model.NewEmail, callbackUrl);
             }
 
             StatusMessage = "Email change request sent.";
@@ -140,20 +141,32 @@ namespace viafront3.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmEmailChange([FromQuery] string code, [FromQuery] string oldEmail, [FromQuery] string newEmail)
+        public IActionResult ConfirmEmailChange([FromQuery] string code, [FromQuery] string oldEmail, [FromQuery] string newEmail)
         {
             if (code == null || oldEmail == null || newEmail == null)
             {
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
-            var user = await _userManager.FindByEmailAsync(oldEmail);
+            var model = new ConfirmEmailChangeViewModel { Code = code, OldEmail = oldEmail, NewEmail = newEmail };
+            return View(model);
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmailChange(ConfirmEmailChangeViewModel model)
+        {
+            if (model.Code == null || model.OldEmail == null || model.NewEmail == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+            var user = await _userManager.FindByEmailAsync(model.OldEmail);
             if (user == null)
             {
                 this.FlashError("Invalid email code");
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
-            var existingUser = await _userManager.FindByEmailAsync(newEmail);
+            var existingUser = await _userManager.FindByEmailAsync(model.NewEmail);
             if (existingUser != null)
             {
                 this.FlashError("Invalid email code");
@@ -161,7 +174,7 @@ namespace viafront3.Controllers
             }
 
             // change email
-            var changeEmailResult = await _userManager.ChangeEmailAsync(user, newEmail, code);
+            var changeEmailResult = await _userManager.ChangeEmailAsync(user, model.NewEmail, model.Code);
             if (!changeEmailResult.Succeeded)
             {
                 this.FlashError("Invalid email code");

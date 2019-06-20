@@ -15,6 +15,7 @@ namespace viafront3.Models.WalletViewModels
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
         [Required]
+        [Display(Name = "Withdrawal address")]
         public string WithdrawalAddress { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]

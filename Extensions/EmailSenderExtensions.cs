@@ -15,10 +15,16 @@ namespace viafront3.Services
                 $"Please confirm your account by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
 
-        public static Task SendEmailChangeAsync(this IEmailSender emailSender, string email, string link)
+        public static Task SendNewEmailChangeAsync(this IEmailSender emailSender, string email)
         {
             return emailSender.SendEmailAsync(email, "Change your email",
-                $"Someone requested to change your email address. Ignore this email if you did not request it!<br/>To confirm the change to your email click this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
+                $"Someone requested to change your email address. If you confirm the change, this (<strong>{email}</strong>) will be your new address.");
+        }
+
+        public static Task SendOldEmailChangeAsync(this IEmailSender emailSender, string email, string newEmail, string link)
+        {
+            return emailSender.SendEmailAsync(email, "Change your email",
+                $"Someone requested to change your email address (the new address will be <strong>{newEmail}</strong>). Ignore this email if you did not request it!<br/>To confirm the change to your email click this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a>");
         }
 
         public static Task SendEmailChainDepositDetectedAsync(this IEmailSender emailSender, string email, string asset, string amount, string txid)

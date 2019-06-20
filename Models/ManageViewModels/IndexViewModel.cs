@@ -21,8 +21,20 @@ namespace viafront3.Models.ManageViewModels
     {
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        [Display(Name = "New email")]
+        public string NewEmail { get; set; }
 
         public string StatusMessage { get; set; }
+    }
+
+    public class ConfirmEmailChangeViewModel : BaseViewModel
+    {
+        [Display(Name = "Old email")]
+        public string OldEmail { get; set; }
+
+        [Display(Name = "New email")]
+        public string NewEmail { get; set; }
+
+        public string Code { get; set; }
     }
 }
