@@ -5,6 +5,13 @@
 }
 
 <h4>Your API KEYS</h4>
+<div class="alert alert-warning">
+    <p>
+        <span class="glyphicon glyphicon-warning-sign"></span>
+        Remember that two-factor authentication is bypassed by any API keys that are enabled for your account.
+    </p>
+</div>
+
 <div class="row">
     <div class="col-md-6">
         <table class="table table-condensed table-responsive table-hover">
@@ -12,29 +19,33 @@
                 <th>Device Name</th>
                 <th>Key</th>
             </tr>
-            <tbody>@{
-                foreach (var apikey in Model.ApiKeys)
-                {
-                    <tr>
-                        <td>
-                            @apikey.Name
-                        </td>
-                        <td>
-                            @apikey.Key
-                        </td>
-                        <td>
-                            <form method="post" asp-action="ApiDelete" id="delete-apikey-form-@apikey.Key" x-device-name="@apikey.Name">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" asp-for="DeleteApiKey" value="@apikey.Key" />
-                                <button type="button" class="btn btn-warning btn-xs form-delete-button"
-                                data-toggle="modal" data-target="#confirm-delete-submit">Delete</button>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            }</tbody>
-        </table>
-    </div>
+            <tbody>
+                @{
+                    foreach (var apikey in Model.ApiKeys)
+                    {
+                        <tr>
+                            <td>
+                                @apikey.Name
+                            </td>
+                            <td>
+                                @apikey.Key
+                            </td>
+                            <td>
+                                <form method="post" asp-action="ApiDelete" id="delete-apikey-form-@apikey.Key" x-device-name="@apikey.Name">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" asp-for="DeleteApiKey" value="@apikey.Key" />
+                                    <button type="button" class="btn btn-warning btn-xs form-delete-button"
+                                            data-toggle="modal" data-target="#confirm-delete-submit">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+            }
+        </tbody>
+    </table>
+</div>
 </div>
 <div class="row">
     <div class="col-md-6">

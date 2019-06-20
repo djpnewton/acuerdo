@@ -23,6 +23,14 @@
             <li>
                 <button type="submit" class="btn btn-link navbar-btn navbar-link">Log out</button>
             </li>
+            @if (Model != null && Model.User != null && !Model.User.TwoFactorEnabled)
+            {
+            <li>
+                <a asp-area="" asp-controller="Manage" asp-action="TwoFactorAuthentication" title="2FA not enabled">
+                    <span class="tfa-alert glyphicon glyphicon-warning-sign"></span>
+                </a>            
+            </li>
+            }
         </ul>
     </form>
 }

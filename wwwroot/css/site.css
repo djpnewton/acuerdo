@@ -57,3 +57,7 @@
 .trip-alert {
     background-color: OrangeRed; font-weight: bolder;
 }
+
+.tfa-alert {
+    color: red;
+}

@@ -16,6 +16,7 @@ namespace viafront3.Models.ManageViewModels
     public class ApiCreateViewModel : TwoFactorRequiredViewModel
     {
         [Required]
+        [Display(Name="Device name")]
         public string DeviceName { get; set; }
     }
 }
