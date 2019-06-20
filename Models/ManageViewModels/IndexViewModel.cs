@@ -12,13 +12,16 @@ namespace viafront3.Models.ManageViewModels
 
         public bool IsEmailConfirmed { get; set; }
 
+        public string Email { get; set; }
+
+        public string StatusMessage { get; set; }
+    }
+
+    public class ChangeEmailViewModel : TwoFactorRequiredViewModel
+    {
         [Required]
         [EmailAddress]
         public string Email { get; set; }
-
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string PhoneNumber { get; set; }
 
         public string StatusMessage { get; set; }
     }

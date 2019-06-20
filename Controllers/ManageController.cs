@@ -63,48 +63,11 @@ namespace viafront3.Controllers
                 User = user,
                 Username = user.UserName,
                 Email = user.Email,
-                PhoneNumber = user.PhoneNumber,
                 IsEmailConfirmed = user.EmailConfirmed,
                 StatusMessage = StatusMessage
             };
 
             return View(model);
-        }
-
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(IndexViewModel model)
-        {
-            var user = await GetUser(required: true);
-
-            if (!ModelState.IsValid)
-            {
-                model.User = user;
-                return View(model);
-            }
-
-            var email = user.Email;
-            if (model.Email != email)
-            {
-                var setEmailResult = await _userManager.SetEmailAsync(user, model.Email);
-                if (!setEmailResult.Succeeded)
-                {
-                    throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
-                }
-            }
-
-            var phoneNumber = user.PhoneNumber;
-            if (model.PhoneNumber != phoneNumber)
-            {
-                var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, model.PhoneNumber);
-                if (!setPhoneResult.Succeeded)
-                {
-                    throw new ApplicationException($"Unexpected error occurred setting phone number for user with ID '{user.Id}'.");
-                }
-            }
-
-            StatusMessage = "Your profile has been updated";
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
@@ -126,6 +89,87 @@ namespace viafront3.Controllers
 
             StatusMessage = "Verification email sent. Please check your email.";
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChangeEmail()
+        {
+            var user = await GetUser(required: true);
+
+            var model = new ChangeEmailViewModel { User = user, TwoFactorRequired = user.TwoFactorEnabled, StatusMessage = StatusMessage };
+            return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeEmail(ChangeEmailViewModel model)
+        {
+            var user = await GetUser(required: true);
+            model.User = user;
+
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            // check 2fa authentication
+            if (user.TwoFactorEnabled)
+            {
+                if (model.TwoFactorCode == null)
+                    model.TwoFactorCode = "";
+                var authenticatorCode = model.TwoFactorCode.Replace(" ", string.Empty).Replace("-", string.Empty);
+                if (!await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, authenticatorCode))
+                {
+                    this.FlashError($"Invalid authenticator code");
+                    return View(model);
+                }
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(model.Email);
+            if (existingUser == null)
+            {
+                var code = await _userManager.GenerateChangeEmailTokenAsync(user, model.Email);
+                var callbackUrl = Url.EmailChangeLink(user.Email, model.Email, code, Request.Scheme);
+                await _emailSender.SendEmailChangeAsync(model.Email, callbackUrl);
+            }
+
+            StatusMessage = "Email change request sent.";
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        public async Task<IActionResult> ConfirmEmailChange([FromQuery] string code, [FromQuery] string oldEmail, [FromQuery] string newEmail)
+        {
+            if (code == null || oldEmail == null || newEmail == null)
+            {
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+            var user = await _userManager.FindByEmailAsync(oldEmail);
+            if (user == null)
+            {
+                this.FlashError("Invalid email code");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+
+            var existingUser = await _userManager.FindByEmailAsync(newEmail);
+            if (existingUser != null)
+            {
+                this.FlashError("Invalid email code");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+
+            // change email
+            var changeEmailResult = await _userManager.ChangeEmailAsync(user, newEmail, code);
+            if (!changeEmailResult.Succeeded)
+            {
+                this.FlashError("Invalid email code");
+                return RedirectToAction(nameof(HomeController.Index), "Home");
+            }
+
+            this.FlashSuccess("Changed email");
+            return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
         [HttpGet]
