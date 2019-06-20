@@ -7,6 +7,7 @@
 <h4>@ViewData["Title"]</h4>
 @if (Model.Is2faEnabled)
 {
+    /*
     if (Model.RecoveryCodesLeft == 0)
     {
         <div class="alert alert-danger">
@@ -28,9 +29,10 @@
             <p>You should <a asp-action="GenerateRecoveryCodes">generate a new set of recovery codes</a>.</p>
         </div>
     }
+    */
 
     <a asp-action="Disable2faWarning" class="btn btn-default">Disable 2FA</a>
-    <a asp-action="GenerateRecoveryCodes" class="btn btn-default">Reset recovery codes</a>
+    //<a asp-action="GenerateRecoveryCodes" class="btn btn-default">Reset recovery codes</a>
 }
 
 @if (!Model.Is2faEnabled)
@@ -43,7 +45,7 @@
 else
 {
     <a asp-action="EnableAuthenticator" class="btn btn-default">Configure authenticator app</a>
-    <a asp-action="ResetAuthenticatorWarning" class="btn btn-default">Reset authenticator key</a>
+    //<a asp-action="ResetAuthenticatorWarning" class="btn btn-default">Reset authenticator key</a>
 }
 }
 

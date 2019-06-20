@@ -5,6 +5,12 @@
 }
 
 <h4>@ViewData["Title"]</h4>
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger">
+        @Html.ValidationMessage("model.Code")
+    </div>
+}
 <div>
     <p>To use an authenticator app go through the following steps:</p>
     <ol class="list">

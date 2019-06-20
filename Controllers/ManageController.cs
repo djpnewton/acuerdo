@@ -389,6 +389,8 @@ namespace viafront3.Controllers
             {
                 throw new ApplicationException($"Unexpected error occured disabling 2FA for user with ID '{user.Id}'.");
             }
+            // we auto reset when 2fa is disabled (we dont want the user manually handling 2fa key resets)
+            await _userManager.ResetAuthenticatorKeyAsync(user);
 
             _logger.LogInformation("User with ID {UserId} has disabled 2fa.", user.Id);
             return RedirectToAction(nameof(TwoFactorAuthentication));
@@ -443,14 +445,20 @@ namespace viafront3.Controllers
             if (!is2faTokenValid)
             {
                 ModelState.AddModelError("model.Code", "Verification code is invalid.");
+
+                var unformattedKey = await _userManager.GetAuthenticatorKeyAsync(user);
+                model.SharedKey = FormatKey(unformattedKey);
+                model.AuthenticatorUri = GenerateQrCodeUri(user.Email, unformattedKey);
                 return View(model);
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
             _logger.LogInformation("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
-            return RedirectToAction(nameof(GenerateRecoveryCodes));
+            //return RedirectToAction(nameof(GenerateRecoveryCodes));
+            return RedirectToAction(nameof(TwoFactorAuthentication));
         }
 
+        /*
         [HttpGet]
         public async Task<IActionResult> ResetAuthenticatorWarning()
         {
@@ -494,6 +502,7 @@ namespace viafront3.Controllers
 
             return View(model);
         }
+        */
 
         [HttpGet]
         public async Task<IActionResult> Api()
