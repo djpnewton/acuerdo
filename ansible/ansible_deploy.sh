@@ -106,6 +106,14 @@ MYSQL_PASS_FILE=creds/$DEPLOY_TYPE/mysql_pass
 MYSQL_USER=$(cat $MYSQL_USER_FILE)
 MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
 
+# read kyc server details from local file
+KYC_URL_FILE=creds/$DEPLOY_TYPE/kyc_url
+KYC_API_KEY_FILE=creds/$DEPLOY_TYPE/kyc_api_key
+KYC_API_SECRET_FILE=creds/$DEPLOY_TYPE/kyc_api_secret
+KYC_URL=$(cat $KYC_URL_FILE)
+KYC_API_KEY=$(cat $KYC_API_KEY_FILE)
+KYC_API_SECRET=$(cat $KYC_API_SECRET_FILE)
+
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
 
@@ -123,6 +131,7 @@ echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
 echo "   - INTERNAL_IP:     $INTERNAL_IP"
 echo "   - MYSQL_USER:      $MYSQL_USER"
 echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
+echo "   - KYC_URL:         $KYC_URL"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
 # ask user to continue
@@ -138,6 +147,6 @@ then
         DEPLOY_HOST=acuerdo.local
     fi 
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
         deploy.yml
 fi

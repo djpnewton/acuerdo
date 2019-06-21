@@ -141,6 +141,30 @@
         regexp: '("SmtpHost": )"10\.50\.1\.100"'
         replace: '\1"localhost"'
 
+    - name: set kyc url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("KycServerUrl": )"http://localhost"'
+        replace: '\1"{{kyc_url}}"'
+
+    - name: set kyc api key
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("KycServerApiKey": )"key"'
+        replace: '\1"{{kyc_api_key}}"'
+
+    - name: set kyc api secret
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("KycServerApiSecret": )"not_production"'
+        replace: '\1"{{kyc_api_secret}}"'
+
+    - name: set alert email
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("AlertEmail": ")admin@viafront3.com(")'
+        replace: '\1{{admin_email}}\2'
+
     - name: copy viafront.service
       template:
         src: templates/viafront.service
