@@ -221,7 +221,7 @@ namespace viafront3
 
                     // send email
                     var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs()), wtx.ChainTx.TxId).GetAwaiter().GetResult();
+                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).GetAwaiter().GetResult();
                     Console.WriteLine($"Sent email to {user.Email}");
                 }
             }

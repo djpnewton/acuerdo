@@ -21,11 +21,26 @@ namespace viafront3.Services
 
         public Task SendEmailAsync(string email, string subject, string message)
         {
-            BackgroundJob.Enqueue(() => Execute(subject, message, email));
-            return Task.CompletedTask;
+            bool useHangfire = true;
+            try
+            {
+                // if we get an exception here then hangfire is not initialized (could be we are running a command line task)
+                var js = JobStorage.Current;
+            }
+            catch
+            {
+                useHangfire = false;
+            }
+            if (useHangfire)
+            {
+                BackgroundJob.Enqueue(() => Execute(subject, message, email));
+                return Task.CompletedTask;
+            }
+            else
+                return Execute(subject, message, email);
         }
 
-        public void Execute(string subject, string message, string email)
+        public Task Execute(string subject, string message, string email)
         { 
             // create smtp client
             var smtp = new SmtpClient();
@@ -43,6 +58,7 @@ namespace viafront3.Services
             mail.Body = message;
             // send mail
             smtp.Send(mail);
+            return Task.CompletedTask;
         }
     }
 }
