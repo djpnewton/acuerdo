@@ -378,12 +378,8 @@ namespace viafront3.Controllers
 
             var wallet = _walletProvider.GetChain(asset);
 
-            var tag = wallet.GetTag(user.Id);
-            var tagId = tag != null ? tag.Id : -1;
-            var spends = wallet.PendingSpendsGet(_walletProvider.ConsolidatedFundsTag(), new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error } )
-                .Where(s => s.TagOnBehalfOfId == tagId);
-            var outgoingTxs = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.TagOnBehalfOfId == tagId).OrderByDescending(t => t.ChainTx.Date);
+            var spends = wallet.PendingSpendsGet(_walletProvider.ConsolidatedFundsTag(), new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error }, user.Id);
+            var outgoingTxs = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag(), user.Id).OrderByDescending(t => t.ChainTx.Date);
 
             var model = new WithdrawalHistoryViewModel
             {

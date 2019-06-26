@@ -243,12 +243,9 @@ namespace viafront3.Controllers
 
             // get wallet transactions
             var wallet = _walletProvider.GetChain(asset);
-            var tag = wallet.GetTag(id);
-            var tagId = tag != null ? tag.Id : -1;
             var txsIn = wallet.GetTransactions(id)
                 .Where(t => t.Direction == WalletDirection.Incomming).OrderByDescending(t => t.ChainTx.Date);
-            var txsOutOnBehalf = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag())
-                .Where(t => t.TagOnBehalfOfId == tagId).OrderByDescending(t => t.ChainTx.Date);
+            var txsOutForUser = wallet.GetTransactions(_walletProvider.ConsolidatedFundsTag(), id).OrderByDescending(t => t.ChainTx.Date);
 
             ViewData["userid"] = id;
             var model = new UserTransactionsViewModel
@@ -263,10 +260,10 @@ namespace viafront3.Controllers
                 TxsIncommingOffset = inOffset,
                 TxsIncommingLimit = inLimit,
                 TxsIncommingCount = txsIn.Count(),
-                TransactionsOutgoing = txsOutOnBehalf.Skip(outOffset).Take(outLimit),
+                TransactionsOutgoing = txsOutForUser.Skip(outOffset).Take(outLimit),
                 TxsOutgoingOffset = outOffset,
                 TxsOutgoingLimit = outLimit,
-                TxsOutgoingCount = txsOutOnBehalf.Count(),
+                TxsOutgoingCount = txsOutForUser.Count(),
             };
             return View(model);
         }

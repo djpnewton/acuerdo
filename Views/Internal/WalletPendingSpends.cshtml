@@ -36,7 +36,7 @@
                             Tag
                         </th>
                         <th>
-                            Tag on behalf of
+                            Tagged For
                         </th>
                         <th>
                             State
@@ -63,8 +63,8 @@
                                         @item.Tag.Tag
                                     </td>
                                     <td>
-                                        <a asp-action="UserInspect" asp-route-id="@item.TagOnBehalfOf.Tag">
-                                            @item.TagOnBehalfOf.Tag
+                                        <a asp-action="UserInspect" asp-route-id="@item.TagFor.Tag">
+                                            @item.TagFor.Tag
                                         </a>
                                     </td>
                                     <td>

@@ -66,7 +66,7 @@ namespace viafront3.Services
                     withdrawalsEnabled = false;
                     var msg = $"Switching off trading and withdrawals.. {count} {eventType} events in the last {settings.TimePeriodInMinutes} minutes";
                     _logger.LogCritical(msg);
-                    emailSender.SendEmailAsync(settings.AlertEmail, "Tripwire!", msg).Wait();
+                    emailSender.SendEmailAsync(settings.AlertEmail, "Tripwire!", msg).GetAwaiter().GetResult();
                 }
             }
         }

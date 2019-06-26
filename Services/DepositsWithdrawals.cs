@@ -68,9 +68,7 @@ namespace viafront3.Services
                             if (addrs != null && addrs.Any())
                             {
                                 var addr = addrs.First();
-                                var task = Utils.CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr);
-                                task.Wait();
-                                var addrTxs = task.Result;
+                                var addrTxs = Utils.CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr).GetAwaiter().GetResult();
                                 foreach (var tx in addrTxs.NewlySeenTxs)
                                     _logger.LogInformation($"{user.Email}: new tx: {tx}");
                                 foreach (var tx in addrTxs.JustAckedTxs)
@@ -129,13 +127,12 @@ namespace viafront3.Services
                                 foreach (var wtx in wtxs)
                                 {
                                     // get user
-                                    var task = userManager.FindByIdAsync(wtx.TagOnBehalfOf.Tag);
-                                    task.Wait();
-                                    var user = task.Result;
+                                    System.Diagnostics.Debug.Assert(spend.TagFor != null);
+                                    var user = userManager.FindByIdAsync(spend.TagFor.Tag).GetAwaiter().GetResult();
                                     System.Diagnostics.Debug.Assert(user != null);
 
                                     // send email
-                                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).Wait();
+                                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).GetAwaiter().GetResult();
                                     _logger.LogInformation($"Sent email to {user.Email}");
                                 }
                             }

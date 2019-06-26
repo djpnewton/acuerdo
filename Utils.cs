@@ -214,14 +214,14 @@ namespace viafront3
                 {
                     // get user
                     var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-                    var task = userManager.FindByIdAsync(wtx.TagOnBehalfOf.Tag);
-                    task.Wait();
-                    var user = task.Result;
+                    var tags = wallet.GetTagsFor(wtx);
+                    System.Diagnostics.Debug.Assert(tags.Count() == 1);
+                    var user = userManager.FindByIdAsync(tags.First().Tag).GetAwaiter().GetResult();
                     System.Diagnostics.Debug.Assert(user != null);
 
                     // send email
                     var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
-                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs()), wtx.ChainTx.TxId).Wait();
+                    emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs()), wtx.ChainTx.TxId).GetAwaiter().GetResult();
                     Console.WriteLine($"Sent email to {user.Email}");
                 }
             }
@@ -336,9 +336,7 @@ namespace viafront3
                 if (addrs != null && addrs.Any())
                 {
                     var addr = addrs.First();
-                    var task = CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr);
-                    task.Wait();
-                    var addrTxs = task.Result;
+                    var addrTxs = CheckAddressIncommingTxsAndUpdateWalletAndExchangeBalance(emailSender, settings, asset, wallet, assetSettings, user, addr).GetAwaiter().GetResult();
                     foreach (var tx in addrTxs.NewlySeenTxs)
                         Console.WriteLine($"{user.Email}: new tx: {tx}");
                     foreach (var tx in addrTxs.JustAckedTxs)

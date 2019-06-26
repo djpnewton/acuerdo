@@ -115,35 +115,35 @@ namespace viafront3
         static int RunInitRoles(InitRoles opts)
         {
             var sp = GetServiceProvider();
-            Utils.CreateRoles(sp).Wait();
+            Utils.CreateRoles(sp).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunAddRole(AddRole opts)
         {
             var sp = GetServiceProvider();
-            Utils.GiveUserRole(sp, opts.Email, opts.Role).Wait();
+            Utils.GiveUserRole(sp, opts.Email, opts.Role).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunConsolidate(ConsolidateWallet opts)
         {
             var sp = GetServiceProvider();
-            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails, opts.All).Wait();
+            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails, opts.All).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunProcessFiatDeposit(ProcessFiatDeposit opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
+            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunProcessFiatWithdrawal(ProcessFiatWithdrawal opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).Wait();
+            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
             return 0;
         }
 

@@ -89,9 +89,7 @@ namespace viafront3.Services
         void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
         {
             // get broker user
-            var task = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
-            task.Wait();
-            var brokerUser = task.Result;
+            var brokerUser = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
             if (brokerUser == null)
             {
                 _logger.LogError("Failed to find broker user");
