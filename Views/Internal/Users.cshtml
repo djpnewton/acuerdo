@@ -18,7 +18,7 @@
                     <input type="hidden" asp-for="Limit" value="@Model.Limit" />
                     <div class="form-group">
                         <label for="Role" class="col-2 col-form-label">Role</label>
-                        <select asp-for="Role" onchange="this.form.submit()">
+                        <select asp-for="Role" class="onchange-submit">
                             <option value="@(Utils.AdminRole)" selected="@(Model.Role == Utils.AdminRole ? "selected" : null)">@Utils.AdminRole</option>
                             <option value="@(Utils.EmailConfirmedRole)" selected="@(Model.Role == Utils.EmailConfirmedRole ? "selected" : null)">@Utils.EmailConfirmedRole</option>
                             <option value="" selected="@(Model.Role == null ? "selected" : null)">All</option>

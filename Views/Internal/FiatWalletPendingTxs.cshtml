@@ -18,7 +18,7 @@
                     <input type="hidden" asp-for="Offset" value="@Model.Offset" />
                     <input type="hidden" asp-for="Limit" value="@Model.Limit" />
                     <div class="form-group">
-                        <select asp-for="OnlyIncomplete" onchange="this.form.submit()">
+                        <select asp-for="OnlyIncomplete" class="onchange-submit">
                             <option value="true" selected="@(Model.OnlyIncomplete ? "selected" : null)">Incomplete</option>
                             <option value="false" selected="@(!Model.OnlyIncomplete ? "selected" : null)">All</option>
                         </select>
