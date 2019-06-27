@@ -40,6 +40,8 @@ ADMIN_EMAIL=admin@$DOMAIN
 VAGRANT=false
 # set deploy variables for production
 DEPLOY_HOST=blockchain.$DOMAIN
+DEPLOY_HOST_INTERNAL=blockchain-internal.$DOMAIN
+FRONTEND_HOST=internal.$DOMAIN
 DEPLOY_USER=root
 TESTNET=
 ADMIN_HOST=123.123.123.123
@@ -48,6 +50,8 @@ ADMIN_HOST=123.123.123.123
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then
     DEPLOY_HOST=blockchain.test.$DOMAIN
+    DEPLOY_HOST_INTERNAL=blockchain-internal.test.$DOMAIN
+    FRONTEND_HOST=test-internal.$DOMAIN
     DEPLOY_USER=root
     TESTNET=true
 fi 
@@ -56,6 +60,8 @@ fi
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then
     DEPLOY_HOST=10.50.1.100
+    DEPLOY_HOST_INTERNAL=10.50.1.100
+    FRONTEND_HOST=$DEPLOY_HOST
     DEPLOY_USER=root
     TESTNET=true
 fi 
@@ -82,6 +88,6 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST deploy_type=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST smtp_host=$DEPLOY_HOST_INTERNAL smtp_relay_host=$FRONTEND_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST deploy_type=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
         ../xchwallet/ansible/deploy.yml
 fi

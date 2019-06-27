@@ -10,14 +10,10 @@ mydestination = $myhostname, localhost.localdomain, localhost
 
 relayhost =
 {% if local %}
-mynetworks = 127.0.0.0/8 10.0.0.0/8
+mynetworks = 127.0.0.0/8 10.0.0.0/8 {{backend_ip}} {{blockchain_ip}}
 {% else %}
-mynetworks = 127.0.0.0/8
+mynetworks = 127.0.0.0/8 {{backend_ip}} {{blockchain_ip}}
 {% endif %}
 mailbox_size_limit = 0
 recipient_delimiter = +
-{% if local %}
 inet_interfaces = all
-{% else %}
-inet_interfaces = loopback-only
-{% endif %}

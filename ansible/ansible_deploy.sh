@@ -85,6 +85,7 @@ then
 fi 
 INTERNAL_IP=`dig +short $INTERNAL_HOST`
 BACKEND_IP=`dig +short $BACKEND_HOST`
+BLOCKCHAIN_IP=`dig +short $BLOCKCHAIN_HOST`
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then 
@@ -98,6 +99,7 @@ then
 
     INTERNAL_IP=$INTERNAL_HOST
     BACKEND_IP=$BACKEND_HOST
+    BLOCKCHAIN_IP=$BLOCKCHAIN_HOST
 fi 
 
 # read mysql user/pass from local file
@@ -128,6 +130,7 @@ echo "   - DEPLOY_USER:     $DEPLOY_USER"
 echo "   - BACKEND_HOST:    $BACKEND_HOST"
 echo "   - BACKEND_IP:      $BACKEND_IP"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
+echo "   - BLOCKCHAIN_IP:   $BLOCKCHAIN_IP"
 echo "   - INTERNAL_IP:     $INTERNAL_IP"
 echo "   - MYSQL_USER:      $MYSQL_USER"
 echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
@@ -147,6 +150,6 @@ then
         DEPLOY_HOST=acuerdo.local
     fi 
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
         deploy.yml
 fi
