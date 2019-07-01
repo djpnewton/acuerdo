@@ -332,6 +332,8 @@ namespace viafront3.Controllers
 
                     // register withdrawal with wallet
                     var tag = wallet.GetTag(user.Id);
+                    if (tag == null)
+                        tag = wallet.NewTag(user.Id);
                     var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
                         model.WithdrawalAddress, amountInt, tag);
                     wallet.Save();
@@ -343,10 +345,16 @@ namespace viafront3.Controllers
                     {
                         via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", businessId, negativeAmount.ToString(), null);
                     }
-                    catch (System.Exception ex)
+                    catch (ViaJsonException ex)
                     {
                         _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
                             user.Exchange.Id, model.Asset, businessId, negativeAmount);
+                        if (ex.Err == ViaError.BALANCE_UPDATE__BALANCE_NOT_ENOUGH)
+                        {
+                            dbtx.Rollback();
+                            this.FlashError("Balance not enough");
+                            return View(model);
+                        }
                         throw;
                     }
 

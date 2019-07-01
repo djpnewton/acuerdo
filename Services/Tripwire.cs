@@ -22,6 +22,7 @@ namespace viafront3.Services
         Task RegisterEvent(TripwireEventType type);
         bool TradingEnabled();
         bool WithdrawalsEnabled();
+        Task Reset();
     }
 
     public class Tripwire : ITripwire
@@ -99,6 +100,21 @@ namespace viafront3.Services
         public bool WithdrawalsEnabled()
         {
             return withdrawalsEnabled;
+        }
+
+        public async Task Reset()
+        {
+            tradingEnabled = true;
+            withdrawalsEnabled = true;
+
+            using (var scope = _services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
+                foreach (var evt in context.TripwireEvents)
+                    context.TripwireEvents.Remove(evt);
+                await context.SaveChangesAsync();
+            }
+
         }
     }
 }

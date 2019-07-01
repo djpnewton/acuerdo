@@ -232,3 +232,10 @@
         name: viafront_order_emails
         state: started
         enabled: yes
+
+    - name: add cron job to double check dev api is not running
+      cron:
+        name: check dev api
+        special_time: hourly
+        job: >
+          status=`curl localhost:5000/api/dev/Check -i  2>/dev/null | head -n 1 | cut -d$' ' -f2` && if [ "$status" != "404" ]; then echo "posting to localhost:5000/api/dev/UserCreate does not give 404!"; fi 
