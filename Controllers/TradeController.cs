@@ -19,15 +19,18 @@ namespace viafront3.Controllers
     public class TradeController : BaseSettingsController
     {
         readonly ITripwire _tripwire;
+        readonly IUserLocks _userLocks;
 
         public TradeController(
           ILogger<TradeController> logger,
           UserManager<ApplicationUser> userManager,
           ApplicationDbContext context,
           IOptions<ExchangeSettings> settings,
-          ITripwire tripwire) : base(logger, userManager, context, settings)
+          ITripwire tripwire,
+          IUserLocks userLocks) : base(logger, userManager, context, settings)
         {
             _tripwire = tripwire;
+            _userLocks = userLocks;
         }
 
         public IActionResult Index()
@@ -81,28 +84,33 @@ namespace viafront3.Controllers
                 return FlashErrorAndRedirect("Trade", model.Market, error);
 
             var user = await GetUser(required: true);
-            try
+
+            // lock process of performing trade
+            lock (_userLocks.GetLock(user.Id))
             {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
-                if (error2 != null)
-                    return BadRequest(error2);
-                var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, model.Order.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
-                // send email: order created
-                var amountUnit = _settings.Markets[model.Market].AmountUnit;
-                var priceUnit = _settings.Markets[model.Market].PriceUnit;
-                this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
-                return RedirectToAction("Trade", new { market = model.Market });
-            }
-            catch (ViaJsonException ex)
-            {
-                if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
+                try
                 {
-                    this.FlashError($"Limit Order Failed (balance too small)");
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
+                    if (error2 != null)
+                        return BadRequest(error2);
+                    var order = via.OrderLimitQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, model.Order.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront");
+                    // send email: order created
+                    var amountUnit = _settings.Markets[model.Market].AmountUnit;
+                    var priceUnit = _settings.Markets[model.Market].PriceUnit;
+                    this.FlashSuccess($"Limit Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit}, Price: {order.price} {priceUnit})");
                     return RedirectToAction("Trade", new { market = model.Market });
                 }
-                throw;
+                catch (ViaJsonException ex)
+                {
+                    if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
+                    {
+                        this.FlashError($"Limit Order Failed (balance too small)");
+                        return RedirectToAction("Trade", new { market = model.Market });
+                    }
+                    throw;
+                }
             }
         }
 
@@ -122,36 +130,41 @@ namespace viafront3.Controllers
                 return FlashErrorAndRedirect("Trade", model.Market, error);
 
             var user = await GetUser(required: true);
-            try
+
+            // lock process of performing trade
+            lock (_userLocks.GetLock(user.Id))
             {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
-                if (error2 != null)
-                    return BadRequest(error2);
-                Order order;
-                if (_settings.MarketOrderBidAmountMoney)
-                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
-                else
-                    order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront");
-                // send email: order created
-                var amountUnit = _settings.Markets[model.Market].AmountUnit;
-                this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
-                return RedirectToAction("Trade", new { market = model.Market });
-            }
-            catch (ViaJsonException ex)
-            {
-                if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
+                try
                 {
-                    this.FlashError($"Market Order Failed (balance too small)");
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    (var side, var error2) = Utils.GetOrderSide(model.Order.Side);
+                    if (error2 != null)
+                        return BadRequest(error2);
+                    Order order;
+                    if (_settings.MarketOrderBidAmountMoney)
+                        order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
+                    else
+                        order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront");
+                    // send email: order created
+                    var amountUnit = _settings.Markets[model.Market].AmountUnit;
+                    this.FlashSuccess($"Market Order Created ({order.market} - {order.side}, Amount: {order.amount} {amountUnit})");
                     return RedirectToAction("Trade", new { market = model.Market });
                 }
-                if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
+                catch (ViaJsonException ex)
                 {
-                    this.FlashError($"Market Order Failed (insufficient market depth)");
-                    return RedirectToAction("Trade", new { market = model.Market });
+                    if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
+                    {
+                        this.FlashError($"Market Order Failed (balance too small)");
+                        return RedirectToAction("Trade", new { market = model.Market });
+                    }
+                    if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
+                    {
+                        this.FlashError($"Market Order Failed (insufficient market depth)");
+                        return RedirectToAction("Trade", new { market = model.Market });
+                    }
+                    throw;
                 }
-                throw;
             }
         }
 
@@ -160,9 +173,15 @@ namespace viafront3.Controllers
         public async Task<IActionResult> CancelOrder(OrdersPendingPartialViewModel model)
         {
             var user = await GetUser(required: true);
-            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var order = via.OrderCancelQuery(user.Exchange.Id, model.Market, model.OrderId);
+
+            // lock process of cancelling trade
+            lock (_userLocks.GetLock(user.Id))
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var order = via.OrderCancelQuery(user.Exchange.Id, model.Market, model.OrderId);
+            }
+
             this.FlashSuccess("Order Cancelled");
             return RedirectToAction("Trade", new { market = model.Market });
         }

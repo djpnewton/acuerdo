@@ -226,6 +226,7 @@ namespace viafront3
             services.AddTransient<IBroker, viafront3.Services.Broker>();
             services.AddSingleton<ITripwire, Tripwire>();
             services.AddSingleton<IDepositsWithdrawals, DepositsWithdrawals>();
+            services.AddSingleton<IUserLocks, UserLocks>();
 
             services.AddMvc(options =>
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));

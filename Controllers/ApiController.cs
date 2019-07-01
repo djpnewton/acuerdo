@@ -31,6 +31,7 @@ namespace viafront3.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly ApiSettings _apiSettings;
         private readonly ITripwire _tripwire;
+        private readonly IUserLocks _userLocks;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -43,13 +44,15 @@ namespace viafront3.Controllers
             RoleManager<IdentityRole> roleManager,
             IOptions<KycSettings> kycSettings,
             IWalletProvider walletProvider,
-            ITripwire tripwire) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            ITripwire tripwire,
+            IUserLocks userLocks) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _apiSettings = apiSettings.Value;
             _tripwire = tripwire;
+            _userLocks = userLocks;
         }
 
         [HttpPost]
@@ -480,13 +483,17 @@ namespace viafront3.Controllers
                 return BadRequest(); 
             try
             {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                (var side, var error2) = Utils.GetOrderSide(req.Side);
-                if (error2 != null)
-                    return BadRequest(error2);
-                var order = via.OrderLimitQuery(xch.Id, req.Market, side, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
-                return FormatOrder(order);
+                // lock process of performing trade
+                lock (_userLocks.GetLock(apikey.ApplicationUserId))
+                {
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    (var side, var error2) = Utils.GetOrderSide(req.Side);
+                    if (error2 != null)
+                        return BadRequest(error2);
+                    var order = via.OrderLimitQuery(xch.Id, req.Market, side, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
+                    return FormatOrder(order);
+                }
             }
             catch (ViaJsonException ex)
             {
@@ -509,17 +516,21 @@ namespace viafront3.Controllers
                 return BadRequest(); 
             try
             {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                (var side, var error2) = Utils.GetOrderSide(req.Side);
-                if (error2 != null)
-                    return BadRequest(error2);
-                Order order;
-                if (_settings.MarketOrderBidAmountMoney)
-                    order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
-                else
-                    order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api");
-                return FormatOrder(order);
+                // lock process of performing trade
+                lock (_userLocks.GetLock(apikey.ApplicationUserId))
+                {
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    (var side, var error2) = Utils.GetOrderSide(req.Side);
+                    if (error2 != null)
+                        return BadRequest(error2);
+                    Order order;
+                    if (_settings.MarketOrderBidAmountMoney)
+                        order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
+                    else
+                        order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api");
+                    return FormatOrder(order);
+                }
             }
             catch (ViaJsonException ex)
             {
@@ -645,12 +656,16 @@ namespace viafront3.Controllers
                 return BadRequest(); 
             try
             {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var order = via.OrderCancelQuery(xch.Id, req.Market, req.Id);
-                if (order == null)
-                    return BadRequest("invalid parameter");
-                return FormatOrder(order);
+                // lock process of performing trade
+                lock (_userLocks.GetLock(apikey.ApplicationUserId))
+                {
+                    //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                    var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                    var order = via.OrderCancelQuery(xch.Id, req.Market, req.Id);
+                    if (order == null)
+                        return BadRequest("invalid parameter");
+                    return FormatOrder(order);
+                }
             }
             catch (ViaJsonException ex)
             {

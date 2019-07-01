@@ -26,6 +26,7 @@ namespace viafront3.Controllers
     {
         private readonly IEmailSender _emailSender;
         private readonly ITripwire _tripwire;
+        private readonly IUserLocks _userLocks;
 
         public WalletController(
           ILogger<WalletController> logger,
@@ -35,10 +36,12 @@ namespace viafront3.Controllers
           IWalletProvider walletProvider,
           IOptions<KycSettings> kycSettings,
           IEmailSender emailSender,
-          ITripwire tripwire) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+          ITripwire tripwire,
+          IUserLocks userLocks) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _emailSender = emailSender;
             _tripwire = tripwire;
+            _userLocks = userLocks;
         }
 
         [HttpGet]
@@ -268,6 +271,12 @@ namespace viafront3.Controllers
 
             var user = await GetUser(required: true);
 
+            if (!ModelState.IsValid)
+            {
+                // redisplay form
+                return View(model);
+            }
+
             // check 2fa authentication
             if (user.TwoFactorEnabled)
             {
@@ -281,13 +290,14 @@ namespace viafront3.Controllers
                 }
             }
 
-            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
-            model.BalanceAvailable = balance.Available;
-
-            if (ModelState.IsValid)
+            // lock process of checking balance and performing withdrawal
+            lock (_userLocks.GetLock(user.Id))
             {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+                model.BalanceAvailable = balance.Available;
+
                 var wallet = _walletProvider.GetChain(model.Asset);
 
                 // validate amount
@@ -364,18 +374,15 @@ namespace viafront3.Controllers
                 // register withdrawal with kyc limits
                 user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
                 _context.SaveChanges();
-
-                // register withdrawal with tripwire
-                await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
-
-                this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
-                // send email: withdrawal created
-                await _emailSender.SendEmailChainWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString());
-
-                return View(model);
             }
 
-            // If we got this far, something failed, redisplay form
+            // register withdrawal with tripwire
+            await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
+
+            this.FlashSuccess(string.Format("Created withdrawal: {0} {1} to {2}", model.Amount, model.Asset, model.WithdrawalAddress));
+            // send email: withdrawal created
+            await _emailSender.SendEmailChainWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString());
+
             return View(model);
         }
 
@@ -476,49 +483,52 @@ namespace viafront3.Controllers
                 return View(model);
             }
 
-            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
-            // validate amount
-            var availableInt = wallet.StringToAmount(balance.Available);
-            if (amountInt > availableInt)
+            // lock process of checking balance and performing withdrawal
+            lock (_userLocks.GetLock(user.Id))
             {
-                this.FlashError("Amount must be less then or equal to available balance");
-                return View(model);
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+                // validate amount
+                var availableInt = wallet.StringToAmount(balance.Available);
+                if (amountInt > availableInt)
+                {
+                    this.FlashError("Amount must be less then or equal to available balance");
+                    return View(model);
+                }
+
+                // validate kyc level
+                (var success, var withdrawalAssetAmount, var error) = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
+                if (!success)
+                {
+                    this.FlashError(error);
+                    return View(model);
+                }
+
+                // create pending withdrawal
+                var account = new BankAccount { AccountNumber = model.WithdrawalAccount };
+                model.PendingTx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
+
+                // register new withdrawal with the exchange backend
+                var source = new Dictionary<string, object>();
+                var amountStr = (-model.Amount).ToString();
+                var depositCodeInt = long.Parse(model.PendingTx.DepositCode);
+                via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", depositCodeInt, amountStr, source);
+                Console.WriteLine($"Updated exchange backend");
+
+                // save wallet (after we have posted the withdrawal to the backend)
+                wallet.Save();
+
+                // register withdrawal with kyc limits
+                user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
+                _context.SaveChanges();
             }
 
-            // validate kyc level
-            (var success, var withdrawalAssetAmount, var error) = ValidateWithdrawlLimit(user, model.Asset, model.Amount);
-            if (!success)
-            {
-                this.FlashError(error);
-                return View(model);
-            }
+                // register withdrawal with tripwire
+                await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
 
-            // create pending withdrawal
-            var account = new BankAccount{ AccountNumber = model.WithdrawalAccount };
-            var tx = wallet.RegisterPendingWithdrawal(user.Id, amountInt, account);
-            model.PendingTx = tx;
-
-            // register new withdrawal with the exchange backend
-            var source = new Dictionary<string, object>();
-            var amountStr = (-model.Amount).ToString();
-            var depositCodeInt = long.Parse(tx.DepositCode);
-            via.BalanceUpdateQuery(user.Exchange.Id, model.Asset, "withdraw", depositCodeInt, amountStr, source);
-            Console.WriteLine($"Updated exchange backend");
-
-            // save wallet (after we have posted the withdrawal to the backend)
-            wallet.Save();
-
-            // register withdrawal with kyc limits
-            user.AddWithdrawal(_context, model.Asset, model.Amount, withdrawalAssetAmount);
-            _context.SaveChanges();
-
-            // register withdrawal with tripwire
-            await _tripwire.RegisterEvent(TripwireEventType.Withdrawal);
-
-            // send email: withdrawal created
-            await _emailSender.SendEmailFiatWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString(), tx.DepositCode);
+                // send email: withdrawal created
+                await _emailSender.SendEmailFiatWithdrawalCreatedAsync(user.Email, model.Asset, model.Amount.ToString(), model.PendingTx.DepositCode);
 
             return View("WithdrawalFiatCreated", model);
         }
