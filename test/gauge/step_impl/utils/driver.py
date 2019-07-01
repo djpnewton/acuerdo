@@ -2,12 +2,18 @@ from getgauge.python import before_suite, after_suite
 from selenium import webdriver
 
 class Driver(object):
-    driver = None
+    drivers = []
 
     @before_suite
     def init(*params):
-        Driver.driver = webdriver.Firefox()
+        driver = webdriver.Firefox()
+        Driver.drivers.append(driver)
 
     @after_suite
     def close(*params):
-        Driver.driver.close()
+        for driver in Driver.drivers:
+            driver.close()
+
+    def add_driver():
+        driver = webdriver.Firefox()
+        Driver.drivers.append(driver)
