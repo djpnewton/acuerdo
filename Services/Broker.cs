@@ -82,7 +82,10 @@ namespace viafront3.Services
                 tradeAmount = order.AmountSend.ToString();
             else
                 throw new Exception("invalid order side");
-            via.OrderMarketQuery(brokerUser.Exchange.Id, order.Market, order.Side, tradeAmount, "0", _apiSettings.Broker.BrokerTag);
+            if (_settings.MarketOrderBidAmountMoney)
+                via.OrderMarketQuery(brokerUser.Exchange.Id, order.Market, order.Side, tradeAmount, "0", _apiSettings.Broker.BrokerTag, _settings.MarketOrderBidAmountMoney);
+            else
+                via.OrderMarketQuery(brokerUser.Exchange.Id, order.Market, order.Side, tradeAmount, "0", _apiSettings.Broker.BrokerTag);
             return true;
         }
 
