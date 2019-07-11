@@ -41,6 +41,7 @@ logs/
 
 # visual studio stuff
 .vs/
+sln/
 
 # vagrant
 .vagrant
@@ -50,3 +51,4 @@ geckodriver*
 
 # deployment credentials
 /ansible/creds/*
+/ansible/ssh_vars.json

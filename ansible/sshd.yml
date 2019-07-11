@@ -1,0 +1,55 @@
+---
+- name: sshd
+  hosts: all
+  become: yes
+  become_user: root
+
+  vars:
+    - sshd_allow_users: "{% for name in ssh_users %} {{ name }}{% endfor %}"
+  
+  tasks:
+    - name: enable UsePAM
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?UsePAM" line="UsePAM yes"
+
+    - name: enable RSAAuthentication
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?RSAAuthentication" line="RSAAuthentication yes"
+
+    - name: enable PubkeyAuthentication
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?PubkeyAuthentication" line="PubkeyAuthentication yes"
+
+    - name: disable PasswordAuthentication
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?PasswordAuthentication" line="PasswordAuthentication no"
+
+    - name: disable ChallengeResponseAuthentication
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?ChallengeResponseAuthentication" line="ChallengeResponseAuthentication no"
+
+    # LogLevel VERBOSE logs user's key fingerprint on login.
+    - name: set LogLevel VERBOSE
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^LogLevel" line="LogLevel VERBOSE"
+
+    - name: create admin group
+      group: name=admin
+
+    - name: create user accounts
+      user: name="{{item}}" groups="admin"
+      with_items: "{{ssh_users}}"
+
+    - name: add ssh pubkeys
+      authorized_key: user="{{item.name}}" key="{{ lookup('file', item.pubkey) }}"
+      with_items: "{{ssh_user_pubkeys}}"
+
+    - name: allow users in admin group to sudo without a password
+      lineinfile:
+        dest: "/etc/sudoers"
+        state: "present"
+        regexp: "^%admin"
+        line: "%admin ALL=(ALL) NOPASSWD: ALL"
+
+    - name: set allowed users
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?AllowUsers" line="AllowUsers {{sshd_allow_users}}"
+
+    - name: disallow root login
+      lineinfile: dest=/etc/ssh/sshd_config regexp="^#?PermitRootLogin" line="PermitRootLogin no"
+
+    - name: reload sshd
+      service: name=sshd state=reloaded

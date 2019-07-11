@@ -41,6 +41,8 @@
       when: vagrant
       ignore_errors: yes
 
+- import_playbook: sshd.yml
+  when: full_deploy and deploy_type != "local" and use_ssh_users
 - import_playbook: firewall.yml
   when: full_deploy and deploy_type != "local"
 - import_playbook: updates.yml

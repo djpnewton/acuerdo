@@ -2,19 +2,22 @@
 
 set -e
 
+. ssh_users.sh
+
 DEPLOY_TEST=test
 DEPLOY_PRODUCTION=production
 DEPLOY_LOCAL=local
-DEPLOY_TYPE=$1
+DEPLOY_USER=$1
+DEPLOY_TYPE=$2
 DEPLOY_LEVEL_VIAFRONT_ONLY=viafront_only
-DEPLOY_LEVEL=$2
+DEPLOY_LEVEL=$3
 
 display_usage() { 
     echo -e "\nUsage:
 
-    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> 
+    ansible_deploy.sh <DEPLOY_USER> <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> 
 
-    ansible_deploy.sh <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> <DEPLOY_LEVEL ($DEPLOY_LEVEL_VIAFRONT_ONLY)>
+    ansible_deploy.sh <DEPLOY_USER> <DEPLOY_TYPE ($DEPLOY_TEST | $DEPLOY_PRODUCTION | $DEPLOY_LOCAL)> <DEPLOY_LEVEL ($DEPLOY_LEVEL_VIAFRONT_ONLY)>
 
         This is a lesser deploy scenario:
 
@@ -23,7 +26,7 @@ display_usage() {
 } 
 
 # if less than two arguments supplied, display usage 
-if [ $# -le 0 ]
+if [ $# -le 1 ]
 then 
     display_usage
     exit 1
@@ -45,7 +48,7 @@ then
 fi 
 
 # check whether we have a valid deploy level
-if [ $# -ge 2 ]
+if [ $# -ge 3 ]
 then 
     # a lesser deployment
     if [[ ( "$DEPLOY_LEVEL" != "$DEPLOY_LEVEL_VIAFRONT_ONLY" ) ]]
@@ -68,7 +71,6 @@ DEPLOY_HOST=$DOMAIN
 BACKEND_HOST=backend-internal.$DOMAIN
 BLOCKCHAIN_HOST=blockchain-internal.$DOMAIN
 INTERNAL_HOST=internal.$DOMAIN
-DEPLOY_USER=root
 TESTNET=
 LOCAL=
 ADMIN_HOST=123.123.123.123
@@ -80,12 +82,8 @@ then
     BACKEND_HOST=backend-internal.test.$DOMAIN
     BLOCKCHAIN_HOST=blockchain-internal.test.$DOMAIN
     INTERNAL_HOST=test-internal.$DOMAIN
-    DEPLOY_USER=root
     TESTNET=true
 fi 
-INTERNAL_IP=`dig +short $INTERNAL_HOST`
-BACKEND_IP=`dig +short $BACKEND_HOST`
-BLOCKCHAIN_IP=`dig +short $BLOCKCHAIN_HOST`
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then 
@@ -93,13 +91,16 @@ then
     BACKEND_HOST=10.50.1.100
     BLOCKCHAIN_HOST=10.50.1.100
     INTERNAL_HOST=10.50.1.100
-    DEPLOY_USER=root
     TESTNET=true
     LOCAL=true
 
     INTERNAL_IP=$INTERNAL_HOST
     BACKEND_IP=$BACKEND_HOST
     BLOCKCHAIN_IP=$BLOCKCHAIN_HOST
+else
+    INTERNAL_IP=`dig +short $INTERNAL_HOST`
+    BACKEND_IP=`dig +short $BACKEND_HOST`
+    BLOCKCHAIN_IP=`dig +short $BLOCKCHAIN_HOST`
 fi 
 
 # read mysql user/pass from local file
@@ -116,17 +117,21 @@ KYC_URL=$(cat $KYC_URL_FILE)
 KYC_API_KEY=$(cat $KYC_API_KEY_FILE)
 KYC_API_SECRET=$(cat $KYC_API_SECRET_FILE)
 
+# read ssh users
+SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
+discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
+
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
 
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
+echo "   - DEPLOY_USER:     $DEPLOY_USER"
 echo "   - DEPLOY_HOST:     $DEPLOY_HOST"
 echo "   - DEPLOY_LEVEL:    $DEPLOY_LEVEL"
 echo "   - TESTNET:         $TESTNET"
 echo "   - ADMIN_EMAIL:     $ADMIN_EMAIL"
 echo "   - ADMIN_HOST:      $ADMIN_HOST"
-echo "   - DEPLOY_USER:     $DEPLOY_USER"
 echo "   - BACKEND_HOST:    $BACKEND_HOST"
 echo "   - BACKEND_IP:      $BACKEND_IP"
 echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
@@ -134,6 +139,8 @@ echo "   - BLOCKCHAIN_IP:   $BLOCKCHAIN_IP"
 echo "   - INTERNAL_IP:     $INTERNAL_IP"
 echo "   - MYSQL_USER:      $MYSQL_USER"
 echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
+echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
+echo "   - SSH_USERS:       $SSH_USERS"
 echo "   - KYC_URL:         $KYC_URL"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
@@ -149,7 +156,10 @@ then
     then 
         DEPLOY_HOST=acuerdo.local
     fi 
+    SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"
+    echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
+        --extra-vars "@ssh_vars.json" \
         deploy.yml
 fi
