@@ -2,6 +2,7 @@
 
 set -e
 
+. influxdb.sh
 . ssh_users.sh
 
 DEPLOY_TEST=test
@@ -118,26 +119,31 @@ IF_INTERNAL=eth1
 # create archive
 (cd ../viabtc_exchange_server; git archive --format=zip HEAD > viabtc_xch.zip)
 
+# read influxdb details 
+INFLUXDB_DIR=creds/$DEPLOY_TYPE
+discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
+
 # read ssh users
 SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
 discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
 
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
-echo "   - DEPLOY_USER:   $DEPLOY_USER"
-echo "   - DEPLOY_HOST:   $DEPLOY_HOST"
-echo "   - TESTNET:       $TESTNET"
-echo "   - ADMIN_EMAIL:   $ADMIN_EMAIL"
-echo "   - ADMIN_HOST:    $ADMIN_HOST"
-echo "   - DEBUG_HOST:    $DEBUG_HOST"
-echo "   - MYSQL_USER:    $MYSQL_USER"
-echo "   - MYSQL_PASS:    *${#MYSQL_PASS} chars*"
-echo "   - B2_ACCT_ID:    $B2_ACCT_ID"
-echo "   - B2_APP_KEY:    *${#B2_APP_KEY} chars*"
-echo "   - B2_BUCKET:     $B2_BUCKET"
-echo "   - CODE ARCHIVE:  viabtc_xch.zip"
-echo "   - USE_SSH_USERS: $USE_SSH_USERS"
-echo "   - SSH_USERS:     $SSH_USERS"
+echo "   - DEPLOY_USER:     $DEPLOY_USER"
+echo "   - DEPLOY_HOST:     $DEPLOY_HOST"
+echo "   - TESTNET:         $TESTNET"
+echo "   - ADMIN_EMAIL:     $ADMIN_EMAIL"
+echo "   - ADMIN_HOST:      $ADMIN_HOST"
+echo "   - DEBUG_HOST:      $DEBUG_HOST"
+echo "   - MYSQL_USER:      $MYSQL_USER"
+echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
+echo "   - B2_ACCT_ID:      $B2_ACCT_ID"
+echo "   - B2_APP_KEY:      *${#B2_APP_KEY} chars*"
+echo "   - B2_BUCKET:       $B2_BUCKET"
+echo "   - CODE ARCHIVE:    viabtc_xch.zip"
+echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
+echo "   - SSH_USERS:       $SSH_USERS"
+echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
@@ -150,6 +156,7 @@ then
     echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR smtp_host=$DEPLOY_HOST_INTERNAL smtp_relay_host=$FRONTEND_HOST mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$DEPLOY_HOST_INTERNAL alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL b2_acct_id=$B2_ACCT_ID b2_app_key=$B2_APP_KEY b2_bucket=$B2_BUCKET gpg_public_key=$GPG_PUBLIC_KEY backup_dbs='$BACKUP_DBS'" \
+        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \        
         --extra-vars "@ssh_vars.json" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi

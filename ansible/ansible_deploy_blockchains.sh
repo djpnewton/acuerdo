@@ -2,6 +2,7 @@
 
 set -e
 
+. influxdb.sh
 . ssh_users.sh
 
 DEPLOY_TEST=test
@@ -70,21 +71,26 @@ fi
 IF_EXTERNAL=eth0
 IF_INTERNAL=eth1
 
+# read influxdb details 
+INFLUXDB_DIR=creds/$DEPLOY_TYPE
+discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
+
 # read ssh users
 SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
 discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
 
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
-echo "   - DEPLOY_USER:   $DEPLOY_USER"
-echo "   - DEPLOY_HOST:   $DEPLOY_HOST"
-echo "   - TESTNET:       $TESTNET"
-echo "   - ADMIN_EMAIL:   $ADMIN_EMAIL"
-echo "   - ADMIN_HOST:    $ADMIN_HOST"
-echo "   - IF_INTERNAL:   $IF_INTERNAL"
-echo "   - IF_EXTERNAL:   $IF_EXTERNAL"
-echo "   - USE_SSH_USERS: $USE_SSH_USERS"
-echo "   - SSH_USERS:     $SSH_USERS"
+echo "   - DEPLOY_USER:     $DEPLOY_USER"
+echo "   - DEPLOY_HOST:     $DEPLOY_HOST"
+echo "   - TESTNET:         $TESTNET"
+echo "   - ADMIN_EMAIL:     $ADMIN_EMAIL"
+echo "   - ADMIN_HOST:      $ADMIN_HOST"
+echo "   - IF_INTERNAL:     $IF_INTERNAL"
+echo "   - IF_EXTERNAL:     $IF_EXTERNAL"
+echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
+echo "   - SSH_USERS:       $SSH_USERS"
+echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
@@ -97,6 +103,7 @@ then
     echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST smtp_host=$DEPLOY_HOST_INTERNAL smtp_relay_host=$FRONTEND_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST deploy_type=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
+        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \        
         --extra-vars "@ssh_vars.json" \
         ../xchwallet/ansible/deploy.yml
 fi

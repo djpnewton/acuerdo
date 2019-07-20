@@ -1,0 +1,29 @@
+# Global Agent Configuration
+[agent]
+  hostname = "{{ telegraf_hostname }}"
+  flush_interval = "15s"
+  interval = "15s"
+
+# Input Plugins
+[[inputs.cpu]]
+    percpu = true
+    totalcpu = true
+    collect_cpu_time = false
+    report_active = false
+[[inputs.disk]]
+    ignore_fs = ["tmpfs", "devtmpfs", "devfs"]
+[[inputs.io]]
+[[inputs.mem]]
+[[inputs.net]]
+[[inputs.system]]
+[[inputs.swap]]
+[[inputs.netstat]]
+[[inputs.processes]]
+[[inputs.kernel]]
+
+# Output Plugin InfluxDB
+[[outputs.influxdb]]
+  database = "telegraf"
+  urls = [ "{{ influxdb_server }}" ]
+  username = "{{ influxdb_user }}"
+  password = "{{ influxdb_pass }}"

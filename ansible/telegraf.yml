@@ -1,0 +1,34 @@
+---
+- name: telegraf
+  hosts: all
+  become: yes
+  become_user: root
+
+  vars:
+    telegraf_install_url: "https://dl.influxdata.com/telegraf/releases/telegraf_1.11.2-1_amd64.deb"
+    telegraf_sha256sum: "39ef98f2ae427c480f8f0ca55e941acf061f208f67f1ae73d6e74ea926f819ef"
+    telegraf_hostname: "{{ deploy_host }}"
+  tasks:
+
+    - name: download telegraf package
+      get_url:
+        url: "{{ telegraf_install_url }}"
+        dest: /tmp/telegraf-ansible-download.deb
+        sha256sum: "{{ telegraf_sha256sum }}"
+
+    - name: install downloaded telegraf package
+      apt:
+        deb: /tmp/telegraf-ansible-download.deb
+        state: present
+      register: apt_result
+      until: apt_result is success
+      retries: 2
+      delay: 5
+
+    - name: install telegraf config
+      template:
+        src: templates/telegraf.conf.j2
+        dest: /etc/telegraf/telegraf.conf
+
+    - name: restart telegraf
+      service: name=telegraf state=restarted

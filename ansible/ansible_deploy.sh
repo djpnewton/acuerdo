@@ -2,6 +2,7 @@
 
 set -e
 
+. influxdb.sh
 . ssh_users.sh
 
 DEPLOY_TEST=test
@@ -117,6 +118,10 @@ KYC_URL=$(cat $KYC_URL_FILE)
 KYC_API_KEY=$(cat $KYC_API_KEY_FILE)
 KYC_API_SECRET=$(cat $KYC_API_SECRET_FILE)
 
+# read influxdb details 
+INFLUXDB_DIR=creds/$DEPLOY_TYPE
+discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
+
 # read ssh users
 SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
 discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
@@ -141,6 +146,7 @@ echo "   - MYSQL_USER:      $MYSQL_USER"
 echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
 echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
 echo "   - SSH_USERS:       $SSH_USERS"
+echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
 echo "   - KYC_URL:         $KYC_URL"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
@@ -160,6 +166,7 @@ then
     echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
+        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \
         deploy.yml
 fi
