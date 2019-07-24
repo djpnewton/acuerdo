@@ -13,33 +13,10 @@
   become: yes
   become_user: root
   tasks:
-    - name: install aptitude
-      apt: 
-        name: aptitude
-        state: present
-      when: full_deploy
-
-    - name: Upgrade to latest debian packages
-      apt:
-        upgrade: yes
-        update_cache: yes   
-      when: full_deploy
-
     - name: Install Required Packages
       apt:
         name: ['git', 'vim', 'jq', 'parted', 'e2fsprogs', 'unzip']
       when: full_deploy
-
-    # https://github.com/ansible/ansible/issues/23914      
-    - name: resize partition
-      shell: 'echo yes | parted ---pretend-input-tty /dev/vda resizepart 1 Yes 100% 2>&1 > /dev/null || true'
-      when: vagrant
-      ignore_errors: yes
-
-    - name: resize filesystem
-      shell: 'resize2fs /dev/vda1'
-      when: vagrant
-      ignore_errors: yes
 
 - import_playbook: telegraf.yml
   when: full_deploy and deploy_type != "local" and influxdb_server != ""
