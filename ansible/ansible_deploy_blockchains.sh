@@ -99,11 +99,15 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
     # do dangerous stuff
     echo ok lets go!!!
+    INVENTORY_HOST=$DEPLOY_HOST
+    if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]; then 
+        DEPLOY_HOST=acuerdo.local
+    fi 
     SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"
     echo "$SSH_VARS" > ssh_vars.json
-    ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
+    ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_host=$DEPLOY_HOST smtp_host=$DEPLOY_HOST_INTERNAL smtp_relay_host=$FRONTEND_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST deploy_type=$DEPLOY_TYPE if_internal=$IF_INTERNAL if_external=$IF_EXTERNAL" \
-        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \        
+        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \
         ../xchwallet/ansible/deploy.yml
 fi

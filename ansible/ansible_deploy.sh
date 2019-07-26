@@ -158,8 +158,7 @@ then
     # do dangerous stuff
     echo ok lets go!!!
     INVENTORY_HOST=$DEPLOY_HOST
-    if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
-    then 
+    if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]; then 
         DEPLOY_HOST=acuerdo.local
     fi 
     SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"

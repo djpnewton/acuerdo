@@ -152,11 +152,15 @@ if [[ $REPLY =~ ^[Yy]$ ]]
 then
     # do dangerous stuff
     echo ok lets go!!!
+    INVENTORY_HOST=$DEPLOY_HOST
+    if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]; then 
+        DEPLOY_HOST=acuerdo.local
+    fi 
     SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"
     echo "$SSH_VARS" > ssh_vars.json
-    ansible-playbook --inventory "$DEPLOY_HOST," --user "$DEPLOY_USER" -v \
+    ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
         --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE deploy_host=$DEPLOY_HOST vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST debug_host=$DEBUG_HOST mysql_host=$MYSQL_HOST mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS redis_host=$REDIS_HOST kafka_host=$KAFKA_HOST match_host=$MATCH_HOST price_host=$PRICE_HOST data_host=$DATA_HOST http_host=$HTTP_HOST ws_host=$WS_HOST alert_host=$ALERT_HOST root_dir=$ROOT_DIR conf_dir=$CONF_DIR smtp_host=$DEPLOY_HOST_INTERNAL smtp_relay_host=$FRONTEND_HOST mysql_user_match_host=$MATCH_HOST mysql_user_data_host=$DATA_HOST redis_pass=$REDIS_PASS auth_url=$AUTH_URL kafka_advertised_listener=$DEPLOY_HOST_INTERNAL alert_email=$ALERT_EMAIL if_external=$IF_EXTERNAL if_internal=$IF_INTERNAL b2_acct_id=$B2_ACCT_ID b2_app_key=$B2_APP_KEY b2_bucket=$B2_BUCKET gpg_public_key=$GPG_PUBLIC_KEY backup_dbs='$BACKUP_DBS'" \
-        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \        
+        --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \
         ../viabtc_exchange_server/provisioning/deploy.yml
 fi
