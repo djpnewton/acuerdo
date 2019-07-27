@@ -239,3 +239,12 @@
         special_time: hourly
         job: >
           status=`curl localhost:5000/api/dev/Check -i  2>/dev/null | head -n 1 | cut -d$' ' -f2` && if [ "$status" != "404" ]; then echo "posting to localhost:5000/api/dev/UserCreate does not give 404!"; fi 
+
+    # build and copy xchwallet test app for telegraf
+    - name: dotnet build xchwallet text
+      shell: cd /opt/viafront/xchwallet/test; dotnet build -c Release;
+      become: yes
+      become_user: viafront
+    - file: path=/opt/telegraf/xchwallet_test state=directory
+    - name: copy xchwallet test
+      shell: cp /opt/viafront/xchwallet/test/bin/Release/netcoreapp2.1/* /opt/telegraf/xchwallet_test; chmod 0755 /opt/telegraf/xchwallet_test -R;

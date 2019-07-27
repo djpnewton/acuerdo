@@ -1,0 +1,6 @@
+[[inputs.exec]]
+    interval = "2m"
+    commands = ["/opt/telegraf/telegraf_wallet.py --path /opt/telegraf/xchwallet_test/ --host localhost --user {{ mysql_user }} --password {{ mysql_pass }} --name btc_wallet", "/opt/telegraf/telegraf_wallet.py --path /opt/telegraf/xchwallet_test/ --host localhost --user {{ mysql_user }} --password {{ mysql_pass }} --name waves_wallet", "/opt/telegraf/telegraf_wallet.py --path /opt/telegraf/xchwallet_test/ --host localhost --user {{ mysql_user }} --password {{ mysql_pass }} --name zap_wallet"]
+    name_prefix = "wallet_"
+    data_format = "json"
+    timeout = "20s"
