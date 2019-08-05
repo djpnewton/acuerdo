@@ -51,7 +51,7 @@ namespace viafront3.Services
             if (_walletSettings.ChainAssetSettings.ContainsKey(asset))
                 cas = _walletSettings.ChainAssetSettings[asset];
             IWallet wallet = null;
-            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false);
+            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false);
             switch (asset)
             {
                 case "WAVES":
@@ -81,7 +81,7 @@ namespace viafront3.Services
             BankAccount account = null;
             if (_walletSettings.BankAccounts.ContainsKey(asset))
                 account = _walletSettings.BankAccounts[asset];
-            var wallet = new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false), asset, account);
+            var wallet = new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false), asset, account);
             return wallet;
         } 
 

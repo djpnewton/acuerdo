@@ -10,7 +10,7 @@ mydestination = $myhostname, localhost.localdomain, localhost
 
 relayhost =
 {% if local %}
-mynetworks = 127.0.0.0/8 10.0.0.0/8 {{backend_ip}} {{blockchain_ip}}
+mynetworks = 127.0.0.0/8 10.0.0.0/8
 {% else %}
 mynetworks = 127.0.0.0/8 {{backend_ip}} {{blockchain_ip}}
 {% endif %}
