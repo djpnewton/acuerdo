@@ -1,0 +1,6 @@
+[[inputs.logparser]]
+  files = ["/var/log/nginx/access.log"]
+  from_beginning = false
+  name_override = "nginx_access_log"
+  [inputs.logparser.grok]
+    patterns = ["%{COMBINED_LOG_FORMAT}"]

@@ -67,6 +67,18 @@
         src: templates/telegraf_sshd.conf.j2
         dest: /etc/telegraf/telegraf.d/sshd.conf
 
+    # nginx config
+    - name: adding telegraf user to group adm (allow to read log files)
+      user:
+        name: telegraf
+        groups: adm
+        append: yes
+
+    - name: install telegraf nginx config
+      template:
+        src: templates/telegraf_nginx.conf.j2
+        dest: /etc/telegraf/telegraf.d/nginx.conf
+
     # general config
     - name: install telegraf config
       template:
