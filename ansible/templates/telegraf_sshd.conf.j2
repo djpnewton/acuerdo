@@ -1,0 +1,7 @@
+[[inputs.exec]]
+    commands = ["/opt/telegraf/telegraf_sshd.py --path /opt/telegraf/sshd/sshd.json"]
+    name_prefix = "sshd_"
+    data_format = "json"
+    json_string_fields = ["user", "ip", "service", "tty"]
+    json_time_key = "date"
+    json_time_format = "unix"
