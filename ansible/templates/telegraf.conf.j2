@@ -20,6 +20,16 @@
 [[inputs.netstat]]
 [[inputs.processes]]
 [[inputs.kernel]]
+[[inputs.logparser]]
+  files = ["/var/log/fail2ban.log"]
+  from_beginning = false
+  name_override = "fail2ban_log"
+  [inputs.logparser.grok]
+    patterns = ["%{TS_F2B:timestamp:ts-\"2006-01-02 15:04:05.000\"} fail2ban.actions%{SPACE}\\[%{NUMBER:pid:int}\\]: NOTICE%{SPACE}\\[%{WORD:service}\\] %{ACTION:action} %{IP:ip}"]
+    custom_patterns = '''
+        TS_F2B %{YEAR}-%{MONTHNUM}-%{MONTHDAY} %{HOUR}:%{MINUTE}:%{SECOND},%{NUMBER}
+        ACTION (Ban|Unban)
+'''
 
 # Output Plugin InfluxDB
 [[outputs.influxdb]]
