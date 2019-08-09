@@ -1,0 +1,9 @@
+[[inputs.exec]]
+    commands = [
+		"/opt/telegraf/telegraf_processes.sh viafront",
+		"/opt/telegraf/telegraf_processes.sh viafront_order_emails",
+		"/opt/telegraf/telegraf_processes.sh nginx"
+	       ]
+    name_override = "process_status"
+    data_format = "json"
+    timeout = "10s"

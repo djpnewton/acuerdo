@@ -73,6 +73,22 @@
         src: templates/telegraf_sshd.conf.j2
         dest: /etc/telegraf/telegraf.d/sshd.conf
 
+    - name: install sshd telegraf script
+      template:
+        src: templates/telegraf_processes.sh
+        dest: /opt/telegraf/telegraf_processes.sh
+        mode: 0755
+
+    - name: install telegraf processes config
+      template:
+        src: templates/telegraf_processes.conf.j2
+        dest: /etc/telegraf/telegraf.d/telegraf_processes.conf
+
+    - name: install telegraf ports config
+      template:
+        src: templates/telegraf_ports.conf.j2
+        dest: /etc/telegraf/telegraf.d/telegraf_ports.conf
+
     # nginx config
     - name: install telegraf nginx config
       template:
