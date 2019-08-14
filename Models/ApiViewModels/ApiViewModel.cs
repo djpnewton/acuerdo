@@ -133,17 +133,19 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiOrderCreateMarket : ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public string Side { get; set; }
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
+        [Range(typeof(decimal), "0", "1000000000000", ErrorMessage = "Please enter a value between 0 and 1000000000000")]
         public string Amount { get; set; }
     }
 
     public class ApiOrderCreateLimit : ApiOrderCreateMarket
     {
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "Please enter a value bigger than {1}")]
+        [Range(typeof(decimal), "0", "1000000000000", ErrorMessage = "Please enter a value between 0 and 1000000000000")]
         public string Price { get; set; }
     }
 
