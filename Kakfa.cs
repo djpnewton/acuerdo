@@ -71,7 +71,7 @@ namespace viafront3
                             switch (cr.Topic)
                             {
                                 case OrdersTopic:
-                                    ProcessOrder(context, userManager, emailSender, cr.Value);
+                                    ProcessOrder(context, userManager, settings, emailSender, cr.Value);
                                     break;
                                 case DealsTopic:
                                     ProcessDeal(context, userManager, emailSender, cr.Value);
@@ -94,7 +94,7 @@ namespace viafront3
             }
         }
 
-        static void ProcessOrder(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailSender emailSender, string json)
+        static void ProcessOrder(ApplicationDbContext context, UserManager<ApplicationUser> userManager, ExchangeSettings settings, IEmailSender emailSender, string json)
         {
             // parse order event
             var parts = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
@@ -126,10 +126,11 @@ namespace viafront3
                         emailSender.SendEmailMarketOrderUpdatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left);
                     break;
                 case OrderEvent.ORDER_EVENT_FINISH:
+                    var amountInterval = decimal.Parse(settings.Markets[order.market].AmountInterval);
                     if (order.type == OrderType.Limit)
-                        emailSender.SendEmailLimitOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left);
+                        emailSender.SendEmailLimitOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left, amountInterval);
                     else
-                        emailSender.SendEmailMarketOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left);
+                        emailSender.SendEmailMarketOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left, amountInterval);
                     break;
             }
             Console.WriteLine($":: email sent to {user.Email}");

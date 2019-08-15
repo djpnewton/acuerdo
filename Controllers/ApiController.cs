@@ -85,7 +85,7 @@ namespace viafront3.Controllers
             if (user == null)
                 return new Models.ApiViewModels.ApiKey { Completed = false };
             // check expiry
-            if (accountReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
+            if (accountReq.Date + (_apiSettings.CreationExpiryMinutes * 60) + 60 /* grace time */ < DateTimeOffset.Now.ToUnixTimeSeconds())
                 return BadRequest("expired");
             // create new apikey
             var key = Utils.CreateToken();
@@ -146,7 +146,7 @@ namespace viafront3.Controllers
             if (apikey != null)
                 return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
-            if (apiKeyReq.Date + _apiSettings.CreationExpiryMinutes * 60 < DateTimeOffset.Now.ToUnixTimeSeconds())
+            if (apiKeyReq.Date + (_apiSettings.CreationExpiryMinutes * 60) + 60 /* grace time */ < DateTimeOffset.Now.ToUnixTimeSeconds())
                 return BadRequest("expired");
             // get user
             var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
@@ -738,23 +738,38 @@ namespace viafront3.Controllers
             orderSide = OrderSide.Any;
             // validate market
             if (market == null)
+            {
+                _logger.LogError("market parameter is null");
                 return false;
+            }
             if (!_settings.Markets.ContainsKey(market))
+            {
+                _logger.LogError($"market ('{market}') does not exist");
                 return false;
+            }
             if (side == "buy")
             {
                 orderSide = OrderSide.Bid;
                 if (_apiSettings.Broker.BuyMarkets == null || !_apiSettings.Broker.BuyMarkets.Contains(market))
+                {
+                    _logger.LogError($"market ('{market}') is not a valid buy market");
                     return false;
+                }
             }
             else if (side == "sell")
             {
                 orderSide = OrderSide.Ask;
                 if (_apiSettings.Broker.SellMarkets == null || !_apiSettings.Broker.SellMarkets.Contains(market))
+                {
+                    _logger.LogError($"market ('{market}') is not a valid sell market");
                     return false;
+                }
             }
             else
+            {
+                _logger.LogError($"order side ('{side}') is not a valid");
                 return false;
+            }
             return true;
         }
 
@@ -858,20 +873,32 @@ namespace viafront3.Controllers
             // validate market
             OrderSide side;
             if (!ValidateBrokerMarket(req.Market, req.Side, out side))
+            {
+                _logger.LogError($"Failed to validate broker market {req.Market} (side: {req.Side})");
                 return BadRequest();
+            }
             // validate auth
             string error;
             var apikey = AuthKey(req.Key, req.Nonce, out error);
             if (apikey == null)
+            {
+                _logger.LogError($"Failed to validate apikey: {req.Key}");
                 return BadRequest(error);
+            }
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
+            {
+                _logger.LogError($"Failed get exchange for user id: {apikey.ApplicationUserId}");
                 return BadRequest();
+            }
             // get quote
             decimal avgPrice;
             var model = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
             if (model == null)
+            {
+                _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
                 return BadRequest(error);
+            }
             return model;
         }
 
@@ -952,7 +979,10 @@ namespace viafront3.Controllers
             decimal avgPrice;
             var quote = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
             if (quote == null)
+            {
+                _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
                 return BadRequest(error);
+            }
             // create order
             string invoiceId = null;
             string paymentAddress = null;

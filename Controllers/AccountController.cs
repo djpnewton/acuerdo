@@ -26,6 +26,7 @@ namespace viafront3.Controllers
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly KycSettings _kycSettings;
         private readonly ITripwire _tripwire;
+        private readonly ApiSettings _apiSettings;
 
         public AccountController(
             ILogger<AccountController> logger,
@@ -36,13 +37,15 @@ namespace viafront3.Controllers
             IOptions<ExchangeSettings> settings,
             RoleManager<IdentityRole> roleManager,
             IOptions<KycSettings> kycSettings,
-            ITripwire tripwire) : base(logger, userManager, context, settings)
+            ITripwire tripwire,
+            IOptions<ApiSettings> apiSettings) : base(logger, userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
             _kycSettings = kycSettings.Value;
             _tripwire = tripwire;
+            _apiSettings = apiSettings.Value;
         }
 
         [TempData]
@@ -294,6 +297,13 @@ namespace viafront3.Controllers
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
+        bool AccountRequestExpired(AccountCreationRequest req)
+        {
+            var date = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var expiry = req.Date + _apiSettings.CreationExpiryMinutes * 60;
+            return date > expiry;
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public IActionResult ConfirmAccountCreation(string token)
@@ -301,7 +311,7 @@ namespace viafront3.Controllers
             if (token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token);
-            if (accountReq != null && !accountReq.Completed)
+            if (accountReq != null && !accountReq.Completed && !AccountRequestExpired(accountReq))
             {
                 var model = new ConfirmAccountCreationViewModel { Token = token };
                 return View(model);
@@ -318,7 +328,7 @@ namespace viafront3.Controllers
             if (model.Token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == model.Token);
-            if (accountReq != null && !accountReq.Completed)
+            if (accountReq != null && !accountReq.Completed && !AccountRequestExpired(accountReq))
             {
                 // create new user
                 (var result, var user) = await CreateUser(_signInManager, _emailSender, accountReq.RequestedEmail, accountReq.RequestedEmail, model.Password, sendEmail: false, signIn: false);
@@ -345,6 +355,13 @@ namespace viafront3.Controllers
             return RedirectToAction(nameof(HomeController.Index), "Home");
         }
 
+        bool ApiKeyCreationRequestExpired(ApiKeyCreationRequest req)
+        {
+            var date = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var expiry = req.Date + _apiSettings.CreationExpiryMinutes * 60;
+            return date > expiry;
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmApiKeyCreation(string token)
@@ -352,7 +369,7 @@ namespace viafront3.Controllers
             if (token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token);
-            if (apiKeyReq != null && !apiKeyReq.Completed)
+            if (apiKeyReq != null && !apiKeyReq.Completed && !ApiKeyCreationRequestExpired(apiKeyReq))
             {
                 var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
                 var model = new ConfirmApiKeyCreationViewModel { Token = token, DeviceName = apiKeyReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
@@ -370,7 +387,7 @@ namespace viafront3.Controllers
             if (model.Token == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == model.Token);
-            if (apiKeyReq != null && !apiKeyReq.Completed)
+            if (apiKeyReq != null && !apiKeyReq.Completed && !ApiKeyCreationRequestExpired(apiKeyReq))
             {
                 // check 2fa authentication
                 var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
