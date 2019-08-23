@@ -142,7 +142,7 @@ namespace viafront3.Controllers
         {
             var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token.Token);
             if (apiKeyReq == null)
-                return NotFound();
+                return new Models.ApiViewModels.ApiKey { Completed = false }; // fake reply if token not found (so robot cant test for user emails)
             if (!apiKeyReq.Completed)
                 return new Models.ApiViewModels.ApiKey { Completed = false };
             var apikey = _context.ApiKeys.SingleOrDefault(d => d.CreationRequestId == apiKeyReq.Id);
@@ -168,7 +168,7 @@ namespace viafront3.Controllers
         {
             var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token.Token);
             if (apiKeyReq == null)
-                return NotFound(); // TODO: leaks account existence
+                return Ok(); // fake reply if token not found (so robot cant test for user emails)
             _context.ApiKeyCreationRequests.Remove(apiKeyReq);
             _context.SaveChanges();
             return Ok();
