@@ -1,5 +1,6 @@
 ﻿@using viafront3.Models.MarketViewModels
 @using viafront3.Views.Market
+@using viafront3.Views
 @model OrderbookPartialViewModel
 
 <div class="col-md-6">
@@ -19,13 +20,13 @@
                 <tr>
                     <td>
                         <span class="pad-decimals-data">
-                        @item.ElementAt(0)
+                        @ViewUtils.FormatStrDec(item.ElementAt(0), Model.AssetSettings[Model.PriceUnit].Decimals)
                         </span>
                         &nbsp;@Model.PriceUnit
                     </td>
                     <td>
                         <span class="pad-decimals-data">
-                        @item.ElementAt(1)
+                        @ViewUtils.FormatStrDec(item.ElementAt(1), Model.AssetSettings[Model.AmountUnit].Decimals)
                         </span>
                         &nbsp;@Model.AmountUnit
                     </td>
@@ -51,13 +52,13 @@
                 <tr>
                     <td>
                         <span class="pad-decimals-data">
-                        @item.ElementAt(0)
+                        @ViewUtils.FormatStrDec(item.ElementAt(0), Model.AssetSettings[Model.PriceUnit].Decimals)
                         </span>
                         &nbsp;@Model.PriceUnit
                     </td>
                     <td>
                         <span class="pad-decimals-data">
-                        @item.ElementAt(1)
+                        @ViewUtils.FormatStrDec(item.ElementAt(1), Model.AssetSettings[Model.AmountUnit].Decimals)
                         </span>
                         &nbsp;@Model.AmountUnit
                     </td>

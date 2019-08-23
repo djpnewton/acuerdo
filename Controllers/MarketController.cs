@@ -39,6 +39,7 @@ namespace viafront3.Controllers
 
             var ob = new OrderbookPartialViewModel
             {
+                AssetSettings = _settings.Assets,
                 AmountUnit = _settings.Markets[market].AmountUnit,
                 PriceUnit = _settings.Markets[market].PriceUnit,
                 OrderDepth = orderDepth

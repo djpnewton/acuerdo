@@ -118,6 +118,7 @@ namespace viafront3.Models.TradeViewModels
             var orderDepth = via.OrderDepthQuery(market, settings.OrderBookLimit, settings.Markets[market].PriceInterval);
             var ob = new OrderbookPartialViewModel
             {
+                AssetSettings = settings.Assets,
                 AmountUnit = settings.Markets[market].AmountUnit,
                 PriceUnit = settings.Markets[market].PriceUnit,
                 OrderDepth = orderDepth

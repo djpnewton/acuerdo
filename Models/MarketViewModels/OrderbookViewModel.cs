@@ -18,6 +18,8 @@ namespace viafront3.Models.MarketViewModels
 
     public class OrderbookPartialViewModel
     {
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+
         public string AmountUnit { get; set; }
 
         public string PriceUnit { get; set; }
