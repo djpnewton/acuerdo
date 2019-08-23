@@ -106,7 +106,7 @@ namespace viafront3.Models.TradeViewModels
 
         public ApiOrderCreateLimit Order { get; set; }
 
-        static public TradeViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, ExchangeSettings settings)
+        static public TradeViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, string side, string amount, string price, ExchangeSettings settings)
         {
             var via = new ViaJsonRpc(settings.AccessHttpUrl);
             var balances = via.BalanceQuery(tradeUser.Exchange.Id);
@@ -135,7 +135,8 @@ namespace viafront3.Models.TradeViewModels
                 Balances = new BalancesPartialViewModel{Balances=balances},
                 OrdersPending = new OrdersPendingPartialViewModel { OrdersPending = ordersPending },
                 BidOrdersCompleted = bidOrdersCompleted,
-                AskOrdersCompleted = askOrdersCompleted
+                AskOrdersCompleted = askOrdersCompleted,
+                Order = new ApiOrderCreateLimit { Market = market, Side = side, Amount = amount, Price = price}
             };
 
             return model;

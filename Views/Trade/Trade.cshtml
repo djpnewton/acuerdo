@@ -5,6 +5,30 @@
 @{
     ViewData["Title"] = "Trade";
     ViewData.AddActivePage(Model.Market);
+
+    var limitSide="Bid";
+    var limitAmount="";
+    var limitPrice="";
+    var marketSide="Bid";
+    var marketAmount="";
+    if (Model.Order.Price != null && Model.Order.Amount != null)
+    {
+        if (Model.Order.Side != null)
+        {
+            limitSide = Model.Order.Side;
+        }
+        limitAmount = Model.Order.Amount;
+        limitPrice = Model.Order.Price;
+    }
+    else if (Model.Order.Amount != null)
+    {
+        if (Model.Order.Side != null)
+        {
+            marketSide = Model.Order.Side;
+        }
+        marketAmount = Model.Order.Amount;
+    }
+
 }
 <h4>@ViewData["Title"] - @Model.MarketNice</h4>
 
@@ -36,21 +60,21 @@
                     <div class="form-group">
                         <label for="form-limit-type">Bid/Ask</label>
                         <select class="form-control" id="form-limit-type" asp-for="Order.Side">
-                            <option value="buy">Bid</option>
-                            <option value="sell">Ask</option>
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="form-limit-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" id="form-limit-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Order.Amount">
+                            <input class="form-control form-order-input" id="form-limit-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Order.Amount" value="@limitAmount">
                             <span asp-validation-for="Order.Amount" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="form-limit-price" class="col-2 col-form-label">Price (@Model.Settings.PriceUnit, min @Model.Settings.PriceInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" id="form-limit-price" x-unit="@Model.Settings.PriceUnit" asp-for="Order.Price">
+                            <input class="form-control form-order-input" id="form-limit-price" x-unit="@Model.Settings.PriceUnit" asp-for="Order.Price" value="@limitPrice">
                             <span asp-validation-for="Order.Price" class="text-danger"></span>
                         </div>
                     </div>
@@ -73,14 +97,14 @@
                     <div class="form-group">
                         <label for="form-market-type">Bid/Ask</label>
                         <select class="form-control" id="form-market-type" asp-for="Order.Side">
-                            <option value="buy">Bid</option>
-                            <option value="sell">Ask</option>
+                            <option value="buy">Buy</option>
+                            <option value="sell">Sell</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label for="form-market-amount" class="col-2 col-form-label">Amount (@Model.Settings.AmountUnit, min @Model.Settings.AmountInterval)</label>
                         <div class="col-10">
-                            <input class="form-control" id="form-market-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Order.Amount">
+                            <input class="form-control form-order-input" id="form-market-amount" x-unit="@Model.Settings.AmountUnit" asp-for="Order.Amount" value="@marketAmount">
                             <span asp-validation-for="Order.Amount" class="text-danger"></span>
                         </div>
                     </div>

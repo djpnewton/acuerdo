@@ -38,10 +38,10 @@ namespace viafront3.Controllers
             return View(BaseViewModel());
         }
 
-        public async Task<IActionResult> Trade(string market)
+        public async Task<IActionResult> Trade(string market, string side=null, string amount=null, string price=null)
         {
             var user = await GetUser(required: true);
-            return View(TradeViewModel.Construct(user, user, market, _settings));
+            return View(TradeViewModel.Construct(user, user, market, side, amount, price, _settings));
         }
 
         public async Task<IActionResult> OrdersPending(string market, int offset=0, int limit=10)
@@ -107,7 +107,7 @@ namespace viafront3.Controllers
                     if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
                     {
                         this.FlashError($"Limit Order Failed (balance too small)");
-                        return RedirectToAction("Trade", new { market = model.Market });
+                        return RedirectToAction("Trade", new { market = model.Market, side = model.Order.Side, amount = model.Order.Amount, price = model.Order.Price });
                     }
                     throw;
                 }
@@ -156,12 +156,12 @@ namespace viafront3.Controllers
                     if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
                     {
                         this.FlashError($"Market Order Failed (balance too small)");
-                        return RedirectToAction("Trade", new { market = model.Market });
+                        return RedirectToAction("Trade", new { market = model.Market, side = model.Order.Side, amount = model.Order.Amount });
                     }
                     if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
                     {
                         this.FlashError($"Market Order Failed (insufficient market depth)");
-                        return RedirectToAction("Trade", new { market = model.Market });
+                        return RedirectToAction("Trade", new { market = model.Market, side = model.Order.Side, amount = model.Order.Amount });
                     }
                     throw;
                 }

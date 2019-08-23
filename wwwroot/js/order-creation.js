@@ -1,6 +1,5 @@
 ﻿$(function() {
-    $('.form-create-button').click(function() {
-        var form = $(this).closest('form');
+    function showOrderModal(form) {
         form.validate();
         if (!form.valid())
             return;
@@ -24,6 +23,22 @@
 
         $('#modal-order-create-p').text(text);
         $('#confirm-order-submit').modal('show')
+    };
+
+    $('.form-order-input').on('keypress', function(e) {
+        if (e.which == 13) {
+            var form = $(this).closest('form');
+            showOrderModal(form);
+            return false; // dont submit form
+        }
+    });
+
+    $('.form-create-button').click(function() {
+        var form = $(this).closest('form');
+        showOrderModal(form);
+        form.validate();
+        if (!form.valid())
+            return;
     });
 
     $('#confirm-creation').click(function() {

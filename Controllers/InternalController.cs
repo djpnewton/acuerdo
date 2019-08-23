@@ -231,7 +231,7 @@ namespace viafront3.Controllers
             var userInspect = _userManager.FindByIdAsync(id).Result;
 
             ViewData["userid"] = id;
-            return View(TradeViewModel.Construct(user, userInspect, market, _settings));
+            return View(TradeViewModel.Construct(user, userInspect, market, null, null, null, _settings));
         }
 
         public IActionResult UserInspectWalletTxs(string id, string asset, int inOffset=0, int inLimit=10, int outOffset=0, int outLimit=10)
