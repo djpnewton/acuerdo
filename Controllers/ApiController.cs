@@ -941,7 +941,7 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ApiBrokerOrder>> BrokerCreate([FromBody] ApiBrokerCreate req)
+        public ActionResult<ApiBrokerOrder> BrokerCreate([FromBody] ApiBrokerCreate req)
         {
             // if tripwire tripped cancel
             if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
@@ -960,24 +960,6 @@ namespace viafront3.Controllers
             var apikey = AuthKey(req.Key, req.Nonce, out error);
             if (apikey == null)
                 return BadRequest(error);
-            // check/create broker user
-            var brokerUser = await _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
-            if (brokerUser == null)
-            {
-                (var result, var user) = await CreateUser(_signInManager, _emailSender, _apiSettings.Broker.BrokerTag, email: null, password: null, sendEmail: false, signIn: false);
-                if (!result.Succeeded)
-                {
-                    _logger.LogError("Failed to create broker user");
-                    return BadRequest();
-                }
-                brokerUser = user;
-            }
-            // check broker exchange id
-            if (brokerUser.Exchange == null)
-            {
-                _logger.LogError("Failed to get broker exchange id");
-                return BadRequest();
-            }
             // get quote
             decimal avgPrice;
             var quote = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
@@ -987,48 +969,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             }
             // create order
-            string invoiceId = null;
-            string paymentAddress = null;
-            string paymentUrl = null;
             string token = Utils.CreateToken();
-            if (_walletProvider.IsChain(quote.AssetSend))
-            {
-                var wallet = _walletProvider.GetChain(quote.AssetSend);
-                var assetSettings = _walletProvider.ChainAssetSettings(quote.AssetSend);
-                if (!wallet.HasTag(brokerUser.Id))
-                {
-                    wallet.NewTag(brokerUser.Id);
-                    wallet.Save();
-                }
-                if (assetSettings.LedgerModel == LedgerModel.Account)
-                {
-                    invoiceId = Utils.CreateToken();
-                    paymentAddress = wallet.NewOrExistingAddress(brokerUser.Id).Address;
-                }
-                else // UTXO
-                    paymentAddress = wallet.NewAddress(brokerUser.Id).Address;
-                wallet.Save();
-            }
-            else // fiat
-            {
-                if (!_fiatPaymentSettings.PaymentProcessorEnabled)
-                {
-                    _logger.LogError("fiat payments not enabled");
-                    return BadRequest();
-                }
-                if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(quote.AssetSend))
-                {
-                    _logger.LogError($"fiat payments of '${quote.AssetSend}' not enabled");
-                    return BadRequest();
-                }
-                var fiatReq = CreateFiatPaymentRequest(_fiatPaymentSettings, token, quote.AssetSend, quote.AmountSend);
-                if (fiatReq == null)
-                {
-                    _logger.LogError("fiat payment request creation failed");
-                    return BadRequest();
-                }
-                paymentUrl = fiatReq.ServiceUrl;
-            }
             var order = new BrokerOrder
             {
                 ApplicationUserId = apikey.ApplicationUserId,
@@ -1043,9 +984,9 @@ namespace viafront3.Controllers
                 Side = side,
                 Price = avgPrice,
                 Token = token,
-                InvoiceId = invoiceId,
-                PaymentAddress = paymentAddress,
-                PaymentUrl = paymentUrl,
+                InvoiceId = null,
+                PaymentAddress = null,
+                PaymentUrl = null,
                 Recipient = req.Recipient,
                 Status = BrokerOrderStatus.Created.ToString(),
             };
@@ -1093,6 +1034,73 @@ namespace viafront3.Controllers
                     return BadRequest(error2);
                 // register withdrawal with kyc limits
                 user.AddWithdrawal(_context, order.AssetReceive, order.AmountReceive, withdrawalAssetAmount);
+            }
+            // check/create broker user
+            var brokerUser = await _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag);
+            if (brokerUser == null)
+            {
+                (var result, var user) = await CreateUser(_signInManager, _emailSender, _apiSettings.Broker.BrokerTag, email: null, password: null, sendEmail: false, signIn: false);
+                if (!result.Succeeded)
+                {
+                    _logger.LogError("Failed to create broker user");
+                    return BadRequest();
+                }
+                brokerUser = user;
+            }
+            // check broker exchange id
+            if (brokerUser.Exchange == null)
+            {
+                _logger.LogError("Failed to get broker exchange id");
+                return BadRequest();
+            }
+            // create payment details
+            if (order.Status == BrokerOrderStatus.Ready.ToString())
+            {
+                string invoiceId = null;
+                string paymentAddress = null;
+                string paymentUrl = null;
+                if (_walletProvider.IsChain(order.AssetSend))
+                {
+                    var wallet = _walletProvider.GetChain(order.AssetSend);
+                    var assetSettings = _walletProvider.ChainAssetSettings(order.AssetSend);
+                    if (!wallet.HasTag(brokerUser.Id))
+                    {
+                        wallet.NewTag(brokerUser.Id);
+                        wallet.Save();
+                    }
+                    if (assetSettings.LedgerModel == LedgerModel.Account)
+                    {
+                        invoiceId = Utils.CreateToken();
+                        paymentAddress = wallet.NewOrExistingAddress(brokerUser.Id).Address;
+                    }
+                    else // UTXO
+                        paymentAddress = wallet.NewAddress(brokerUser.Id).Address;
+                    wallet.Save();
+                }
+                else // fiat
+                {
+                    if (!_fiatPaymentSettings.PaymentProcessorEnabled)
+                    {
+                        _logger.LogError("fiat payments not enabled");
+                        return BadRequest();
+                    }
+                    if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(order.AssetSend))
+                    {
+                        _logger.LogError($"fiat payments of '${order.AssetSend}' not enabled");
+                        return BadRequest();
+                    }
+                    var fiatReq = CreateFiatPaymentRequest(_fiatPaymentSettings, order.Token, order.AssetSend, order.AmountSend);
+                    if (fiatReq == null)
+                    {
+                        _logger.LogError("fiat payment request creation failed");
+                        return BadRequest();
+                    }
+                    paymentUrl = fiatReq.ServiceUrl;
+                }
+                //  update order payment details
+                order.InvoiceId = invoiceId;
+                order.PaymentAddress = paymentAddress;
+                order.PaymentUrl = paymentUrl;
             }
             // save order and withdrawal record
             _context.BrokerOrders.Update(order);
