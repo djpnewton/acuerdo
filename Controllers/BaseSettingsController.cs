@@ -94,6 +94,18 @@ namespace viafront3.Controllers
             }
         }
 
+        protected IRestResponse ServiceRequest(string url, string secret, string jsonBody)
+        {
+            var client = new RestClient(url);
+            var request = new RestRequest("request", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddParameter("application/json", jsonBody, ParameterType.RequestBody);
+            var sig = HMacWithSha256(secret, jsonBody);
+            request.AddHeader("X-Signature", sig);
+            var response = client.Execute(request);
+            return response;
+        }
+
         protected viafront3.Models.ApiViewModels.ApiAccountKycRequest CreateKycRequest(KycSettings kycSettings, string applicationUserId)
         {
             // check request does not already exist
@@ -102,14 +114,8 @@ namespace viafront3.Controllers
                 return null;
             // call kyc server to create request
             var token = Utils.CreateToken();
-            var client = new RestClient(kycSettings.KycServerUrl);
-            var request = new RestRequest("request", Method.POST);
-            request.RequestFormat = DataFormat.Json;
             var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token });
-            request.AddParameter("application/json", jsonBody, ParameterType.RequestBody);
-            var sig = HMacWithSha256(kycSettings.KycServerApiSecret, jsonBody);
-            request.AddHeader("X-Signature", sig);
-            var response = client.Execute(request);
+            var response = ServiceRequest(kycSettings.KycServerUrl, kycSettings.KycServerApiSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
@@ -131,6 +137,8 @@ namespace viafront3.Controllers
                     return model;
                 }
             }
+            else
+                _logger.LogError($"kyc request ({kycSettings.KycServerUrl}) failed with http statuscode: {response.StatusCode}");
             return null;
         }
 
@@ -148,7 +156,7 @@ namespace viafront3.Controllers
                 {
                     var status = json["status"];
                     // update kyc level if complete
-                    if (status == "completed")
+                    if (status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
                     {
                         var newLevel = 2;
                         var user = await _userManager.FindByIdAsync(applicationUserId);
@@ -178,6 +186,34 @@ namespace viafront3.Controllers
                     return model;
                 }
             }
+            return null;
+        }
+
+        protected viafront3.Models.ApiViewModels.ApiFiatPaymentRequest CreateFiatPaymentRequest(FiatPaymentProcessorSettings fiatPaymentSettings, string token, string asset, decimal amount)
+        {
+            // call payment server to create request
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatPaymentSettings.PaymentServerApiKey, token = token, asset = asset, amount = amount, return_url = "" });
+            var response = ServiceRequest(fiatPaymentSettings.PaymentServerUrl, fiatPaymentSettings.PaymentServerSecret, jsonBody);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    // return to user
+                    var model = new viafront3.Models.ApiViewModels.ApiFiatPaymentRequest
+                    {
+                        Token = token,
+                        ServiceUrl = $"{fiatPaymentSettings.PaymentServerUrl}/request/{token}",
+                        Status = status,
+                        Asset = asset,
+                        Amount = amount,
+                    };
+                    return model;
+                }
+            }
+            else
+                _logger.LogError($"fiat payment request ({fiatPaymentSettings.PaymentServerUrl}) failed with http statuscode: {response.StatusCode}");
             return null;
         }
     }

@@ -10,6 +10,7 @@ using viafront3.Models;
 using xchwallet;
 using via_jsonrpc;
 using Newtonsoft.Json;
+using RestSharp;
 
 namespace viafront3.Services
 {
@@ -29,6 +30,7 @@ namespace viafront3.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ExchangeSettings _settings;
         private readonly ITripwire _tripwire;
+        private readonly FiatPaymentProcessorSettings _fiatPaymentSettings;
 
         public Broker(ILogger<Broker> logger,
             ApplicationDbContext context,
@@ -36,7 +38,8 @@ namespace viafront3.Services
             IOptions<ApiSettings> apiSettings,
             UserManager<ApplicationUser> userManager,
             IOptions<ExchangeSettings> settings,
-            ITripwire tripwire)
+            ITripwire tripwire,
+            IOptions<FiatPaymentProcessorSettings> fiatPaymentSettings)
         {
             _logger = logger;
             _context = context;
@@ -45,9 +48,10 @@ namespace viafront3.Services
             _userManager = userManager;
             _settings = settings.Value;
             _tripwire = tripwire;
+            _fiatPaymentSettings = fiatPaymentSettings.Value;
         }
 
-        bool DepositAndCreateTrade(ApplicationUser brokerUser, IWallet wallet, BrokerOrder order, WalletTx tx)
+        bool DepositAndCreateTrade(ApplicationUser brokerUser, BrokerOrder order)
         {
             // check broker exchange id
             if (brokerUser.Exchange == null)
@@ -59,10 +63,10 @@ namespace viafront3.Services
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             via.BalanceQuery(1);
             // register new deposit with the exchange backend
-            var amount = wallet.AmountToString(tx.AmountOutputs());
+            var amount = order.AmountReceive.ToString();
             var source = new Dictionary<string, object>();
-            source["txid"] = tx.ChainTx.TxId;
-            var businessId = tx.Id;
+            source["BrokerOrderToken"] = order.Token;
+            var businessId = order.Id;
             try
             {
                 via.BalanceUpdateQuery(brokerUser.Exchange.Id, order.AssetSend, "deposit", businessId, amount, source);
@@ -151,7 +155,7 @@ namespace viafront3.Services
                                 _context.BrokerOrders.Update(order);
                                 ackTxs.Add(tx);
                                 _logger.LogInformation($"Payment confirmed for order {order.Token}, {tx}");
-                                DepositAndCreateTrade(brokerUser, wallet, order, tx);
+                                DepositAndCreateTrade(brokerUser, order);
                             }
                         }
                     }
@@ -161,10 +165,72 @@ namespace viafront3.Services
             wallet.Save();
         }
 
+        viafront3.Models.ApiViewModels.ApiFiatPaymentRequest GetFiatPaymentRequest(FiatPaymentProcessorSettings fiatPaymentSettings, string token)
+        {
+            var client = new RestClient(fiatPaymentSettings.PaymentServerUrl);
+            var request = new RestRequest("status", Method.POST);
+            request.RequestFormat = DataFormat.Json;
+            request.AddJsonBody(new { token = token });
+            var response = client.Execute(request);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
+                if (json.ContainsKey("status"))
+                {
+                    var status = json["status"];
+                    var asset = json["asset"];
+                    var amount = json["amount"];
+                    // return to user
+                    var model = new viafront3.Models.ApiViewModels.ApiFiatPaymentRequest
+                    {
+                        Token = token,
+                        ServiceUrl = $"{fiatPaymentSettings.PaymentServerUrl}/request/{token}",
+                        Status = status,
+                        Asset = asset,
+                        Amount = decimal.Parse(amount),
+                    };
+                    return model;
+                }
+            }
+            return null;
+        }
+
         void ProcessOrderFiat(BrokerOrder order)
         {
-            //TODO: not yet implemented
-            _logger.LogError("receiving fiat not yet implemented");
+            if (!_fiatPaymentSettings.PaymentProcessorEnabled)
+            {
+                _logger.LogError("receiving fiat not enabled");
+                return;
+            }
+            if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(order.AssetSend))
+            {
+                _logger.LogError($"receiving fiat currency '${order.AssetSend}' not supported");
+                return;
+            }
+            // get broker user
+            var brokerUser = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
+            if (brokerUser == null)
+            {
+                _logger.LogError("Failed to find broker user");
+                return;
+            }
+            var paymentReq = GetFiatPaymentRequest(_fiatPaymentSettings, order.Token);
+            if (paymentReq == null)
+            {
+                _logger.LogError("Failed to get fiat payment request");
+                return;
+            }
+            if (paymentReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
+            {
+                // bingo!
+                if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
+                {
+                    order.Status = BrokerOrderStatus.Confirmed.ToString();
+                    _context.BrokerOrders.Update(order);
+                    _logger.LogInformation($"Payment confirmed for order {order.Token}");
+                    DepositAndCreateTrade(brokerUser, order);
+                }
+            }
         }
 
         public void ProcessOrders()

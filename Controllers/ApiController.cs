@@ -32,6 +32,7 @@ namespace viafront3.Controllers
         private readonly ApiSettings _apiSettings;
         private readonly ITripwire _tripwire;
         private readonly IUserLocks _userLocks;
+        private readonly FiatPaymentProcessorSettings _fiatPaymentSettings;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -45,7 +46,8 @@ namespace viafront3.Controllers
             IOptions<KycSettings> kycSettings,
             IWalletProvider walletProvider,
             ITripwire tripwire,
-            IUserLocks userLocks) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IUserLocks userLocks,
+            IOptions<FiatPaymentProcessorSettings> fiatPaymentSettings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
@@ -53,6 +55,7 @@ namespace viafront3.Controllers
             _apiSettings = apiSettings.Value;
             _tripwire = tripwire;
             _userLocks = userLocks;
+            _fiatPaymentSettings = fiatPaymentSettings.Value;
         }
 
         [HttpPost]
@@ -987,6 +990,7 @@ namespace viafront3.Controllers
             string invoiceId = null;
             string paymentAddress = null;
             string paymentUrl = null;
+            string token = Utils.CreateToken();
             if (_walletProvider.IsChain(quote.AssetSend))
             {
                 var wallet = _walletProvider.GetChain(quote.AssetSend);
@@ -1007,8 +1011,23 @@ namespace viafront3.Controllers
             }
             else // fiat
             {
-                invoiceId = Utils.CreateToken();
-                paymentUrl = "not implemented";
+                if (!_fiatPaymentSettings.PaymentProcessorEnabled)
+                {
+                    _logger.LogError("fiat payments not enabled");
+                    return BadRequest();
+                }
+                if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(quote.AssetSend))
+                {
+                    _logger.LogError($"fiat payments of '${quote.AssetSend}' not enabled");
+                    return BadRequest();
+                }
+                var fiatReq = CreateFiatPaymentRequest(_fiatPaymentSettings, token, quote.AssetSend, quote.AmountSend);
+                if (fiatReq == null)
+                {
+                    _logger.LogError("fiat payment request creation failed");
+                    return BadRequest();
+                }
+                paymentUrl = fiatReq.ServiceUrl;
             }
             var order = new BrokerOrder
             {
@@ -1023,7 +1042,7 @@ namespace viafront3.Controllers
                 Market = req.Market,
                 Side = side,
                 Price = avgPrice,
-                Token = Utils.CreateToken(),
+                Token = token,
                 InvoiceId = invoiceId,
                 PaymentAddress = paymentAddress,
                 PaymentUrl = paymentUrl,

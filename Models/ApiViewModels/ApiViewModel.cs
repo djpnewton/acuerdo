@@ -50,6 +50,11 @@ namespace viafront3.Models.ApiViewModels
         public String WithdrawalTotal { get; set; }
     }
 
+    public enum ApiRequestStatus
+    {
+        Completed,
+    }
+
     public class ApiAccountKycRequest
     {
         public String Token { get; set; }
@@ -60,6 +65,15 @@ namespace viafront3.Models.ApiViewModels
     public class ApiAccountKycRequestStatus : ApiAuth
     {
         public String Token { get; set; }
+    }
+
+    public class ApiFiatPaymentRequest
+    {
+        public String Token { get; set; }
+        public String ServiceUrl { get; set; }
+        public String Status { get; set; }
+        public String Asset { get; set; }
+        public Decimal Amount { get; set; }
     }
 
     public class ApiMarketList
