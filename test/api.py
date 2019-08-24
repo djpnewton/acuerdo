@@ -131,6 +131,11 @@ def construct_parser():
     parser_order_executed_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_order_executed_status.add_argument("id", metavar="ID", type=int, help="Order ID")
 
+    parser_order_status = subparsers.add_parser("order_status", help="View order status (pending or executed)")
+    parser_order_status.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_order_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
+    parser_order_status.add_argument("market", metavar="MARKET", type=str, help="The market trade in")
+    parser_order_status.add_argument("id", metavar="ID", type=int, help="Order ID")
 
     parser_order_cancel = subparsers.add_parser("order_cancel", help="Cancel order")
     parser_order_cancel.add_argument("key", metavar="KEY", type=str, help="the api key")
@@ -374,6 +379,13 @@ def order_executed_status(args):
     check_request_status(r)
     print(r.text)
 
+def order_status(args):
+    print(":: calling order status..")
+    params = {"market": args.market, "id": args.id}
+    r = req("OrderStatus", params, args.key, args.secret)
+    check_request_status(r)
+    print(r.text)
+
 def order_cancel(args):
     print(":: calling order cancel..")
     params = {"market": args.market, "id": args.id}
@@ -478,6 +490,8 @@ if __name__ == "__main__":
         function = order_pending_status
     elif args.command == "order_executed_status":
         function = order_executed_status
+    elif args.command == "order_status":
+        function = order_status
     elif args.command == "order_cancel":
         function = order_cancel
     elif args.command == "trades_executed":

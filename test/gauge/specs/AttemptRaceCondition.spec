@@ -10,13 +10,15 @@ We create two users and fund their accounts.. User A creates a large limit order
 
 ## Fund user A and create limit order
 
+* DEV: Set maker ("0") and taker ("0") fee rates
 * DEV: Clear all orders on "WAVESNZD"
-* DEV: Fund user "a@example.com" give "1000" "NZD"
+* DEV: Fund user "a@example.com" set "NZD" to "1000"
 * DEV: Limit buy for "a@example.com" in market "WAVESNZD", "200" units at price "5"
 
 
 ## Attempt to exploit race conditions using web interface
 
+* Add driver
 * Add driver
 * Navigate to "/"
 * Login with "b@example.com" and "Not_prod_123!"

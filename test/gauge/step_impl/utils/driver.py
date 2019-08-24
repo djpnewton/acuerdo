@@ -6,8 +6,9 @@ class Driver(object):
 
     @before_suite
     def init(*params):
-        driver = webdriver.Firefox()
-        Driver.drivers.append(driver)
+        #driver = webdriver.Firefox()
+        #Driver.drivers.append(driver)
+        pass
 
     @after_suite
     def close(*params):

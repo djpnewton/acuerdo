@@ -43,18 +43,28 @@ namespace viafront3.Models.DevApiViewModels
     public class DevApiUserFundCheck : DevApiUserFundGive
     { }
 
-    public class DevApiUserLimitOrder
+    public class DevApiUserMarketOrder
     {
         public string Email { get; set; }
         public string Market { get; set; }
         public string Side { get; set; }
         public decimal Amount { get; set; }
+    }
+
+    public class DevApiUserLimitOrder : DevApiUserMarketOrder
+    {
         public decimal Price { get; set; }
     }
 
     public class DevApiClearAllOrders
     {
         public string Market { get; set; }
+    }
+
+    public class DevApiFeeRates
+    {
+        public string Maker { get; set; }
+        public string Taker { get; set; }
     }
 
     public class DevApiResetWithdrawalLimit

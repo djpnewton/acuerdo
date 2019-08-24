@@ -9,6 +9,7 @@ We log in and interate through all the pages. Any forms are checked to make sure
 
 ## Login
 
+* Add driver
 * Navigate to "/"
 * Login with "test@example.com" and "Not_prod_123!"
 

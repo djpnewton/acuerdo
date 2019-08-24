@@ -190,8 +190,31 @@ namespace viafront3.Controllers
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var order = via.OrderLimitQuery(user.Exchange.Id, req.Market, side, req.Amount.ToString(), req.Price.ToString(), "0", "0", "DEVAPI");
+            var order = via.OrderLimitQuery(user.Exchange.Id, req.Market, side, req.Amount.ToString(), req.Price.ToString(), _settings.TakerFeeRate, _settings.MakerFeeRate, "DEVAPI");
             return order;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<Order>> UserMarketOrder([FromBody] DevApiUserLimitOrder req)
+        {
+            var user = await _userManager.FindByEmailAsync(req.Email);
+            if (user == null)
+                return BadRequest();
+
+            var side = OrderSide.Any;
+            if (req.Side == "buy")
+                side = OrderSide.Bid;
+            else if (req.Side == "sell")
+                side = OrderSide.Ask;
+            else
+                return BadRequest();
+
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            if (!_settings.MarketOrderBidAmountMoney)
+                return via.OrderMarketQuery(user.Exchange.Id, req.Market, side, req.Amount.ToString(), _settings.TakerFeeRate, "DEVAPI", _settings.MarketOrderBidAmountMoney);
+            else
+                return via.OrderMarketQuery(user.Exchange.Id, req.Market, side, req.Amount.ToString(), _settings.TakerFeeRate, "DEVAPI");
         }
 
         [HttpPost]
@@ -215,6 +238,14 @@ namespace viafront3.Controllers
                 if (count >= 2)
                     break;
             }
+            return req;
+        }
+
+        [HttpPost]
+        public ActionResult<DevApiFeeRates> FeeRatesSet([FromBody] DevApiFeeRates req)
+        {
+            _settings.MakerFeeRate = req.Maker;
+            _settings.TakerFeeRate = req.Taker;
             return req;
         }
 

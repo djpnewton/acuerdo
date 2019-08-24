@@ -53,15 +53,39 @@ def user_fund_get(email, asset):
 def user_fund_check(asset, email, amount):
     r = req("/api/dev/UserFundCheck", {"email": email, "asset": asset, "amount": amount})
     r.raise_for_status()
-    
+
 @step("DEV: Limit buy for <email> in market <market>, <amount> units at price <price>")
 def user_limit_buy_order(email, market, amount, price):
     r = req("/api/dev/UserLimitOrder", {"email": email, "market": market, "side": "buy", "amount": amount, "price": price})
     r.raise_for_status()
+    return r.json()
+
+@step("DEV: Limit sell for <email> in market <market>, <amount> units at price <price>")
+def user_limit_sell_order(email, market, amount, price):
+    r = req("/api/dev/UserLimitOrder", {"email": email, "market": market, "side": "sell", "amount": amount, "price": price})
+    r.raise_for_status()
+    return r.json()
+
+@step("DEV: Market buy for <email> in market <market>, <amount> units")
+def user_market_buy_order(email, market, amount):
+    r = req("/api/dev/UserMarketOrder", {"email": email, "market": market, "side": "buy", "amount": amount})
+    r.raise_for_status()
+    return r.json()
+
+@step("DEV: Market sell for <email> in market <market>, <amount> units")
+def user_market_sell_order(email, market, amount):
+    r = req("/api/dev/UserMarketOrder", {"email": email, "market": market, "side": "sell", "amount": amount})
+    r.raise_for_status()
+    return r.json()
 
 @step("DEV: Clear all orders on <market>")
 def clear_all_orders(market):
     r = req("/api/dev/ClearAllOrders", {"market": market})
+    r.raise_for_status() 
+
+@step("DEV: Set maker (<maker>) and taker (<taker>) fee rates")
+def taker_fee_set(maker, taker):
+    r = req("/api/dev/FeeRatesSet", {"maker": maker, "taker": taker})
     r.raise_for_status() 
 
 @step("DEV: Reset tripwire")

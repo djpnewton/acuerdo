@@ -7,6 +7,7 @@ Tags: race2, racecondition
 
 ## Attempt to exploit race conditions using web interface
 
+* Add driver
 * Navigate to "/"
 * Login with "b@example.com" and "Not_prod_123!"
 * Withdraw "1" of "WAVES" (to "3MwR2FzFtbHeds3NzvkbiaYMVNhbtqcfRPU") "10" times (while funding "b@example.com")

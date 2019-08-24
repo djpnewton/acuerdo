@@ -142,7 +142,7 @@ namespace viafront3.Controllers
                     if (error2 != null)
                         return BadRequest(error2);
                     Order order;
-                    if (_settings.MarketOrderBidAmountMoney)
+                    if (!_settings.MarketOrderBidAmountMoney)
                         order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront", _settings.MarketOrderBidAmountMoney);
                     else
                         order = via.OrderMarketQuery(user.Exchange.Id, model.Market, side, model.Order.Amount, _settings.TakerFeeRate, "viafront");
