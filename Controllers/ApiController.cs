@@ -234,8 +234,7 @@ namespace viafront3.Controllers
         [HttpPost]
         public IActionResult ApiKeyDestroy([FromBody] ApiAuth req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             _context.ApiKeys.Remove(apikey);
@@ -246,8 +245,7 @@ namespace viafront3.Controllers
         [HttpPost]
         public IActionResult ApiKeyValidate([FromBody] ApiAuth req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             return Ok();
@@ -256,8 +254,7 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiAccountBalance> AccountBalance([FromBody] ApiAuth req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -280,8 +277,7 @@ namespace viafront3.Controllers
         [HttpPost]
         public async Task<ActionResult<ApiAccountKyc>> AccountKyc([FromBody] ApiAuth req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
@@ -550,8 +546,9 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrdersResponse> OrdersPending([FromBody] ApiOrders req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid market");
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -576,8 +573,9 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrdersResponse> OrdersExecuted([FromBody] ApiOrders req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid market");
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -602,8 +600,9 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderPendingStatus([FromBody] ApiOrderPendingStatus req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid market");
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -629,8 +628,7 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderExecutedStatus([FromBody] ApiOrderExecutedStatus req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -656,8 +654,9 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderCancel([FromBody] ApiOrderCancel req) 
         {
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid market");
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -708,11 +707,10 @@ namespace viafront3.Controllers
         public ActionResult<ApiTradesResponse> TradesExecuted([FromBody] ApiTrades req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid request");
+                return BadRequest("invalid market");
             var marketSettings = _settings.Markets[req.Market];
 
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
@@ -880,15 +878,13 @@ namespace viafront3.Controllers
                 return BadRequest();
             }
             // validate market
-            OrderSide side;
-            if (!ValidateBrokerMarket(req.Market, req.Side, out side))
+            if (!ValidateBrokerMarket(req.Market, req.Side, out OrderSide side))
             {
                 _logger.LogError($"Failed to validate broker market {req.Market} (side: {req.Side})");
                 return BadRequest();
             }
             // validate auth
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
             {
                 _logger.LogError($"Failed to validate apikey: {req.Key}");
@@ -901,8 +897,7 @@ namespace viafront3.Controllers
                 return BadRequest();
             }
             // get quote
-            decimal avgPrice;
-            var model = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
+            var model = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
             if (model == null)
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
@@ -956,19 +951,16 @@ namespace viafront3.Controllers
                 return BadRequest();
             }
             // validate market
-            OrderSide side;
-            if (!ValidateBrokerMarket(req.Market, req.Side, out side))
+            if (!ValidateBrokerMarket(req.Market, req.Side, out OrderSide side))
                 return BadRequest("invalid market");
             if (!ValidateRecipient(req.Market, side, req.Recipient))
                 return BadRequest("invalid recipient");
             // validate auth
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             // get quote
-            decimal avgPrice;
-            var quote = _brokerQuote(req.Market, req.Amount, side, out error, out avgPrice);
+            var quote = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
             if (quote == null)
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
@@ -1012,8 +1004,7 @@ namespace viafront3.Controllers
                 return BadRequest();
             }
             // validate auth
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             // get order
@@ -1118,8 +1109,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiBrokerOrder> BrokerStatus([FromBody] ApiBrokerStatus req)
         {
             // validate auth
-            string error;
-            var apikey = AuthKey(req.Key, req.Nonce, out error);
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             // get order
