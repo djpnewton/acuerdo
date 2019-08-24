@@ -670,7 +670,7 @@ namespace viafront3.Controllers
                 if (order != null && order.user == xch.Id)
                     return FormatOrder(order);
             }
-            catch (ViaJsonException ex)
+            catch (ViaJsonException)
             {}
             try
             {
@@ -678,7 +678,7 @@ namespace viafront3.Controllers
                 if (order != null && order.user == xch.Id && order.market == req.Market)
                     return FormatOrder(order);
             }
-            catch (ViaJsonException ex)
+            catch (ViaJsonException)
             {}
             return BadRequest("invalid parameter");
         }
@@ -817,6 +817,16 @@ namespace viafront3.Controllers
             error = null;
             avgPrice = 0;
             var marketSettings = _settings.Markets[market];
+            // validate minimum order
+            if (_apiSettings.Broker.MinimumOrderAmount.ContainsKey(market))
+            {
+                var minAmount = _apiSettings.Broker.MinimumOrderAmount[market];
+                if (decimal.Parse(amount) < minAmount)
+                {
+                    error = "order amount too low";
+                    return null;
+                }
+            }
             try
             {
                 // get orderbook
@@ -913,7 +923,7 @@ namespace viafront3.Controllers
             if (!ValidateBrokerMarket(req.Market, req.Side, out OrderSide side))
             {
                 _logger.LogError($"Failed to validate broker market {req.Market} (side: {req.Side})");
-                return BadRequest();
+                return BadRequest("invalid market");
             }
             // validate auth
             var apikey = AuthKey(req.Key, req.Nonce, out string error);

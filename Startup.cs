@@ -106,6 +106,7 @@ namespace viafront3
         public int TimeLimitGracePeriod { get; set; }
         public List<string> SellMarkets { get; set; }
         public List<string> BuyMarkets { get; set; }
+        public Dictionary<string, decimal> MinimumOrderAmount {get; set;}
         public string BrokerTag { get; set; }
     }
 
