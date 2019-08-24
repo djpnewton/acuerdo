@@ -652,6 +652,38 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
+        public ActionResult<ApiOrder> OrderStatus([FromBody] ApiOrderPendingStatus req)
+        {
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest("invalid market");
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
+            if (apikey == null)
+                return BadRequest(error);
+            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
+            if (xch == null)
+                return BadRequest();
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            try
+            {
+                var order = via.OrderPendingDetails(req.Market, req.Id);
+                if (order != null && order.user == xch.Id)
+                    return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {}
+            try
+            {
+                var order = via.OrderCompletedDetails(req.Id);
+                if (order != null && order.user == xch.Id && order.market == req.Market)
+                    return FormatOrder(order);
+            }
+            catch (ViaJsonException ex)
+            {}
+            return BadRequest("invalid parameter");
+        }
+
+        [HttpPost]
         public ActionResult<ApiOrder> OrderCancel([FromBody] ApiOrderCancel req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
