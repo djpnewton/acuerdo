@@ -354,6 +354,8 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiMarketStatus> MarketStatus([FromBody] ApiMarketPeriod market) 
         {
+            if (!_settings.Markets.ContainsKey(market.Market))
+                return BadRequest("invalid market");
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -380,7 +382,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiMarketDetail> MarketDetail([FromBody] ApiMarket market) 
         {
             if (!_settings.Markets.ContainsKey(market.Market))
-                return BadRequest("invalid request");
+                return BadRequest("invalid market");
             var marketSettings = _settings.Markets[market.Market];
             var model = new ApiMarketDetail
             {
@@ -398,6 +400,8 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiMarketDepthResponse> MarketDepth([FromBody] ApiMarketDepth market) 
         {
+            if (!_settings.Markets.ContainsKey(market.Market))
+                return BadRequest("invalid market");
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -419,6 +423,8 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiMarketHistoryResponse> MarketHistory([FromBody] ApiMarketHistory market) 
         {
+            if (!_settings.Markets.ContainsKey(market.Market))
+                return BadRequest("invalid market");
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
