@@ -84,7 +84,7 @@ def clear_all_orders(market):
     r.raise_for_status() 
 
 @step("DEV: Set maker (<maker>) and taker (<taker>) fee rates")
-def taker_fee_set(maker, taker):
+def fee_rates_set(maker, taker):
     r = req("/api/dev/FeeRatesSet", {"maker": maker, "taker": taker})
     r.raise_for_status() 
 
@@ -96,7 +96,64 @@ def reset_tripwire():
 @step("DEV: Reset withdrawal limit for <email>")
 def reset_withdrawal_limit(email):
     r = req("/api/dev/ResetWithdrawalLimit", {"email": email})
-    r.raise_for_status() 
+    r.raise_for_status()
+
+@step("DEV: Perform market orders on <market> market with users <user_a> and <user_b> (asset <amount_asset> and priced in <price_asset>")
+def perform_market_orders(market, user_a, user_b, amount_asset, price_asset):
+    from decimal import Decimal, getcontext
+    getcontext().prec = 10
+
+    for fee_rate in (0, 0.02, 0.05, 0.1):
+        fee_rate = Decimal(fee_rate)
+        fee_rates_set(str(fee_rate), str(fee_rate))
+        amount_units = Decimal(10)
+        price_units = Decimal(100)
+
+        ## market buy ##
+        clear_all_orders(market)
+        # give user A 10 of amount asset
+        user_fund_set(user_a, amount_asset, str(amount_units))
+        user_fund_set(user_a, price_asset, 0)
+        # give user B 100 of price asset
+        user_fund_set(user_b, amount_asset, 0)
+        user_fund_set(user_b, price_asset, str(price_units))
+        # user A limit sells (10 asset units for 100 total price units)
+        user_limit_sell_order(user_a, market, 1, 2)
+        user_limit_sell_order(user_a, market, 2, 7)
+        user_limit_sell_order(user_a, market, 7, 12)
+        # user B market buy
+        user_market_buy_order(user_b, market, str(amount_units))
+        # check user A funds
+        user_fund_check(amount_asset, user_a, 0)
+        user_a_price_units = price_units * (Decimal(1) - fee_rate)
+        user_fund_check(price_asset, user_a, str(user_a_price_units))
+        # check user B funds
+        user_b_amount_units = amount_units * (Decimal(1) - fee_rate)
+        user_fund_check(amount_asset, user_b, str(user_b_amount_units))
+        user_fund_check(price_asset, user_b, 0)
+
+        ## market sell ##
+        clear_all_orders(market)
+        # give user A 100 of price asset
+        user_fund_set(user_a, amount_asset, 0)
+        user_fund_set(user_a, price_asset, str(price_units))
+        # give user B 10 of amount asset
+        user_fund_set(user_b, amount_asset, str(amount_units))
+        user_fund_set(user_b, price_asset, 0)
+        # user A limit buys (10 asset units for 100 total price units)
+        user_limit_buy_order(user_a, market, 1, 2)
+        user_limit_buy_order(user_a, market, 2, 7)
+        user_limit_buy_order(user_a, market, 7, 12)
+        # user B market sell
+        user_market_sell_order(user_b, market, str(amount_units))
+        # check user A funds
+        user_a_amount_units = amount_units * (Decimal(1) - fee_rate)
+        user_fund_check(amount_asset, user_a, str(user_a_amount_units))
+        user_fund_check(price_asset, user_a, 0)
+        # check user B funds
+        user_fund_check(amount_asset, user_b, 0)
+        user_b_price_units = price_units * (Decimal(1) - fee_rate)
+        user_fund_check(price_asset, user_b, str(user_b_price_units))
 
 @step("Navigate to <endpoint>")
 def navigate_to(endpoint):

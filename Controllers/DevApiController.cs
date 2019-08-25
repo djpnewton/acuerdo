@@ -123,7 +123,7 @@ namespace viafront3.Controllers
 
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            via.BalanceUpdateQuery(user.Exchange.Id, req.Asset, "DEVAPI", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), req.Amount.ToString());
+            via.BalanceUpdateQuery(user.Exchange.Id, req.Asset, "DEVAPI", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), req.Amount.ToString());
             return req;
         }
 
@@ -140,7 +140,7 @@ namespace viafront3.Controllers
             var available = decimal.Parse(balance.Available);
             var change = req.Amount - available;
             if (change != 0)
-                via.BalanceUpdateQuery(user.Exchange.Id, req.Asset, "DEVAPI", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), change.ToString());
+                via.BalanceUpdateQuery(user.Exchange.Id, req.Asset, "DEVAPI", DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), change.ToString());
             return req;
         }
 

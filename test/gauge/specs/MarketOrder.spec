@@ -40,3 +40,7 @@ We create user A and user B, we select a market, clear all orders and then const
 * DEV: Check "NZD" funds of user "a@example.com" are "990.5"
 * DEV: Check "WAVES" funds of user "b@example.com" are "198.1"
 * DEV: Check "NZD" funds of user "b@example.com" are "0"
+
+## Market orders between user A and B
+
+* DEV: Perform market orders on "WAVESNZD" market with users "a@example.com" and "b@example.com" (asset "WAVES" and priced in "NZD"
