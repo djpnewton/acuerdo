@@ -63,7 +63,7 @@ namespace viafront3.Services
             var via = new ViaJsonRpc(_settings.AccessHttpUrl); //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             via.BalanceQuery(1);
             // register new deposit with the exchange backend
-            var amount = order.AmountReceive.ToString();
+            var amount = order.AmountSend.ToString();
             var source = new Dictionary<string, object>();
             source["BrokerOrderToken"] = order.Token;
             var businessId = order.Id;
