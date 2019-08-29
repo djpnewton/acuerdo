@@ -24,7 +24,7 @@
                     {
                         <a href="@Model.KycRequestUrl">View Kyc Upgrade Request @(Model.KycRequestStatus != null ? $"({Model.KycRequestStatus})" : "")</a>
                     }
-                    else
+                    else if (Model.KycSettings.KycServerEnabled)
                     {
                         <form asp-action="KycUpgrade" method="post">
                             @Html.AntiForgeryToken()

@@ -304,6 +304,11 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiAccountKycRequest> AccountKycUpgrade([FromBody] ApiAuth req) 
         {
+            if (!_kycSettings.KycServerEnabled)
+            {
+                _logger.LogError("kyc server not enabled");
+                return BadRequest();
+            }
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
@@ -317,6 +322,11 @@ namespace viafront3.Controllers
         [HttpPost]
         public async Task<ActionResult<ApiAccountKycRequest>> AccountKycUpgradeStatus([FromBody] ApiAccountKycRequestStatus req) 
         {
+            if (!_kycSettings.KycServerEnabled)
+            {
+                _logger.LogError("kyc server not enabled");
+                return BadRequest();
+            }
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
@@ -1007,6 +1017,12 @@ namespace viafront3.Controllers
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
                 return BadRequest(error);
+            }
+            // cancel if asset the user sends is fiat and fiat payments are not enabled
+            if (_walletProvider.IsFiat(quote.AssetSend) && !_fiatPaymentSettings.PaymentProcessorEnabled)
+            {
+                _logger.LogError("fiat payments not enabled");
+                return BadRequest();
             }
             // create order
             string token = Utils.CreateToken();

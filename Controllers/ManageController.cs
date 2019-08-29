@@ -615,6 +615,11 @@ namespace viafront3.Controllers
         [HttpPost]
         public async Task<IActionResult> KycUpgrade()
         {
+            if (!_kycSettings.KycServerEnabled)
+            {
+                _logger.LogError("kyc server not enabled");
+                return NotFound();
+            }
             var user = await GetUser(required: true);
 
             var _model = CreateKycRequest(_kycSettings, user.Id);

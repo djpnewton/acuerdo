@@ -6,6 +6,8 @@
 
   vars:
     dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development;' if DEPLOY_TYPE == 'test' else '' }}"
+    kyc_enabled: "{{ 'true' if kyc_url else 'false' }}"
+    fiat_payment_enabled: "{{ 'true' if fiat_payment_url else 'false' }}"
   tasks:
     - name: ansible group
       group: 
@@ -141,6 +143,12 @@
         regexp: '("SmtpHost": )"10\.50\.1\.100"'
         replace: '\1"localhost"'
 
+    - name: set kyc enabled
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("KycServerEnabled": )false'
+        replace: '\1{{kyc_enabled}}'
+
     - name: set kyc url
       replace:
         path: /opt/viafront/appsettings.json
@@ -158,6 +166,30 @@
         path: /opt/viafront/appsettings.json
         regexp: '("KycServerApiSecret": )"not_production"'
         replace: '\1"{{kyc_api_secret}}"'
+
+    - name: set fiat payment enabled
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("PaymentProcessorEnabled": )false'
+        replace: '\1{{fiat_payment_enabled}}'
+
+    - name: set fiat payment url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("PaymentServerUrl": )"http://localhost"'
+        replace: '\1"{{fiat_payment_url}}"'
+
+    - name: set fiat payment api key
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("PaymentServerApiKey": )"key"'
+        replace: '\1"{{fiat_payment_api_key}}"'
+
+    - name: set fiat payment api secret
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("PaymentServerSecret": )"not_production"'
+        replace: '\1"{{fiat_payment_api_secret}}"'
 
     - name: set alert email
       replace:

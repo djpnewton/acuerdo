@@ -4,6 +4,7 @@ set -e
 
 . influxdb.sh
 . ssh_users.sh
+. service_details.sh
 
 DEPLOY_TEST=test
 DEPLOY_PRODUCTION=production
@@ -110,14 +111,6 @@ MYSQL_PASS_FILE=creds/$DEPLOY_TYPE/mysql_pass
 MYSQL_USER=$(cat $MYSQL_USER_FILE)
 MYSQL_PASS=$(cat $MYSQL_PASS_FILE)
 
-# read kyc server details from local file
-KYC_URL_FILE=creds/$DEPLOY_TYPE/kyc_url
-KYC_API_KEY_FILE=creds/$DEPLOY_TYPE/kyc_api_key
-KYC_API_SECRET_FILE=creds/$DEPLOY_TYPE/kyc_api_secret
-KYC_URL=$(cat $KYC_URL_FILE)
-KYC_API_KEY=$(cat $KYC_API_KEY_FILE)
-KYC_API_SECRET=$(cat $KYC_API_SECRET_FILE)
-
 # read influxdb details 
 INFLUXDB_DIR=creds/$DEPLOY_TYPE
 discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
@@ -125,6 +118,14 @@ discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
 # read ssh users
 SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
 discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
+
+# read kyc server details from local file
+KYC_DIR=creds/$DEPLOY_TYPE
+discover_service $KYC_DIR kyc KYC_URL KYC_API_KEY KYC_API_SECRET
+
+# read fiat payment server details from local file
+FIAT_PAYMENT_DIR=creds/$DEPLOY_TYPE
+discover_service $FIAT_PAYMENT_DIR fiat_payment FIAT_PAYMENT_URL FIAT_PAYMENT_API_KEY FIAT_PAYMENT_API_SECRET
 
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
@@ -148,6 +149,7 @@ echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
 echo "   - SSH_USERS:       $SSH_USERS"
 echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
 echo "   - KYC_URL:         $KYC_URL"
+echo "   - FIAT_PAYMENT_URL:$FIAT_PAYMENT_URL"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
 # ask user to continue
@@ -164,8 +166,11 @@ then
     SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"
     echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+        --extra-vars "mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS" \
         --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \
+        --extra-vars "kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
+        --extra-vars "fiat_payment_url=$FIAT_PAYMENT_URL fiat_payment_api_key=$FIAT_PAYMENT_API_KEY fiat_payment_api_secret=$FIAT_PAYMENT_API_SECRET" \
         deploy.yml
 fi
