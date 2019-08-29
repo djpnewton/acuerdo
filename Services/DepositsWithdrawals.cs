@@ -44,6 +44,7 @@ namespace viafront3.Services
                     var settings = scope.ServiceProvider.GetRequiredService<IOptions<ExchangeSettings>>().Value;
                     var walletProvider = scope.ServiceProvider.GetRequiredService<IWalletProvider>();
                     var walletSettings = scope.ServiceProvider.GetRequiredService<IOptions<WalletSettings>>().Value;
+                    var apiSettings = scope.ServiceProvider.GetRequiredService<IOptions<ApiSettings>>().Value;
                     // get the user manager & email sender
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -64,6 +65,10 @@ namespace viafront3.Services
                         // update for each user
                         foreach (var user in userManager.Users)
                         {
+                            // skip broker user because his chain deposits are handled in the Broker class
+                            if (user.UserName == apiSettings.Broker.BrokerTag)
+                                continue;
+
                             var addrs = wallet.GetAddresses(user.Id);
                             if (addrs != null && addrs.Any())
                             {

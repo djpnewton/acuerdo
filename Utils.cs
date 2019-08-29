@@ -311,6 +311,7 @@ namespace viafront3
         {
             // get exchange settings
             var settings = serviceProvider.GetRequiredService<IOptions<ExchangeSettings>>().Value;
+            var apiSettings = serviceProvider.GetRequiredService<IOptions<ApiSettings>>().Value;
 
             // get wallet
             asset = asset.ToUpper();
@@ -332,6 +333,10 @@ namespace viafront3
             // update for each user
             foreach (var user in userManager.Users)
             {
+                // skip broker user because his chain deposits are handled in the Broker class
+                if (user.UserName == apiSettings.Broker.BrokerTag)
+                    continue;
+
                 var addrs = wallet.GetAddresses(user.Id);
                 if (addrs != null && addrs.Any())
                 {
