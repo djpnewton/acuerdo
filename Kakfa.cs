@@ -102,7 +102,7 @@ namespace viafront3
             var stock = (string)parts["stock"];
             var money = (string)parts["money"];
             var order = JsonConvert.DeserializeObject<Order>(((Newtonsoft.Json.Linq.JObject)parts["order"]).ToString());
-            Console.WriteLine($":: order event :: {evt} - {stock}/{money} (user id: {order.user}\n\tid: {order.id}, type: {order.type}, side: {order.side}, amount: {order.amount}, price: {order.price}, left: {order.left}");
+            Console.WriteLine($":: order event :: {evt} - {stock}/{money} (user id: {order.user}, id: {order.id}, type: {order.type}, side: {order.side}, amount: {order.amount}, price: {order.price}, left: {order.left}");
             // find user who owns the order
             var user = ApplicationUser.GetUserFromExchangeId(context, userManager, order.user);
             if (user == null)
@@ -111,29 +111,39 @@ namespace viafront3
                 return;
             }
             // send email to user
-            switch (evt)
+            if (user.Email != null)
             {
-                case OrderEvent.ORDER_EVENT_PUT:
-                    if (order.type == OrderType.Limit)
-                        emailSender.SendEmailLimitOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money);
-                    else
-                        emailSender.SendEmailMarketOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock);
-                    break;
-                case OrderEvent.ORDER_EVENT_UPDATE:
-                    if (order.type == OrderType.Limit)
-                        emailSender.SendEmailLimitOrderUpdatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left);
-                    else
-                        emailSender.SendEmailMarketOrderUpdatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left);
-                    break;
-                case OrderEvent.ORDER_EVENT_FINISH:
-                    var amountInterval = decimal.Parse(settings.Markets[order.market].AmountInterval);
-                    if (order.type == OrderType.Limit)
-                        emailSender.SendEmailLimitOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left, amountInterval);
-                    else
-                        emailSender.SendEmailMarketOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left, amountInterval);
-                    break;
+                try
+                {
+                    switch (evt)
+                    {
+                        case OrderEvent.ORDER_EVENT_PUT:
+                            if (order.type == OrderType.Limit)
+                                emailSender.SendEmailLimitOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money);
+                            else
+                                emailSender.SendEmailMarketOrderCreatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock);
+                            break;
+                        case OrderEvent.ORDER_EVENT_UPDATE:
+                            if (order.type == OrderType.Limit)
+                                emailSender.SendEmailLimitOrderUpdatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left);
+                            else
+                                emailSender.SendEmailMarketOrderUpdatedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left);
+                            break;
+                        case OrderEvent.ORDER_EVENT_FINISH:
+                            var amountInterval = decimal.Parse(settings.Markets[order.market].AmountInterval);
+                            if (order.type == OrderType.Limit)
+                                emailSender.SendEmailLimitOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.price, money, order.left, amountInterval);
+                            else
+                                emailSender.SendEmailMarketOrderFinishedAsync(user.Email, order.market, order.side.ToString(), order.amount, stock, order.left, amountInterval);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($":: ERROR sending email - '{ex.Message}'");
+                }
+                Console.WriteLine($":: email sent to {user.Email}");
             }
-            Console.WriteLine($":: email sent to {user.Email}");
         } 
 
         static void ProcessDeal(ApplicationDbContext context, UserManager<ApplicationUser> userManager, IEmailSender emailSender, string json)
@@ -154,7 +164,7 @@ namespace viafront3
             var stock = (string)parts[12];
             var money = (string)parts[13];
 
-            Console.WriteLine($":: deal :: {stock}/{money} (ask user id: {ask_user_id}, bid user id: {bid_user_id}\n\tid: {id}, amount: {amount}, price: {price}");
+            Console.WriteLine($":: deal :: {stock}/{money} (ask user id: {ask_user_id}, bid user id: {bid_user_id}, id: {id}, amount: {amount}, price: {price}");
         }   
     }
 }
