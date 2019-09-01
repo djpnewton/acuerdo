@@ -47,7 +47,7 @@ namespace viafront3
                 // topic/partitions of interest. By default, offsets are committed
                 // automatically, so in this example, consumption will only start from the
                 // earliest message in the topic 'my-topic' the first time you run the program.
-                AutoOffsetReset = AutoOffsetReset.Earliest
+                AutoOffsetReset = AutoOffsetReset.Earliest,
             };
 
             using (var c = new ConsumerBuilder<Ignore, string>(conf).Build())
@@ -79,6 +79,8 @@ namespace viafront3
                                 default:
                                     break;
                             }
+                            // commit queue offsets
+                            c.Commit(cr, cts.Token);
                         }
                         catch (ConsumeException e)
                         {
