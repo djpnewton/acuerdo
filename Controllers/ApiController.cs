@@ -822,7 +822,7 @@ namespace viafront3.Controllers
             return true;
         }
 
-        ApiBrokerQuoteResponse _brokerQuote(string market, string amount, OrderSide side, out string error, out decimal avgPrice)
+        ApiBrokerQuoteInternal _brokerQuote(string market, string amount, OrderSide side, out string error, out decimal avgPrice)
         {
             error = null;
             avgPrice = 0;
@@ -903,7 +903,7 @@ namespace viafront3.Controllers
                         avgPrice = amountSend / amountReceive;
                     amountReceive *= (1 - _apiSettings.Broker.Fee);
                 }
-                var model = new ApiBrokerQuoteResponse
+                var model = new ApiBrokerQuoteInternal
                 {
                     AssetSend = assetSend,
                     AmountSend = amountSend,
@@ -949,12 +949,20 @@ namespace viafront3.Controllers
                 return BadRequest();
             }
             // get quote
-            var model = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
-            if (model == null)
+            var modelInternal = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
+            if (modelInternal == null)
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
                 return BadRequest(error);
             }
+            var model = new ApiBrokerQuoteResponse
+            {
+                AssetSend = modelInternal.AssetSend,
+                AmountSend = FormatOrderValue(_walletProvider, modelInternal.AssetSend, modelInternal.AmountSend),
+                AssetReceive = modelInternal.AssetReceive,
+                AmountReceive = FormatOrderValue(_walletProvider, modelInternal.AssetReceive, modelInternal.AmountReceive),
+                TimeLimit = modelInternal.TimeLimit,
+            };
             return model;
         }
 
@@ -973,14 +981,26 @@ namespace viafront3.Controllers
                 return Utils.ValidateBankAccount(recipient);
         }
 
-        private static ApiBrokerOrder FormatOrder(BrokerOrder order)
+        private static string FormatOrderValue(IWalletProvider walletProvider, string asset, decimal value)
+        {
+            if (walletProvider.IsFiat(asset))
+            {
+                return walletProvider.GetFiat(asset).AmountToString(value);
+            }
+            else
+            {
+                return walletProvider.GetChain(asset).AmountToString(value);
+            }
+        }
+
+        private static ApiBrokerOrder FormatOrder(IWalletProvider walletProvider, BrokerOrder order)
         {
             return new ApiBrokerOrder
             {
                 AssetReceive = order.AssetReceive,
-                AmountReceive = order.AmountReceive,
+                AmountReceive = FormatOrderValue(walletProvider, order.AssetReceive, order.AmountReceive),
                 AssetSend = order.AssetSend,
-                AmountSend = order.AmountSend,
+                AmountSend = FormatOrderValue(walletProvider, order.AssetSend, order.AmountSend),
                 Expiry = order.Expiry,
                 Token = order.Token,
                 InvoiceId = order.InvoiceId,
@@ -1049,7 +1069,7 @@ namespace viafront3.Controllers
             _context.BrokerOrders.Add(order);
             _context.SaveChanges();
             // respond
-            return FormatOrder(order);
+            return FormatOrder(_walletProvider, order);
         }
 
         [HttpPost]
@@ -1160,7 +1180,7 @@ namespace viafront3.Controllers
             // save order and withdrawal record
             _context.BrokerOrders.Update(order);
             _context.SaveChanges();
-            return FormatOrder(order);
+            return FormatOrder(_walletProvider, order);
         }
 
         [HttpPost]
@@ -1174,7 +1194,7 @@ namespace viafront3.Controllers
             var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == apikey.ApplicationUserId && o.Token == req.Token);
             if (order == null)
                 return BadRequest();
-            return FormatOrder(order);
+            return FormatOrder(_walletProvider, order);
         }
     }
 }

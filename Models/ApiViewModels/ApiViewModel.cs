@@ -254,12 +254,21 @@ namespace viafront3.Models.ApiViewModels
         public string Amount { get; set; }
     }
 
-    public class ApiBrokerQuoteResponse
+        public class ApiBrokerQuoteInternal
     {
         public string AssetSend { get; set; }
         public decimal AmountSend { get; set; }
         public string AssetReceive { get; set; }
         public decimal AmountReceive { get; set; }
+        public int TimeLimit { get; set; }
+    }
+
+    public class ApiBrokerQuoteResponse
+    {
+        public string AssetSend { get; set; }
+        public string AmountSend { get; set; }
+        public string AssetReceive { get; set; }
+        public string AmountReceive { get; set; }
         public int TimeLimit { get; set; }
     }
     
@@ -271,9 +280,9 @@ namespace viafront3.Models.ApiViewModels
     public class ApiBrokerOrder
     {
         public string AssetSend { get; set; }
-        public decimal AmountSend { get; set; }
+        public string AmountSend { get; set; }
         public string AssetReceive { get; set; }
-        public decimal AmountReceive { get; set; }
+        public string AmountReceive { get; set; }
         public long Expiry { get; set; }
         public string Token { get; set; }
         public string InvoiceId { get; set; }
