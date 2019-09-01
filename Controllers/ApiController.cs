@@ -26,6 +26,19 @@ namespace viafront3.Controllers
     [IgnoreAntiforgeryToken]
     public class ApiController : BaseWalletController
     {
+        const string EXPIRED = "expired";
+        const string INTERNAL_ERROR = "internal error";
+        const string AUTHENTICATION_FAILED = "authentication failed";
+        const string OLD_NONCE = "old nonce";
+        const string KYC_SERVICE_NOT_AVAILABLE = "kyc service not available";
+        const string FIAT_PAYMENT_SERVICE_NOT_AVAILABLE = "fiat payment service not available";
+        const string INVALID_MARKET = "invalid market";
+        const string INSUFFICIENT_BALANCE = "insufficient balance";
+        const string INSUFFICIENT_LIQUIDITY = "insufficient liquidity";
+        const string INVALID_ORDER = "invalid order";
+        const string AMOUNT_TOO_LOW = "amount too low";
+        const string INVALID_RECIPIENT = "invalid recipient";
+
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -89,7 +102,7 @@ namespace viafront3.Controllers
                 return new Models.ApiViewModels.ApiKey { Completed = false };
             // check expiry
             if (accountReq.Date + (_apiSettings.CreationExpiryMinutes * 60) + 60 /* grace time */ < DateTimeOffset.Now.ToUnixTimeSeconds())
-                return BadRequest("expired");
+                return BadRequest(EXPIRED);
             // create new apikey
             var key = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
@@ -150,11 +163,11 @@ namespace viafront3.Controllers
                 return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
             if (apiKeyReq.Date + (_apiSettings.CreationExpiryMinutes * 60) + 60 /* grace time */ < DateTimeOffset.Now.ToUnixTimeSeconds())
-                return BadRequest("expired");
+                return BadRequest(EXPIRED);
             // get user
             var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
             if (user == null)
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             // create new apikey
             apikey = Utils.CreateApiKey(user, apiKeyReq.Id, apiKeyReq.RequestedDeviceName);
             _context.ApiKeys.Add(apikey);
@@ -193,7 +206,7 @@ namespace viafront3.Controllers
             var headerValue = Request.Headers["X-Signature"];
             if (!headerValue.Any())
             {
-                error = "authentication failed";
+                error = AUTHENTICATION_FAILED;
                 return null;
             }
             var signature = headerValue.ToString();
@@ -207,20 +220,20 @@ namespace viafront3.Controllers
                 var apikey = _context.ApiKeys.SingleOrDefault(a => a.Key == key);
                 if (apikey == null)
                 {
-                    error = "authentication failed";
+                    error = AUTHENTICATION_FAILED;
                     return null;
                 }
                 // check signature
                 var ourSig = HMacWithSha256(apikey.Secret, requestBody);
                 if (!CompareDigest(ourSig, signature))
                 {
-                    error = "authentication failed";
+                    error = AUTHENTICATION_FAILED;
                     return null;
                 }
                 // check nonce
                 if (nonce <= apikey.Nonce)
                 {
-                    error = "old nonce";
+                    error = OLD_NONCE;
                     return null;
                 }
                 // update nonce in db
@@ -259,7 +272,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -270,7 +283,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error in balance query");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -282,13 +296,13 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
             if (user == null)
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             var level = user.Kyc != null ? user.Kyc.Level : 0;
             KycLevel kycLevel = null;
             if (level < _kycSettings.Levels.Count())
                 kycLevel = _kycSettings.Levels[level];
             else
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             var model = new ApiAccountKyc
             {
                 Level = level.ToString(),
@@ -307,7 +321,7 @@ namespace viafront3.Controllers
             if (!_kycSettings.KycServerEnabled)
             {
                 _logger.LogError("kyc server not enabled");
-                return BadRequest();
+                return BadRequest(KYC_SERVICE_NOT_AVAILABLE);
             }
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
@@ -316,7 +330,7 @@ namespace viafront3.Controllers
             var model = CreateKycRequest(_kycSettings, apikey.ApplicationUserId);
             if (model != null)
                 return model;
-            return BadRequest();
+            return BadRequest(INTERNAL_ERROR);
         }
 
         [HttpPost]
@@ -325,7 +339,7 @@ namespace viafront3.Controllers
             if (!_kycSettings.KycServerEnabled)
             {
                 _logger.LogError("kyc server not enabled");
-                return BadRequest();
+                return BadRequest(KYC_SERVICE_NOT_AVAILABLE);
             }
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
@@ -334,7 +348,7 @@ namespace viafront3.Controllers
             var model = await CheckKycRequest(_kycSettings, apikey.ApplicationUserId, req.Token);
             if (model != null)
                 return model;
-            return BadRequest();
+            return BadRequest(INTERNAL_ERROR);
         }
 
         [HttpGet]
@@ -353,7 +367,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error retrieving market list");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -361,7 +376,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiMarketStatus> MarketStatus([FromBody] ApiMarketPeriod market) 
         {
             if (!_settings.Markets.ContainsKey(market.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -380,7 +395,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error retrieving market status");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -388,7 +404,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiMarketDetail> MarketDetail([FromBody] ApiMarket market) 
         {
             if (!_settings.Markets.ContainsKey(market.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var marketSettings = _settings.Markets[market.Market];
             var model = new ApiMarketDetail
             {
@@ -407,7 +423,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiMarketDepthResponse> MarketDepth([FromBody] ApiMarketDepth market) 
         {
             if (!_settings.Markets.ContainsKey(market.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -422,7 +438,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error retreiving market depth");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -430,7 +447,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiMarketHistoryResponse> MarketHistory([FromBody] ApiMarketHistory market) 
         {
             if (!_settings.Markets.ContainsKey(market.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -450,7 +467,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error retrieving market history");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -486,6 +504,13 @@ namespace viafront3.Controllers
         [HttpPost]
         public ActionResult<ApiOrder> OrderLimit([FromBody] ApiOrderCreateLimit req) 
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting OrderLimit()");
+                return BadRequest(INTERNAL_ERROR);
+            }
+
             (var success, var error) = Utils.ValidateOrderParams(_settings, req, req.Price);
             if (!success)
                 return BadRequest(error);
@@ -495,7 +520,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 // lock process of performing trade
@@ -512,13 +537,23 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                if (ex.Err == ViaError.PUT_LIMIT__BALANCE_NOT_ENOUGH)
+                    return BadRequest(INSUFFICIENT_BALANCE);
+                _logger.LogError(ex, "error making limit order");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
         [HttpPost]
         public ActionResult<ApiOrder> OrderMarket([FromBody] ApiOrderCreateMarket req) 
         {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting OrderMarket()");
+                return BadRequest(INTERNAL_ERROR);
+            }
+
             (var success, var error) = Utils.ValidateOrderParams(_settings, req, null, marketOrder: true);
             if (!success)
                 return BadRequest(error);
@@ -528,7 +563,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 // lock process of performing trade
@@ -549,7 +584,12 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                if (ex.Err == ViaError.PUT_MARKET__BALANCE_NOT_ENOUGH)
+                    return BadRequest(INSUFFICIENT_BALANCE);
+                if (ex.Err == ViaError.PUT_MARKET__NO_ENOUGH_TRADER)
+                    return BadRequest(INSUFFICIENT_LIQUIDITY);
+                _logger.LogError(ex, "error creating market order");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -557,13 +597,13 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrdersResponse> OrdersPending([FromBody] ApiOrders req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -576,7 +616,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error querying pending orders");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -584,13 +625,13 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrdersResponse> OrdersExecuted([FromBody] ApiOrders req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -603,7 +644,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error querying executed orders");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -611,27 +653,28 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrder> OrderPendingStatus([FromBody] ApiOrderPendingStatus req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
                 var order = via.OrderPendingDetails(req.Market, req.Id);
                 if (order == null)
-                    return BadRequest("invalid parameter");
+                    return BadRequest(INVALID_ORDER);
                 if (order.user != xch.Id)
-                    return BadRequest("invalid parameter");
+                    return BadRequest(INVALID_ORDER);
                 return FormatOrder(order);
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error querying pending order details");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -643,21 +686,22 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
                 var order = via.OrderCompletedDetails(req.Id);
                 if (order == null)
-                    return BadRequest("invalid parameter");
+                    return BadRequest(INVALID_ORDER);
                 if (order.user != xch.Id)
-                    return BadRequest("invalid parameter");
+                    return BadRequest(INVALID_ORDER);
                 return FormatOrder(order);
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error querying executed order details");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -665,13 +709,13 @@ namespace viafront3.Controllers
         public ActionResult<ApiOrder> OrderStatus([FromBody] ApiOrderPendingStatus req)
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             try
@@ -690,20 +734,20 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException)
             {}
-            return BadRequest("invalid parameter");
+            return BadRequest(INVALID_ORDER);
         }
 
         [HttpPost]
         public ActionResult<ApiOrder> OrderCancel([FromBody] ApiOrderCancel req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 // lock process of performing trade
@@ -713,13 +757,14 @@ namespace viafront3.Controllers
                     var via = new ViaJsonRpc(_settings.AccessHttpUrl);
                     var order = via.OrderCancelQuery(xch.Id, req.Market, req.Id);
                     if (order == null)
-                        return BadRequest("invalid parameter");
+                        return BadRequest(INVALID_ORDER);
                     return FormatOrder(order);
                 }
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error cancelling order");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -749,7 +794,7 @@ namespace viafront3.Controllers
         public ActionResult<ApiTradesResponse> TradesExecuted([FromBody] ApiTrades req) 
         {
             if (!_settings.Markets.ContainsKey(req.Market))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             var marketSettings = _settings.Markets[req.Market];
 
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
@@ -757,7 +802,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
             if (xch == null)
-                return BadRequest(); 
+                return BadRequest(INTERNAL_ERROR); 
             try
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
@@ -770,7 +815,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "error querying executed trades");
+                return BadRequest(INTERNAL_ERROR);
             }
         }
 
@@ -833,7 +879,7 @@ namespace viafront3.Controllers
                 var minAmount = _apiSettings.Broker.MinimumOrderAmount[market];
                 if (decimal.Parse(amount) < minAmount)
                 {
-                    error = "order amount too low";
+                    error = AMOUNT_TOO_LOW;
                     return null;
                 }
             }
@@ -860,7 +906,7 @@ namespace viafront3.Controllers
                     {
                         if (depth.Count() == 0)
                         {
-                            error = "insufficient liquidity";
+                            error = INSUFFICIENT_LIQUIDITY;
                             return null;
                         }
                         var priceItem = decimal.Parse(depth[0][0]);
@@ -887,7 +933,7 @@ namespace viafront3.Controllers
                     {
                         if (depth.Count() == 0)
                         {
-                            error = "insufficient liquidity";
+                            error = INSUFFICIENT_LIQUIDITY;
                             return null;
                         }
                         var priceItem = decimal.Parse(depth[0][0]);
@@ -915,7 +961,8 @@ namespace viafront3.Controllers
             }
             catch (ViaJsonException ex)
             {
-                error = ex.Message;
+                _logger.LogError(ex, "error getting market depth");
+                error = INTERNAL_ERROR;
                 return null;
             }
         }
@@ -927,13 +974,13 @@ namespace viafront3.Controllers
             if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
             {
                 _logger.LogError("Tripwire tripped, exiting BrokerQuote()");
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             }
             // validate market
             if (!ValidateBrokerMarket(req.Market, req.Side, out OrderSide side))
             {
                 _logger.LogError($"Failed to validate broker market {req.Market} (side: {req.Side})");
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             }
             // validate auth
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
@@ -946,7 +993,7 @@ namespace viafront3.Controllers
             if (xch == null)
             {
                 _logger.LogError($"Failed get exchange for user id: {apikey.ApplicationUserId}");
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             }
             // get quote
             var modelInternal = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
@@ -1020,13 +1067,13 @@ namespace viafront3.Controllers
             if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
             {
                 _logger.LogError("Tripwire tripped, exiting BrokerCreate()");
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             }
             // validate market
             if (!ValidateBrokerMarket(req.Market, req.Side, out OrderSide side))
-                return BadRequest("invalid market");
+                return BadRequest(INVALID_MARKET);
             if (!ValidateRecipient(req.Market, side, req.Recipient))
-                return BadRequest("invalid recipient");
+                return BadRequest(INVALID_RECIPIENT);
             // validate auth
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
@@ -1042,7 +1089,7 @@ namespace viafront3.Controllers
             if (_walletProvider.IsFiat(quote.AssetSend) && !_fiatPaymentSettings.PaymentProcessorEnabled)
             {
                 _logger.LogError("fiat payments not enabled");
-                return BadRequest();
+                return BadRequest(FIAT_PAYMENT_SERVICE_NOT_AVAILABLE);
             }
             // create order
             string token = Utils.CreateToken();
@@ -1079,7 +1126,7 @@ namespace viafront3.Controllers
             if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
             {
                 _logger.LogError("Tripwire tripped, exiting BrokerAccept()");
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             }
             // validate auth
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
@@ -1088,7 +1135,7 @@ namespace viafront3.Controllers
             // get order
             var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == apikey.ApplicationUserId && o.Token == req.Token);
             if (order == null)
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             // update order status
             if (order.Status == BrokerOrderStatus.Created.ToString())
             {
@@ -1102,7 +1149,7 @@ namespace viafront3.Controllers
                 // get user
                 var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
                 if (user == null)
-                    return BadRequest();
+                    return BadRequest(INTERNAL_ERROR);
                 // check kyc limits
                 (var success, var withdrawalAssetAmount, var error2) = ValidateWithdrawlLimit(user, order.AssetReceive, order.AmountReceive);
                 if (!success)
@@ -1118,7 +1165,7 @@ namespace viafront3.Controllers
                 if (!result.Succeeded)
                 {
                     _logger.LogError("Failed to create broker user");
-                    return BadRequest();
+                    return BadRequest(INTERNAL_ERROR);
                 }
                 brokerUser = user;
             }
@@ -1126,7 +1173,7 @@ namespace viafront3.Controllers
             if (brokerUser.Exchange == null)
             {
                 _logger.LogError("Failed to get broker exchange id");
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             }
             // create payment details
             if (order.Status == BrokerOrderStatus.Ready.ToString())
@@ -1157,18 +1204,18 @@ namespace viafront3.Controllers
                     if (!_fiatPaymentSettings.PaymentProcessorEnabled)
                     {
                         _logger.LogError("fiat payments not enabled");
-                        return BadRequest();
+                        return BadRequest(FIAT_PAYMENT_SERVICE_NOT_AVAILABLE);
                     }
                     if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(order.AssetSend))
                     {
                         _logger.LogError($"fiat payments of '${order.AssetSend}' not enabled");
-                        return BadRequest();
+                        return BadRequest($"fiat payments of '${order.AssetSend}' not enabled");
                     }
                     var fiatReq = CreateFiatPaymentRequest(_fiatPaymentSettings, order.Token, order.AssetSend, order.AmountSend);
                     if (fiatReq == null)
                     {
                         _logger.LogError("fiat payment request creation failed");
-                        return BadRequest();
+                        return BadRequest(INTERNAL_ERROR);
                     }
                     paymentUrl = fiatReq.ServiceUrl;
                 }
@@ -1193,7 +1240,7 @@ namespace viafront3.Controllers
             // get order
             var order = _context.BrokerOrders.SingleOrDefault(o => o.ApplicationUserId == apikey.ApplicationUserId && o.Token == req.Token);
             if (order == null)
-                return BadRequest();
+                return BadRequest(INTERNAL_ERROR);
             return FormatOrder(_walletProvider, order);
         }
     }

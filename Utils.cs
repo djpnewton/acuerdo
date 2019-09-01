@@ -424,7 +424,7 @@ namespace viafront3
             };
         }
 
-       public static (bool success, string error) ValidateOrderParams(ExchangeSettings settings, ApiOrderCreateMarket model, string price, bool marketOrder=false)
+        public static (bool success, string error) ValidateOrderParams(ExchangeSettings settings, ApiOrderCreateMarket model, string price, bool marketOrder=false)
         {
             // check market exists
             if (model.Market == null || !settings.Markets.ContainsKey(model.Market))
