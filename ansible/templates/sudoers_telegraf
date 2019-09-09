@@ -1,0 +1,3 @@
+Cmnd_Alias FAIL2BAN = /usr/bin/fail2ban-client status, /usr/bin/fail2ban-client status *
+telegraf  ALL=(root) NOEXEC: NOPASSWD: FAIL2BAN
+Defaults!FAIL2BAN !logfile, !syslog, !pam_session
