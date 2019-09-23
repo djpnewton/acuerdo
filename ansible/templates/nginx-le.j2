@@ -6,7 +6,7 @@ add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style
 
 limit_req_status 429;
 limit_req_zone $binary_remote_addr zone=app_limit:10m rate=10r/s;
-limit_req_zone $binary_remote_addr zone=api_limit:10m rate=1r/s;
+limit_req_zone $binary_remote_addr zone=api_limit:10m rate=2r/s;
 limit_req_zone $binary_remote_addr zone=login_limit:10m rate=6r/m;
 
 # HTTPS server
@@ -58,7 +58,7 @@ server {
         proxy_set_header  X-Forwarded-Proto $scheme;
         proxy_pass        http://localhost:5000;
         location /api {
-            limit_req zone=api_limit;
+            limit_req zone=api_limit burst=20 nodelay;
             # proxy_pass is not inherited
             proxy_pass http://localhost:5000;
         }
