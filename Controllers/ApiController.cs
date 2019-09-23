@@ -100,13 +100,16 @@ namespace viafront3.Controllers
             var user = await _userManager.FindByEmailAsync(accountReq.RequestedEmail);
             if (user == null)
                 return new Models.ApiViewModels.ApiKey { Completed = false };
+            var apikey = _context.ApiKeys.SingleOrDefault(d => d.CreationRequestId == accountReq.Id);
+            if (apikey != null)
+                return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
             if (accountReq.Date + (_apiSettings.CreationExpiryMinutes * 60) + 60 /* grace time */ < DateTimeOffset.Now.ToUnixTimeSeconds())
                 return BadRequest(EXPIRED);
             // create new apikey
             var key = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
-            var apikey = new Models.ApiKey
+            apikey = new Models.ApiKey
             { 
                 ApplicationUserId = accountReq.ApplicationUserId,
                 CreationRequestId = accountReq.Id,
