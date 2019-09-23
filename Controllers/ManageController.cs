@@ -173,6 +173,8 @@ namespace viafront3.Controllers
                 return RedirectToAction(nameof(HomeController.Index), "Home");
             }
 
+            // update user name
+            user.UserName = model.NewEmail; // ChangeEmailAsync should persist this change if successful (it calls UpdateUserAsync)
             // change email
             var changeEmailResult = await _userManager.ChangeEmailAsync(user, model.NewEmail, model.Code);
             if (!changeEmailResult.Succeeded)
