@@ -132,9 +132,10 @@ namespace viafront3.Controllers
                 var code = await _userManager.GenerateChangeEmailTokenAsync(user, model.NewEmail);
                 var callbackUrl = Url.EmailChangeLink(user.Email, model.NewEmail, code, Request.Scheme);
                 await _emailSender.SendOldEmailChangeAsync(user.Email, model.NewEmail, callbackUrl);
+                StatusMessage = "Email change request sent.";
             }
-
-            StatusMessage = "Email change request sent.";
+            else
+                StatusMessage = "Email not available.";
 
             return RedirectToAction(nameof(Index));
         }
