@@ -138,7 +138,8 @@ namespace viafront3.Models
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }
-        public int CreationRequestId { get; set; }
+        public int AccountCreationRequestId { get; set; }
+        public int ApiKeyCreationRequestId { get; set; }
         public string Name { get; set; }
         public string Key { get; set; }
         public string Secret { get; set; }

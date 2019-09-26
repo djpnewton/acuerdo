@@ -83,7 +83,7 @@ namespace viafront3.Controllers
             var accountReq = new AccountCreationRequest { ApplicationUserId = null, Date = date, Token = token, Secret = secret, Completed = false,
                 RequestedEmail = req.Email, RequestedDeviceName = req.DeviceName };
             _context.AccountCreationRequests.Add(accountReq);
-            var callbackUrl = Url.AccountCreationConfirmationLink(token, Request.Scheme);
+            var callbackUrl = Url.AccountCreationConfirmationLink(secret, Request.Scheme);
             await _emailSender.SendEmailApiAccountCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
             _context.SaveChanges();
             return new ApiToken { Token = token };
@@ -100,7 +100,7 @@ namespace viafront3.Controllers
             var user = await _userManager.FindByEmailAsync(accountReq.RequestedEmail);
             if (user == null)
                 return new Models.ApiViewModels.ApiKey { Completed = false };
-            var apikey = _context.ApiKeys.SingleOrDefault(d => d.CreationRequestId == accountReq.Id);
+            var apikey = _context.ApiKeys.SingleOrDefault(d => d.AccountCreationRequestId == accountReq.Id);
             if (apikey != null)
                 return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
@@ -109,15 +109,7 @@ namespace viafront3.Controllers
             // create new apikey
             var key = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
-            apikey = new Models.ApiKey
-            { 
-                ApplicationUserId = accountReq.ApplicationUserId,
-                CreationRequestId = accountReq.Id,
-                Name = accountReq.RequestedDeviceName,
-                Key = key,
-                Secret = secret,
-                Nonce = 0
-            };
+            apikey = Utils.CreateApiKey(user, accountReq.Id, -1/*ApiKeyRequestId*/, accountReq.RequestedDeviceName);
             _context.ApiKeys.Add(apikey);
             // save db and return connection details
             _context.SaveChanges();
@@ -147,7 +139,7 @@ namespace viafront3.Controllers
             var accountReq = new ApiKeyCreationRequest { ApplicationUserId = user.Id, Date = date, Token = token, Secret = secret, Completed = false,
                 RequestedDeviceName = req.DeviceName };
             _context.ApiKeyCreationRequests.Add(accountReq);
-            var callbackUrl = Url.ApiKeyCreationConfirmationLink(token, Request.Scheme);
+            var callbackUrl = Url.ApiKeyCreationConfirmationLink(secret, Request.Scheme);
             await _emailSender.SendEmailApiKeyCreationRequest(req.Email, _apiSettings.CreationExpiryMinutes, callbackUrl);
             _context.SaveChanges();
             return new ApiToken { Token = token };       
@@ -161,7 +153,7 @@ namespace viafront3.Controllers
                 return new Models.ApiViewModels.ApiKey { Completed = false }; // fake reply if token not found (so robot cant test for user emails)
             if (!apiKeyReq.Completed)
                 return new Models.ApiViewModels.ApiKey { Completed = false };
-            var apikey = _context.ApiKeys.SingleOrDefault(d => d.CreationRequestId == apiKeyReq.Id);
+            var apikey = _context.ApiKeys.SingleOrDefault(d => d.ApiKeyCreationRequestId == apiKeyReq.Id);
             if (apikey != null)
                 return new Models.ApiViewModels.ApiKey { Completed = true };
             // check expiry
@@ -172,7 +164,7 @@ namespace viafront3.Controllers
             if (user == null)
                 return BadRequest(INTERNAL_ERROR);
             // create new apikey
-            apikey = Utils.CreateApiKey(user, apiKeyReq.Id, apiKeyReq.RequestedDeviceName);
+            apikey = Utils.CreateApiKey(user, -1/*AccountRequestId*/, apiKeyReq.Id, apiKeyReq.RequestedDeviceName);
             _context.ApiKeys.Add(apikey);
             // save db and return connection details
             _context.SaveChanges();

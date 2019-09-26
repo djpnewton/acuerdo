@@ -409,14 +409,15 @@ namespace viafront3
             return decimalPlaces;
         }
 
-        public static Models.ApiKey CreateApiKey(ApplicationUser user, int apiKeyRequestId, string deviceName)
+        public static Models.ApiKey CreateApiKey(ApplicationUser user, int accountRequestId, int apiKeyRequestId, string deviceName)
         {
             var key = Utils.CreateToken();
             var secret = Utils.CreateToken(32);
             return new Models.ApiKey
             { 
                 ApplicationUserId = user.Id,
-                CreationRequestId = apiKeyRequestId,
+                AccountCreationRequestId = accountRequestId,
+                ApiKeyCreationRequestId = apiKeyRequestId,
                 Name = deviceName,
                 Key = key,
                 Secret = secret,

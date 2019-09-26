@@ -571,7 +571,7 @@ namespace viafront3.Controllers
                 }
             }
 
-            var apikey = Utils.CreateApiKey(user, -1, model.DeviceName);
+            var apikey = Utils.CreateApiKey(user, -1, -1, model.DeviceName);
             _context.ApiKeys.Add(apikey);
             _context.SaveChanges();
             this.FlashSuccess($"Created API KEY ({apikey.Name} - Key: {apikey.Key} - Secret: {apikey.Secret})");

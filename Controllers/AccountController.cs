@@ -306,14 +306,14 @@ namespace viafront3.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public IActionResult ConfirmAccountCreation(string token)
+        public IActionResult ConfirmAccountCreation(string code)
         {
-            if (token == null)
+            if (code == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == token);
+            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Secret == code);
             if (accountReq != null && !accountReq.Completed && !AccountRequestExpired(accountReq))
             {
-                var model = new ConfirmAccountCreationViewModel { Token = token };
+                var model = new ConfirmAccountCreationViewModel { Code = code };
                 return View(model);
             }
 
@@ -325,9 +325,9 @@ namespace viafront3.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmAccountCreation(ConfirmAccountCreationViewModel model)
         {
-            if (model.Token == null)
+            if (model.Code == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Token == model.Token);
+            var accountReq = _context.AccountCreationRequests.SingleOrDefault(r => r.Secret == model.Code);
             if (accountReq != null && !accountReq.Completed && !AccountRequestExpired(accountReq))
             {
                 // create new user
@@ -364,15 +364,15 @@ namespace viafront3.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ConfirmApiKeyCreation(string token)
+        public async Task<IActionResult> ConfirmApiKeyCreation(string code)
         {
-            if (token == null)
+            if (code == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == token);
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Secret == code);
             if (apiKeyReq != null && !apiKeyReq.Completed && !ApiKeyCreationRequestExpired(apiKeyReq))
             {
                 var user = await _userManager.FindByIdAsync(apiKeyReq.ApplicationUserId);
-                var model = new ConfirmApiKeyCreationViewModel { Token = token, DeviceName = apiKeyReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
+                var model = new ConfirmApiKeyCreationViewModel { Code = code, DeviceName = apiKeyReq.RequestedDeviceName, TwoFactorRequired = user.TwoFactorEnabled };
                 return View(model);
             }
 
@@ -384,9 +384,9 @@ namespace viafront3.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> ConfirmApiKeyCreation(ConfirmApiKeyCreationViewModel model)
         {
-            if (model.Token == null)
+            if (model.Code == null)
                 return RedirectToAction(nameof(HomeController.Index), "Home");
-            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Token == model.Token);
+            var apiKeyReq = _context.ApiKeyCreationRequests.SingleOrDefault(r => r.Secret == model.Code);
             if (apiKeyReq != null && !apiKeyReq.Completed && !ApiKeyCreationRequestExpired(apiKeyReq))
             {
                 // check 2fa authentication

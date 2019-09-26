@@ -32,13 +32,13 @@ namespace viafront3.Models.AccountViewModels
     public class ConfirmAccountCreationViewModel : PasswordViewModel
     {
         [Required]
-        public string Token { get; set; }    
+        public string Code { get; set; }    
     }
 
     public class ConfirmApiKeyCreationViewModel : TwoFactorRequiredViewModel
     {
         [Required]
-        public string Token { get; set; } 
+        public string Code { get; set; } 
         public string DeviceName { get; set; }
     }
 }

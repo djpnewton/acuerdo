@@ -35,21 +35,21 @@ namespace Microsoft.AspNetCore.Mvc
                 protocol: scheme);
         }
 
-        public static string AccountCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
+        public static string AccountCreationConfirmationLink(this IUrlHelper urlHelper, string code, string scheme)
         {
             return urlHelper.Action(
                 action: nameof(AccountController.ConfirmAccountCreation),
                 controller: "Account",
-                values: new { token },
+                values: new { code },
                 protocol: scheme);
         }
 
-        public static string ApiKeyCreationConfirmationLink(this IUrlHelper urlHelper, string token, string scheme)
+        public static string ApiKeyCreationConfirmationLink(this IUrlHelper urlHelper, string code, string scheme)
         {
             return urlHelper.Action(
                 action: nameof(AccountController.ConfirmApiKeyCreation),
                 controller: "Account",
-                values: new { token },
+                values: new { code },
                 protocol: scheme);
         }
     }
