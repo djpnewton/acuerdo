@@ -148,13 +148,15 @@ namespace viafront3
         public Dictionary<TripwireEventType, int> Maximum { get; set; }
     }
 
-    public class FiatPaymentProcessorSettings
+    public class FiatProcessorSettings
     {
-        public bool PaymentProcessorEnabled { get; set; }
-        public string[] PaymentProcessorAssets { get; set; }
-        public string PaymentServerUrl { get; set; }
-        public string PaymentServerApiKey { get; set; }
-        public string PaymentServerSecret { get; set; }
+        public string FiatServerUrl { get; set; }
+        public string FiatServerApiKey { get; set; }
+        public string FiatServerSecret { get; set; }
+        public bool PaymentsEnabled { get; set; }
+        public string[] PaymentsAssets { get; set; }
+        public bool PayoutsEnabled { get; set; }
+        public string[] PayoutsAssets { get; set; }
     }
 
     public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
@@ -189,7 +191,7 @@ namespace viafront3
             services.Configure<ApiSettings>(options => Configuration.GetSection("Api").Bind(options));
             services.Configure<KycSettings>(options => Configuration.GetSection("Kyc").Bind(options));
             services.Configure<TripwireSettings>(options => Configuration.GetSection("Tripwire").Bind(options));
-            services.Configure<FiatPaymentProcessorSettings>(options => Configuration.GetSection("FiatPaymentProcessor").Bind(options));
+            services.Configure<FiatProcessorSettings>(options => Configuration.GetSection("FiatProcessor").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()

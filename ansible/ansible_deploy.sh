@@ -124,8 +124,8 @@ KYC_DIR=creds/$DEPLOY_TYPE
 discover_service $KYC_DIR kyc KYC_URL KYC_API_KEY KYC_API_SECRET
 
 # read fiat payment server details from local file
-FIAT_PAYMENT_DIR=creds/$DEPLOY_TYPE
-discover_service $FIAT_PAYMENT_DIR fiat_payment FIAT_PAYMENT_URL FIAT_PAYMENT_API_KEY FIAT_PAYMENT_API_SECRET
+FIAT_SERVER_DIR=creds/$DEPLOY_TYPE
+discover_service $FIAT_SERVER_DIR fiat_server FIAT_SERVER_URL FIAT_SERVER_API_KEY FIAT_SERVER_API_SECRET
 
 # create archive
 (cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
@@ -149,7 +149,7 @@ echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
 echo "   - SSH_USERS:       $SSH_USERS"
 echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
 echo "   - KYC_URL:         $KYC_URL"
-echo "   - FIAT_PAYMENT_URL:$FIAT_PAYMENT_URL"
+echo "   - FIAT_SERVER_URL: $FIAT_SERVER_URL"
 echo "   - CODE ARCHIVE:    acuerdo.zip"
 
 # ask user to continue
@@ -171,6 +171,6 @@ then
         --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \
         --extra-vars "kyc_url=$KYC_URL kyc_api_key=$KYC_API_KEY kyc_api_secret=$KYC_API_SECRET" \
-        --extra-vars "fiat_payment_url=$FIAT_PAYMENT_URL fiat_payment_api_key=$FIAT_PAYMENT_API_KEY fiat_payment_api_secret=$FIAT_PAYMENT_API_SECRET" \
+        --extra-vars "fiat_server_url=$FIAT_SERVER_URL fiat_server_api_key=$FIAT_SERVER_API_KEY fiat_server_api_secret=$FIAT_SERVER_API_SECRET" \
         deploy.yml
 fi

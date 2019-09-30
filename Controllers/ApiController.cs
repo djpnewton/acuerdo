@@ -45,7 +45,7 @@ namespace viafront3.Controllers
         private readonly ApiSettings _apiSettings;
         private readonly ITripwire _tripwire;
         private readonly IUserLocks _userLocks;
-        private readonly FiatPaymentProcessorSettings _fiatPaymentSettings;
+        private readonly FiatProcessorSettings _fiatSettings;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -60,7 +60,7 @@ namespace viafront3.Controllers
             IWalletProvider walletProvider,
             ITripwire tripwire,
             IUserLocks userLocks,
-            IOptions<FiatPaymentProcessorSettings> fiatPaymentSettings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IOptions<FiatProcessorSettings> fiatSettings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
@@ -68,7 +68,7 @@ namespace viafront3.Controllers
             _apiSettings = apiSettings.Value;
             _tripwire = tripwire;
             _userLocks = userLocks;
-            _fiatPaymentSettings = fiatPaymentSettings.Value;
+            _fiatSettings = fiatSettings.Value;
         }
 
         [HttpPost]
@@ -219,7 +219,7 @@ namespace viafront3.Controllers
                     return null;
                 }
                 // check signature
-                var ourSig = HMacWithSha256(apikey.Secret, requestBody);
+                var ourSig = RestUtils.HMacWithSha256(apikey.Secret, requestBody);
                 if (!CompareDigest(ourSig, signature))
                 {
                     error = AUTHENTICATION_FAILED;
@@ -322,7 +322,7 @@ namespace viafront3.Controllers
             if (apikey == null)
                 return BadRequest(error);
             // call kyc server to create request
-            var model = CreateKycRequest(_kycSettings, apikey.ApplicationUserId);
+            var model = RestUtils.CreateKycRequest(_logger, _context, _kycSettings, apikey.ApplicationUserId);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);
@@ -340,7 +340,7 @@ namespace viafront3.Controllers
             if (apikey == null)
                 return BadRequest(error);
             // call kyc server to check request
-            var model = await CheckKycRequest(_kycSettings, apikey.ApplicationUserId, req.Token);
+            var model = await RestUtils.CheckKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId, req.Token);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);
@@ -1081,7 +1081,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             }
             // cancel if asset the user sends is fiat and fiat payments are not enabled
-            if (_walletProvider.IsFiat(quote.AssetSend) && !_fiatPaymentSettings.PaymentProcessorEnabled)
+            if (_walletProvider.IsFiat(quote.AssetSend) && !_fiatSettings.PaymentsEnabled)
             {
                 _logger.LogError("fiat payments not enabled");
                 return BadRequest(FIAT_PAYMENT_SERVICE_NOT_AVAILABLE);
@@ -1196,17 +1196,17 @@ namespace viafront3.Controllers
                 }
                 else // fiat
                 {
-                    if (!_fiatPaymentSettings.PaymentProcessorEnabled)
+                    if (!_fiatSettings.PaymentsEnabled)
                     {
                         _logger.LogError("fiat payments not enabled");
                         return BadRequest(FIAT_PAYMENT_SERVICE_NOT_AVAILABLE);
                     }
-                    if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(order.AssetSend))
+                    if (!_fiatSettings.PaymentsAssets.Contains(order.AssetSend))
                     {
                         _logger.LogError($"fiat payments of '${order.AssetSend}' not enabled");
                         return BadRequest($"fiat payments of '${order.AssetSend}' not enabled");
                     }
-                    var fiatReq = CreateFiatPaymentRequest(_fiatPaymentSettings, order.Token, order.AssetSend, order.AmountSend);
+                    var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend);
                     if (fiatReq == null)
                     {
                         _logger.LogError("fiat payment request creation failed");

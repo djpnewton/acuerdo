@@ -76,6 +76,14 @@ namespace viafront3.Models.ApiViewModels
         public Decimal Amount { get; set; }
     }
 
+    public class ApiFiatPayoutRequest
+    {
+        public String Token { get; set; }
+        public String Status { get; set; }
+        public String Asset { get; set; }
+        public Decimal Amount { get; set; }
+    }
+    
     public class ApiMarketList
     {
         public List<String> Markets { get; set; }

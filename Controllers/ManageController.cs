@@ -590,7 +590,7 @@ namespace viafront3.Controllers
             if (kycRequest != null)
             {
                 kycRequestUrl = $"{_kycSettings.KycServerUrl}/request/{kycRequest.Token}";
-                var _model = await CheckKycRequest(_kycSettings, user.Id, kycRequest.Token);
+                var _model = await RestUtils.CheckKycRequest(_logger, _context, _userManager, _kycSettings, user.Id, kycRequest.Token);
                 if (_model != null)
                     kycRequestStatus = _model.Status;
             }
@@ -625,7 +625,7 @@ namespace viafront3.Controllers
             }
             var user = await GetUser(required: true);
 
-            var _model = CreateKycRequest(_kycSettings, user.Id);
+            var _model = RestUtils.CreateKycRequest(_logger, _context, _kycSettings, user.Id);
             if (_model != null)
                 this.FlashSuccess("Created KYC upgrade request");
 

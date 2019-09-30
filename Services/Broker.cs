@@ -30,7 +30,7 @@ namespace viafront3.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly ExchangeSettings _settings;
         private readonly ITripwire _tripwire;
-        private readonly FiatPaymentProcessorSettings _fiatPaymentSettings;
+        private readonly FiatProcessorSettings _fiatSettings;
 
         public Broker(ILogger<Broker> logger,
             ApplicationDbContext context,
@@ -39,7 +39,7 @@ namespace viafront3.Services
             UserManager<ApplicationUser> userManager,
             IOptions<ExchangeSettings> settings,
             ITripwire tripwire,
-            IOptions<FiatPaymentProcessorSettings> fiatPaymentSettings)
+            IOptions<FiatProcessorSettings> fiatSettings)
         {
             _logger = logger;
             _context = context;
@@ -48,7 +48,7 @@ namespace viafront3.Services
             _userManager = userManager;
             _settings = settings.Value;
             _tripwire = tripwire;
-            _fiatPaymentSettings = fiatPaymentSettings.Value;
+            _fiatSettings = fiatSettings.Value;
         }
 
         bool DepositAndCreateTrade(ApplicationUser brokerUser, BrokerOrder order)
@@ -93,15 +93,8 @@ namespace viafront3.Services
             return true;
         }
 
-        void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
+        void CheckTxs(ApplicationUser brokerUser, Dictionary<string, IWallet> wallets, BrokerOrder order)
         {
-            // get broker user
-            var brokerUser = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
-            if (brokerUser == null)
-            {
-                _logger.LogError("Failed to find broker user");
-                return;
-            }
             // get wallet and only update from the blockchain one time
             IWallet wallet;
             if (wallets.ContainsKey(order.AssetSend))
@@ -165,44 +158,47 @@ namespace viafront3.Services
             wallet.Save();
         }
 
-        viafront3.Models.ApiViewModels.ApiFiatPaymentRequest GetFiatPaymentRequest(FiatPaymentProcessorSettings fiatPaymentSettings, string token)
+        void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
         {
-            var client = new RestClient(fiatPaymentSettings.PaymentServerUrl);
-            var request = new RestRequest("status", Method.POST);
-            request.RequestFormat = DataFormat.Json;
-            request.AddJsonBody(new { token = token });
-            var response = client.Execute(request);
-            if (response.IsSuccessful)
+            // get broker user
+            var brokerUser = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
+            if (brokerUser == null)
             {
-                var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
-                if (json.ContainsKey("status"))
+                _logger.LogError("Failed to find broker user");
+                return;
+            }
+
+            if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
+                CheckTxs(brokerUser, wallets, order);
+            else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
+            {
+                if (_fiatSettings.PayoutsEnabled || _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
-                    var status = json["status"];
-                    var asset = json["asset"];
-                    var amount = json["amount"];
-                    // return to user
-                    var model = new viafront3.Models.ApiViewModels.ApiFiatPaymentRequest
+                    var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, order.Token);
+                    if (payoutReq == null)
                     {
-                        Token = token,
-                        ServiceUrl = $"{fiatPaymentSettings.PaymentServerUrl}/request/{token}",
-                        Status = status,
-                        Asset = asset,
-                        Amount = decimal.Parse(amount),
-                    };
-                    return model;
+                        payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend);
+                        if (payoutReq == null)
+                            _logger.LogError("fiat payout request creation failed");
+                    }
+                    else if (payoutReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
+                    {
+                        order.Status = BrokerOrderStatus.Sent.ToString();
+                        _context.BrokerOrders.Update(order);
+                        _logger.LogInformation($"Payout confirmed for order {order.Token}");
+                    }
                 }
             }
-            return null;
         }
 
         void ProcessOrderFiat(BrokerOrder order)
         {
-            if (!_fiatPaymentSettings.PaymentProcessorEnabled)
+            if (!_fiatSettings.PaymentsEnabled)
             {
                 _logger.LogError("receiving fiat not enabled");
                 return;
             }
-            if (!_fiatPaymentSettings.PaymentProcessorAssets.Contains(order.AssetSend))
+            if (!_fiatSettings.PaymentsAssets.Contains(order.AssetSend))
             {
                 _logger.LogError($"receiving fiat currency '${order.AssetSend}' not supported");
                 return;
@@ -214,7 +210,7 @@ namespace viafront3.Services
                 _logger.LogError("Failed to find broker user");
                 return;
             }
-            var paymentReq = GetFiatPaymentRequest(_fiatPaymentSettings, order.Token);
+            var paymentReq = RestUtils.GetFiatPaymentRequest(_fiatSettings, order.Token);
             if (paymentReq == null)
             {
                 _logger.LogError("Failed to get fiat payment request");
@@ -248,18 +244,22 @@ namespace viafront3.Services
                 var wallets = new Dictionary<string, IWallet>();
                 var date = DateTimeOffset.Now.ToUnixTimeSeconds();
                 // process created orders
-                var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString() || o.Status == BrokerOrderStatus.Incomming.ToString());
+                var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString() || o.Status == BrokerOrderStatus.Incomming.ToString()).ToList();
                 foreach (var order in orders)
                 {
                     if (_walletProvider.IsChain(order.AssetSend))
                         ProcessOrderChain(wallets, order);
                     else
                         ProcessOrderFiat(order);
+
+                    // we should save changes here because calls to the exchange backend could potentially throw exceptions
+                    // which this would leave the backend and frontend in conflicting state (if we save after the loop finishes)
+                    // I just eagerly load 'orders' using ToList() at the end of the linq statement to make sure that doesnt get invalidated or anything 
+                    _context.SaveChanges();
                 }
-                _context.SaveChanges();
                 // expire orders
-                orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString());
-                foreach (var order in orders)
+                var ordersToExpire = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString());
+                foreach (var order in ordersToExpire)
                 {
                     if (date > order.Expiry + _apiSettings.Broker.TimeLimitGracePeriod)
                     {

@@ -7,7 +7,8 @@
   vars:
     dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development;' if DEPLOY_TYPE == 'test' else '' }}"
     kyc_enabled: "{{ 'true' if kyc_url else 'false' }}"
-    fiat_payment_enabled: "{{ 'true' if fiat_payment_url else 'false' }}"
+    fiat_payment_enabled: "{{ 'true' if fiat_server_url else 'false' }}"
+    fiat_payout_enabled: "{{ 'true' if fiat_server_url else 'false' }}"
   tasks:
     - name: ansible group
       group: 
@@ -167,29 +168,35 @@
         regexp: '("KycServerApiSecret": )"not_production"'
         replace: '\1"{{kyc_api_secret}}"'
 
+    - name: set fiat server url
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("FiatServerUrl": )"http://localhost"'
+        replace: '\1"{{fiat_server_url}}"'
+
+    - name: set fiat server api key
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("FiatServerApiKey": )"key"'
+        replace: '\1"{{fiat_server_api_key}}"'
+
+    - name: set fiat server api secret
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("FiatServerSecret": )"not_production"'
+        replace: '\1"{{fiat_server_api_secret}}"'
+
     - name: set fiat payment enabled
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("PaymentProcessorEnabled": )false'
+        regexp: '("PaymentsEnabled": )false'
         replace: '\1{{fiat_payment_enabled}}'
 
-    - name: set fiat payment url
+    - name: set fiat payout enabled
       replace:
         path: /opt/viafront/appsettings.json
-        regexp: '("PaymentServerUrl": )"http://localhost"'
-        replace: '\1"{{fiat_payment_url}}"'
-
-    - name: set fiat payment api key
-      replace:
-        path: /opt/viafront/appsettings.json
-        regexp: '("PaymentServerApiKey": )"key"'
-        replace: '\1"{{fiat_payment_api_key}}"'
-
-    - name: set fiat payment api secret
-      replace:
-        path: /opt/viafront/appsettings.json
-        regexp: '("PaymentServerSecret": )"not_production"'
-        replace: '\1"{{fiat_payment_api_secret}}"'
+        regexp: '("PayoutsEnabled": )false'
+        replace: '\1{{fiat_payout_enabled}}'
 
     - name: set alert email
       replace:
