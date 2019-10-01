@@ -118,9 +118,13 @@ namespace viafront3.Services
                 if (tx.ChainTx.Attachment != null)
                 {
                     var att = System.Text.Encoding.UTF8.GetString(tx.ChainTx.Attachment.Data);
-                    var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(att);
-                    if (dict.ContainsKey("InvoiceId"))
-                        invoiceId = dict["InvoiceId"];
+                    try
+                    {
+                        var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(att);
+                        if (dict.ContainsKey("InvoiceId"))
+                            invoiceId = dict["InvoiceId"];
+                    }
+                    catch {}
                 }
                 // check tx is incomming to our wallet
                 if (tx.Direction == WalletDirection.Incomming)
