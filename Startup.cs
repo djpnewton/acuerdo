@@ -157,6 +157,7 @@ namespace viafront3
         public string[] PaymentsAssets { get; set; }
         public bool PayoutsEnabled { get; set; }
         public string[] PayoutsAssets { get; set; }
+        public string PayoutsReference { get; set; }
     }
 
     public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter

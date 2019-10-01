@@ -196,12 +196,13 @@ namespace viafront3.Models
 
     public enum BrokerOrderStatus
     {
-        Created,
-        Ready,
-        Incomming,
-        Confirmed,
-        Sent,
-        Expired,
+        Created,    // create order for user
+        Ready,      // user has accepted order
+        Incomming,  // seen incomming payment from user
+        Confirmed,  // confirmed incomming payment from user
+        PayoutWait, // requested payout to user
+        Sent,       // sent payout to user
+        Expired,    // order expired without seeing payment
         Error
     }
 

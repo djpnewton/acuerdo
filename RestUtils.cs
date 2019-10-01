@@ -49,7 +49,7 @@ namespace viafront3
         {
             // call payment server to create request
             var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount, return_url = "" });
-            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_request", fiatSettings.FiatServerSecret, jsonBody);
+            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
@@ -75,8 +75,8 @@ namespace viafront3
 
         public static viafront3.Models.ApiViewModels.ApiFiatPaymentRequest GetFiatPaymentRequest(FiatProcessorSettings fiatSettings, string token)
         {
-            var jsonBody = JsonConvert.SerializeObject(new { token = token });
-            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_status", jsonBody);
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token });
+            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_status", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
@@ -101,11 +101,14 @@ namespace viafront3
         }
 
 
-        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount)
+        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, ExchangeSettings settings, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, string account_number)
         {
+            var cents = amount * Utils.IntPow(10, settings.Assets[asset].Decimals);
+            var centsInt = Convert.ToInt64(cents);
+
             // call payment server to create request
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount, return_url = "" });
-            var response = ServiceRequest(fiatSettings.FiatServerUrl, fiatSettings.FiatServerSecret, jsonBody);
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = centsInt, account_number = account_number, account_name = "broker user", reference = fiatSettings.PayoutsReference, code = token });
+            var response = ServiceRequest(fiatSettings.FiatServerUrl, "payout_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
@@ -130,8 +133,8 @@ namespace viafront3
 
         public static viafront3.Models.ApiViewModels.ApiFiatPayoutRequest GetFiatPayoutRequest(FiatProcessorSettings fiatSettings, string token)
         {
-            var jsonBody = JsonConvert.SerializeObject(new { token = token });
-            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payout_status", jsonBody);
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token });
+            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payout_status", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);
@@ -163,7 +166,7 @@ namespace viafront3
             // call kyc server to create request
             var token = Utils.CreateToken();
             var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token });
-            var response = RestUtils.ServiceRequest(kycSettings.KycServerUrl, kycSettings.KycServerApiSecret, jsonBody);
+            var response = RestUtils.ServiceRequest(kycSettings.KycServerUrl, "request", kycSettings.KycServerApiSecret, jsonBody);
             if (response.IsSuccessful)
             {
                 var json = JsonConvert.DeserializeObject<Dictionary<string, string>>(response.Content);

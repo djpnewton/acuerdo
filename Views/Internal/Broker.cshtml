@@ -20,6 +20,7 @@
                     <div class="form-group">
                         <select asp-for="OrderStatus" class="onchange-submit">
                             <option value="@(BrokerOrderStatus.Confirmed)" selected="@(Model.OrderStatus == BrokerOrderStatus.Confirmed.ToString() ? "selected" : null)">@BrokerOrderStatus.Confirmed</option>
+                            <option value="@(BrokerOrderStatus.PayoutWait)" selected="@(Model.OrderStatus == BrokerOrderStatus.PayoutWait.ToString() ? "selected" : null)">@BrokerOrderStatus.PayoutWait</option>
                             <option value="@(BrokerOrderStatus.Sent)" selected="@(Model.OrderStatus == BrokerOrderStatus.Sent.ToString() ? "selected" : null)">@BrokerOrderStatus.Sent</option>
                             <option value="@(BrokerOrderStatus.Error)" selected="@(Model.OrderStatus == BrokerOrderStatus.Error.ToString() ? "selected" : null)">@BrokerOrderStatus.Error</option>
                             <option value="" selected="@(Model.OrderStatus == null ? "selected" : null)">All</option>

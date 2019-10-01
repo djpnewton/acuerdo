@@ -484,5 +484,17 @@ namespace viafront3
                     return false;
             return true;
         }
+
+        public static long IntPow(long x, long exp)
+        {
+            if (exp == 0)
+                return 1;
+            if (exp % 2 == 0)
+            {
+                var val = IntPow(x, exp/2);
+                return val * val;
+            }
+            return x * IntPow(x, exp - 1);
+        }
     }
 }

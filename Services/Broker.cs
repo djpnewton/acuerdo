@@ -178,13 +178,23 @@ namespace viafront3.Services
             {
                 if (_fiatSettings.PayoutsEnabled || _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
+                    var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient);
+                    if (payoutReq == null)
+                        _logger.LogError($"fiat payout request creation failed ({order.Token})");
+                    else 
+                    {
+                        order.Status = BrokerOrderStatus.PayoutWait.ToString();
+                        _context.BrokerOrders.Update(order);
+                    }
+                }
+            }
+            else if (order.Status == BrokerOrderStatus.PayoutWait.ToString())
+            {
+                if (_fiatSettings.PayoutsEnabled || _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
+                {
                     var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, order.Token);
                     if (payoutReq == null)
-                    {
-                        payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend);
-                        if (payoutReq == null)
-                            _logger.LogError("fiat payout request creation failed");
-                    }
+                        _logger.LogError($"fiat payout request not found ({order.Token})");
                     else if (payoutReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
                     {
                         order.Status = BrokerOrderStatus.Sent.ToString();
@@ -248,7 +258,8 @@ namespace viafront3.Services
                 var wallets = new Dictionary<string, IWallet>();
                 var date = DateTimeOffset.Now.ToUnixTimeSeconds();
                 // process created orders
-                var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString() || o.Status == BrokerOrderStatus.Incomming.ToString()).ToList();
+                var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString() || o.Status == BrokerOrderStatus.Incomming.ToString() ||
+                    o.Status == BrokerOrderStatus.Confirmed.ToString() || o.Status == BrokerOrderStatus.PayoutWait.ToString()).ToList();
                 foreach (var order in orders)
                 {
                     if (_walletProvider.IsChain(order.AssetSend))
