@@ -94,12 +94,21 @@ namespace viafront3.Services
             }
             lock (lockObj)
             {
+                // if lockfile exists exit early
+                var lockFile = new LockFile(_logger, "chain_withdrawals");
+                if (lockFile.IsPresent())
+                {
+                    _logger.LogError($"lockfile ('{lockFile.MkPath()}) exists");
+                    return;
+                }
+
                 using (var scope = _services.CreateScope())
                 {
                     var settings = scope.ServiceProvider.GetRequiredService<IOptions<WalletSettings>>().Value;
                     var walletProvider = scope.ServiceProvider.GetRequiredService<IWalletProvider>();
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+
                     foreach (var asset in settings.ChainAssetSettings.Keys)
                     {
                         // get wallet
@@ -110,10 +119,22 @@ namespace viafront3.Services
                         foreach (var spend in spends)
                         {
                             // recheck tripwire
-
                             if (!_tripwire.WithdrawalsEnabled())
                             {
                                 _logger.LogError("Tripwire tripped, exiting ProcessChainWithdrawls()");
+                                return;
+                            }
+
+                            // check and create lockfile to make sure we cant send withdrawals twice
+                            if (lockFile.IsPresent())
+                            {
+                                _logger.LogError($"lockfile ('{lockFile.MkPath()}) exists");
+                                return;
+                            }
+                            var contents = $"Pending spend: {spend.SpendCode}, {spend.State}, {spend.Date}, {spend.Amount} {asset} cents";
+                            if (!lockFile.CreateIfNotPresent(contents))
+                            {
+                                _logger.LogError($"failed to create lockfile ('{lockFile.MkPath()})");
                                 return;
                             }
 
@@ -126,6 +147,10 @@ namespace viafront3.Services
                             // save wallet
                             wallet.Save();
                             _logger.LogInformation($"Saved {asset} wallet");
+
+                            // remove lock file now that we have saved wallet status
+                            if (!lockFile.RemoveIfPresent())
+                                _logger.LogError($"Failed to remove lockfile ({lockFile.MkPath()})");
 
                             if (err == WalletError.Success)
                             {
