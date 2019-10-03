@@ -162,6 +162,86 @@ namespace viafront3.Services
             wallet.Save();
         }
 
+        bool ChainWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order)
+        {
+            var asset = order.AssetReceive;
+            var amount = order.AmountReceive;
+
+            var wallet = _walletProvider.GetChain(asset);
+            if (wallet == null)
+            {
+                _logger.LogError($"No chain wallet for {asset}");
+                return false;
+            }
+            var brokerWalletTag = wallet.GetTag(brokerUser.Id);
+            if (brokerWalletTag == null)
+            {
+                _logger.LogError($"No tag for broker {brokerUser.Id}");
+                return false;
+            }
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(brokerUser.Exchange.Id, asset);
+
+            // validate amount
+            var amountInt = wallet.StringToAmount(amount.ToString());
+            var availableInt = wallet.StringToAmount(balance.Available);
+            if (amountInt > availableInt)
+            {
+                _logger.LogError("broker available balance is too small");
+                return false;
+            }
+            if (amountInt <= 0)
+            {
+                _logger.LogError("amount must be greather then or equal to 0");
+                return false;
+            }
+
+            var consolidatedFundsTag = _walletProvider.ConsolidatedFundsTag();
+
+            using (var dbtx = wallet.BeginDbTransaction())
+            {
+                // ensure tag exists
+                if (!wallet.HasTag(consolidatedFundsTag))
+                {
+                    wallet.NewTag(consolidatedFundsTag);
+                    wallet.Save();
+                }
+
+                // register withdrawal with wallet
+                var tag = wallet.GetTag(brokerUser.Id);
+                if (tag == null)
+                    tag = wallet.NewTag(brokerUser.Id);
+                var spend = wallet.RegisterPendingSpend(consolidatedFundsTag, consolidatedFundsTag,
+                    order.Recipient, amountInt, tag);
+                wallet.Save();
+                var businessId = spend.Id;
+
+                // register withdrawal with the exchange backend
+                var negativeAmount = -amount;
+                try
+                {
+                    via.BalanceUpdateQuery(brokerUser.Exchange.Id, asset, "withdraw", businessId, negativeAmount.ToString(), null);
+                }
+                catch (ViaJsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
+                        brokerUser.Exchange.Id, asset, businessId, negativeAmount);
+                    if (ex.Err == ViaError.BALANCE_UPDATE__BALANCE_NOT_ENOUGH)
+                    {
+                        dbtx.Rollback();
+                        _logger.LogError("balance not enough");
+                        return false;
+                    }
+                    throw;
+                }
+
+                dbtx.Commit();
+            }
+
+            return true;
+        }
+
         void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
         {
             // get broker user
@@ -230,16 +310,27 @@ namespace viafront3.Services
                 _logger.LogError("Failed to get fiat payment request");
                 return;
             }
-            if (paymentReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
+            if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
             {
                 // bingo!
-                if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
+                if (paymentReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
                 {
                     order.Status = BrokerOrderStatus.Confirmed.ToString();
                     _context.BrokerOrders.Update(order);
                     _logger.LogInformation($"Payment confirmed for order {order.Token}");
                     DepositAndCreateTrade(brokerUser, order);
                 }
+            }
+            else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
+            {
+                if (ChainWithdrawToCustomer(brokerUser, order))
+                {
+                    order.Status = BrokerOrderStatus.Sent.ToString();
+                    _context.BrokerOrders.Update(order);
+                    _logger.LogInformation($"Sent funds for order {order.Token}");
+                }
+                else
+                    _logger.LogError($"failed to send funds for order ({order.Token})");
             }
         }
 
