@@ -11,11 +11,11 @@
     <form asp-area="" asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="navbar-right">
         <ul class="nav navbar-nav navbar-right">
             <li>
-                <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage">Hello @UserManager.GetUserName(User)!
+                <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage user @UserManager.GetUserName(User)"><i class="fas fa-user"></i>
                     <environment include="Development">
                         @if (Model != null && Model.User != null && Model.User.Exchange != null)
                         {
-                            <span>(Exchange Id: @Model.User.Exchange.Id)</span>
+                            <span>(XchId: @Model.User.Exchange.Id)</span>
                         }
                     </environment>
                 </a>

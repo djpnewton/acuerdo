@@ -6,6 +6,7 @@
     "jquery": "2.2.0",
     "jquery-validation": "1.14.0",
     "jquery-validation-unobtrusive": "3.2.6",
-    "qrcode.js": "qrcode-js#*"
+    "qrcode.js": "qrcode-js#*",
+    "Font-Awesome": "5.11.2"
   }
 }

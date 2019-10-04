@@ -11,10 +11,12 @@
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="/lib/Font-Awesome/css/all.css" />
         <link rel="stylesheet" href="~/css/site.css" />
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="/lib/Font-Awesome/css/all.min.css" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
     @RenderSection("Head", required: false)
@@ -31,7 +33,7 @@
                 </button>
                 <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">Acuerdo</a>
                 <environment include="Development">
-                    <span class="dev-alert navbar-brand">DEV MODE</span>
+                    <span class="dev-alert navbar-brand">DEV</span>
                 </environment>
             </div>
             <div class="navbar-collapse collapse">
