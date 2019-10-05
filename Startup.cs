@@ -293,7 +293,8 @@ namespace viafront3
             RecurringJob.AddOrUpdate<IDepositsWithdrawals>(
                 depositsWithdrawals => depositsWithdrawals.ProcessChainWithdrawals(), "0 */10 * ? * *"); // every 10 minutes
 
-            loggerFactory.AddFile("logs/viafront-{Date}.txt");
+            var defaultLogLevel = Configuration.GetSection("Logging").GetSection("LogLevel").GetValue<LogLevel>("Default");
+            loggerFactory.AddFile("logs/viafront-{Date}.txt", defaultLogLevel);
         }
     }
 }
