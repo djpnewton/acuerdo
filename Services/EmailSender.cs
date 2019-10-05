@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 using System.Net.Mail;
 using Hangfire;
 
@@ -12,15 +13,22 @@ namespace viafront3.Services
     // Also for any other user notifications.
     public class EmailSender : IEmailSender
     {
+        readonly ILogger<EmailSender> _logger;
         readonly EmailSenderSettings _settings;
 
-        public EmailSender(IOptions<EmailSenderSettings> optionsAccessor)
+        public EmailSender(ILogger<EmailSender> logger, IOptions<EmailSenderSettings> optionsAccessor)
         {
+            _logger = logger;
             _settings = optionsAccessor.Value;
         }
 
         public Task SendEmailAsync(string email, string subject, string message)
         {
+            if (email == null)
+            {
+                _logger.LogError($"Email parameter is null when sending email (subject '{subject}')");
+                return Task.CompletedTask;
+            }
             bool useHangfire = true;
             try
             {
