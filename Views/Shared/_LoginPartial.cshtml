@@ -12,12 +12,6 @@
         <ul class="nav navbar-nav navbar-right">
             <li>
                 <a asp-area="" asp-controller="Manage" asp-action="Index" title="Manage user @UserManager.GetUserName(User)"><i class="fas fa-user"></i>
-                    <environment include="Development">
-                        @if (Model != null && Model.User != null && Model.User.Exchange != null)
-                        {
-                            <span>(XchId: @Model.User.Exchange.Id)</span>
-                        }
-                    </environment>
                 </a>
             </li>
             <li>
