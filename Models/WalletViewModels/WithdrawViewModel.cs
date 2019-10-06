@@ -12,6 +12,7 @@ namespace viafront3.Models.WalletViewModels
 {
     public class WithdrawViewModel : TwoFactorRequiredViewModel
     {
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
         [Required]
@@ -39,6 +40,7 @@ namespace viafront3.Models.WalletViewModels
 
     public class WithdrawFiatViewModel : TwoFactorRequiredViewModel
     {
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
         public string Asset { get; set; }
         public string BalanceAvailable { get; set; }
         [Required]

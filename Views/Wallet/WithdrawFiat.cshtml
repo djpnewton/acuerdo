@@ -12,7 +12,7 @@
     <div class="col-md-6">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <strong>@Model.BalanceAvailable @Model.Asset Available</strong>
+                <strong>@ViewUtils.FormatStrDec(Model.BalanceAvailable, Model.AssetSettings[Model.Asset].Decimals) @Model.Asset Available</strong>
             </div>
             <div class="panel-body">
                 <form id="withdraw-form" asp-action="WithdrawFiat" method="post" class="form-group" x-unit="@Model.Asset">

@@ -29,6 +29,7 @@ namespace viafront3.Controllers
         private readonly UrlEncoder _urlEncoder;
         private readonly GeneralSettings _genSettings;
         private readonly KycSettings _kycSettings;
+        private readonly IWalletProvider _walletProvider;
 
         private const string AuthenicatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
 
@@ -41,13 +42,15 @@ namespace viafront3.Controllers
           ApplicationDbContext context,
           IOptions<ExchangeSettings> settings,
           IOptions<GeneralSettings> gen,
-          IOptions<KycSettings> kyc) : base(logger, userManager, context, settings)
+          IOptions<KycSettings> kyc,
+          IWalletProvider walletProvider) : base(logger, userManager, context, settings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
             _urlEncoder = urlEncoder;
             _genSettings = gen.Value;
             _kycSettings = kyc.Value;
+            _walletProvider = walletProvider;
         }
 
         [TempData]
@@ -600,13 +603,27 @@ namespace viafront3.Controllers
             if (_kycSettings.Levels.Count > levelNum)
                 level = _kycSettings.Levels[levelNum];
             var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
+            // convert withdrawal amount to string
+            var withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
+            if (_walletProvider.IsChain(_kycSettings.WithdrawalAsset))
+            {
+                var wallet = _walletProvider.GetChain(_kycSettings.WithdrawalAsset);
+                if (wallet != null)
+                    withdrawalTotalThisPeriodString = wallet.AmountToString(withdrawalTotalThisPeriod);
+            }
+            else
+            {
+                var wallet = _walletProvider.GetFiat(_kycSettings.WithdrawalAsset);
+                if (wallet != null)
+                    withdrawalTotalThisPeriodString = wallet.AmountToString(withdrawalTotalThisPeriod);
+            }
 
             var model = new KycViewModel
             {
                 User = user,
                 LevelNum = levelNum,
                 Level = level,
-                WithdrawalTotalThisPeriod = withdrawalTotalThisPeriod,
+                WithdrawalTotalThisPeriod = withdrawalTotalThisPeriodString,
                 KycSettings = _kycSettings,
                 KycRequestUrl = kycRequestUrl,
                 KycRequestStatus = kycRequestStatus,

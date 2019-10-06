@@ -248,6 +248,7 @@ namespace viafront3.Controllers
             var model = new WithdrawViewModel
             {
                 User = user,
+                AssetSettings = _settings.Assets,
                 Asset = asset,
                 BalanceAvailable = balance.Available,
                 TwoFactorRequired = user.TwoFactorEnabled,
@@ -427,6 +428,7 @@ namespace viafront3.Controllers
             var model = new WithdrawFiatViewModel
             {
                 User = user,
+                AssetSettings = _settings.Assets,
                 Asset = asset,
                 BalanceAvailable = balance.Available,
                 TwoFactorRequired = user.TwoFactorEnabled,

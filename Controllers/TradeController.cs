@@ -81,7 +81,10 @@ namespace viafront3.Controllers
             }
             (var success, var error) = Utils.ValidateOrderParams(_settings, model.Order, model.Order.Price);
             if (!success)
-                return FlashErrorAndRedirect("Trade", model.Market, error);
+            {
+                this.FlashError(error);
+                return RedirectToAction("Trade", new { market = model.Market, side = model.Order.Side, amount = model.Order.Amount, price = model.Order.Price });
+            }
 
             var user = await GetUser(required: true);
 

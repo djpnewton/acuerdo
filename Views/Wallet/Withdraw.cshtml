@@ -11,7 +11,7 @@
 <div class="row">
     <div class="col-md-6">
         <div class="panel panel-default">
-            <div class="panel-heading"><strong>@Model.BalanceAvailable @Model.Asset Available</strong></div>
+            <div class="panel-heading"><strong>@ViewUtils.FormatStrDec(Model.BalanceAvailable, Model.AssetSettings[Model.Asset].Decimals) @Model.Asset Available</strong></div>
             <div class="panel-body">
                 <form asp-action="Withdraw" method="post" class="form-group" x-unit="@Model.Asset" id="withdraw-form">
                     <div asp-validation-summary="All" class="text-danger"></div>

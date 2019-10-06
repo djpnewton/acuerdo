@@ -10,7 +10,7 @@ namespace viafront3.Models.ManageViewModels
     {
         public int LevelNum { get; set; }
         public KycLevel Level { get; set; }
-        public Decimal WithdrawalTotalThisPeriod { get; set; }
+        public String WithdrawalTotalThisPeriod { get; set; }
         public KycSettings KycSettings { get; set; }
         public string KycRequestUrl { get; set; }
         public string KycRequestStatus { get; set; }
