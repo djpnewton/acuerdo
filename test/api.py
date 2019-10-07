@@ -89,6 +89,12 @@ def construct_parser():
     parser_market_history.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_market_history.add_argument("limit", metavar="LIMIT", type=int, nargs="?", default=20, help="the maximum records to return")
 
+    parser_market_chart = subparsers.add_parser("market_chart", help="Get the candlestick chart data of a market")
+    parser_market_chart.add_argument("market", metavar="MARKET", type=str, help="the market to query")
+    parser_market_chart.add_argument("start", metavar="START", type=int, help="the start date (unix timestamp)")
+    parser_market_chart.add_argument("end", metavar="END", type=int, help="the end date (unix timestamp)")
+    parser_market_chart.add_argument("interval", metavar="INTERVAL", help="the interval (time period of each candle) in seconds (must be a multiple of 3600)")
+
     ## Trade
 
     parser_order_limit = subparsers.add_parser("order_limit", help="Create a limit order")
@@ -331,6 +337,16 @@ def market_history(args):
     check_request_status(r)
     print(r.text)
 
+def market_chart(args):
+    print(":: calling market chart..")
+    params = {"market": args.market}
+    params["start"] = args.start
+    params["end"] = args.end
+    params["interval"] = args.interval
+    r = req("MarketChart", params)
+    check_request_status(r)
+    print(r.text)
+
 def order_limit(args):
     print(":: calling order limit..")
     if args.side not in ("buy", "sell"):
@@ -478,6 +494,8 @@ if __name__ == "__main__":
         function = market_depth
     elif args.command == "market_history":
         function = market_history
+    elif args.command == "market_chart":
+        function = market_chart
     elif args.command == "order_limit":
         function = order_limit
     elif args.command == "order_market":

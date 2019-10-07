@@ -38,6 +38,7 @@ namespace viafront3.Controllers
         const string INVALID_ORDER = "invalid order";
         const string AMOUNT_TOO_LOW = "amount too low";
         const string INVALID_RECIPIENT = "invalid recipient";
+        const string INVALID_INTERVAL = "invalid interval";
 
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
@@ -463,6 +464,41 @@ namespace viafront3.Controllers
             catch (ViaJsonException ex)
             {
                 _logger.LogError(ex, "error retrieving market history");
+                return BadRequest(INTERNAL_ERROR);
+            }
+        }
+
+        [HttpPost]
+        public ActionResult<ApiMarketChartResponse> MarketChart([FromBody] ApiMarketChart req) 
+        {
+            if (!_settings.Markets.ContainsKey(req.Market))
+                return BadRequest(INVALID_MARKET);
+            if (req.Interval % 3600 != 0)
+                return BadRequest(INVALID_INTERVAL);
+            if (req.Interval <= 0)
+                return BadRequest(INVALID_INTERVAL);
+            try
+            {
+                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+                var klines = via.KlineQuery(req.Market, req.Start, req.End, req.Interval);
+                var model = new ApiMarketChartResponse { Candlesticks = new List<ApiMarketCandlestick>() };
+                foreach (var candle in klines)
+                {
+                    model.Candlesticks.Add(new ApiMarketCandlestick {
+                        Date = Convert.ToInt32(candle[0]),
+                        Open = candle[1],
+                        Close = candle[2],
+                        High = candle[3],
+                        Low = candle[4],
+                        Volume = candle[5]
+                    });
+                };
+                return model;
+            }
+            catch (ViaJsonException ex)
+            {
+                _logger.LogError(ex, "error retrieving market chart");
                 return BadRequest(INTERNAL_ERROR);
             }
         }

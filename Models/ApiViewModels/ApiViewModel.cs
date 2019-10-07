@@ -153,6 +153,29 @@ namespace viafront3.Models.ApiViewModels
         public IList<ApiMarketTrade> Trades;
     }
 
+    public class ApiMarketChart
+    {
+        public string Market { get; set; }
+        public int Start { get; set; }
+        public int End { get; set; }
+        public int Interval { get; set; }
+    }
+
+    public class ApiMarketCandlestick
+    {
+        public int Date { get; set; }
+        public string Open { get; set; }
+        public string Close { get; set; }
+        public string High { get; set; }
+        public string Low { get; set; }
+        public string Volume { get; set; }
+    }
+
+    public class ApiMarketChartResponse
+    {
+        public IList<ApiMarketCandlestick> Candlesticks;
+    }
+
     public class ApiOrderCreateMarket : ApiAuth
     {
         [Required]
