@@ -34,6 +34,16 @@ namespace viafront3
             public string Role { get; set; }
         }
 
+        [Verb("change_user_email", HelpText = "Mark 'sent' a broker order")]
+        class ChangeUserEmail
+        {
+            [Option('o', "oldemail", Required = true, HelpText = "Old (current) email address")]
+            public string OldEmail { get; set; }
+
+            [Option('n', "newemail", Required = true, HelpText = "New email address")]
+            public string NewEmail { get; set; }
+        }
+
         [Verb("consolidate_wallet", HelpText = "Consolidate funds in a wallet")]
         class ConsolidateWallet
         { 
@@ -98,16 +108,6 @@ namespace viafront3
             public string Asset { get; set; }
         }
 
-        [Verb("process_broker_order", HelpText = "Mark 'sent' a broker order")]
-        class ProcessBrokerOrder
-        {
-            [Option('t', "token", Required = true, HelpText = "Token")]
-            public string Token { get; set; }
-
-            [Option('a', "amountsent", Required = true, HelpText = "Amount (decimal) sent")]
-            public decimal AmountSent { get; set; }
-        }
-
         [Verb("kafka_order_updates", HelpText = "Run a kafka order message consumer (and email users whose orders have been updated)")]
         class KafkaOrderUpdates
         { }
@@ -115,63 +115,63 @@ namespace viafront3
         static int RunInitRoles(InitRoles opts)
         {
             var sp = GetServiceProvider();
-            Utils.CreateRoles(sp).GetAwaiter().GetResult();
+            ConsoleTasks.CreateRoles(sp).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunAddRole(AddRole opts)
         {
             var sp = GetServiceProvider();
-            Utils.GiveUserRole(sp, opts.Email, opts.Role).GetAwaiter().GetResult();
+            ConsoleTasks.GiveUserRole(sp, opts.Email, opts.Role).GetAwaiter().GetResult();
+            return 0;
+        }
+
+        static int RunChangeUserEmail(ChangeUserEmail opts)
+        {
+            var sp = GetServiceProvider();
+            ConsoleTasks.ChangeUserEmail(sp, opts.OldEmail, opts.NewEmail).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunConsolidate(ConsolidateWallet opts)
         {
             var sp = GetServiceProvider();
-            Utils.ConsolidateWallet(sp, opts.Asset, opts.Emails, opts.All).GetAwaiter().GetResult();
+            ConsoleTasks.ConsolidateWallet(sp, opts.Asset, opts.Emails, opts.All).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunProcessFiatDeposit(ProcessFiatDeposit opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
+            ConsoleTasks.ProcessFiatDeposit(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunProcessFiatWithdrawal(ProcessFiatWithdrawal opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
+            ConsoleTasks.ProcessFiatWithdrawal(sp, opts.Asset, opts.DepositCode, opts.Date, opts.Amount, opts.BankMetadata).GetAwaiter().GetResult();
             return 0;
         }
 
         static int RunProcessChainWithdrawal(ProcessChainWithdrawal opts)
         {
             var sp = GetServiceProvider();
-            Utils.ProcessChainWithdrawal(sp, opts.Asset, opts.SpendCode);
+            ConsoleTasks.ProcessChainWithdrawal(sp, opts.Asset, opts.SpendCode);
             return 0;
         }
 
         static int RunShowPendingChainWithdrawals(ShowPendingChainWithdrawals opts)
         {
             var sp = GetServiceProvider();
-            Utils.ShowPendingChainWithdrawals(sp, opts.Asset);
+            ConsoleTasks.ShowPendingChainWithdrawals(sp, opts.Asset);
             return 0;
         }
 
         static int RunCheckChainDeposits(CheckChainDeposits opts)
         {
             var sp = GetServiceProvider();
-            Utils.CheckChainDeposits(sp, opts.Asset);
-            return 0;
-        }
-
-        static int RunProcessBrokerOrder(ProcessBrokerOrder opts)
-        {
-            var sp = GetServiceProvider();
-            Utils.ProcessBrokerOrder(sp, opts.Token, opts.AmountSent);
+            ConsoleTasks.CheckChainDeposits(sp, opts.Asset);
             return 0;
         }
 
@@ -188,19 +188,19 @@ namespace viafront3
             {
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
-                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole,
-                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits, ProcessBrokerOrder,
+                return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ChangeUserEmail,
+                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits,
                         KafkaOrderUpdates>(argsList)
                     .MapResult(
                     (InitRoles opts) => RunInitRoles(opts),
                     (AddRole opts) => RunAddRole(opts),
+                    (ChangeUserEmail opts) => RunChangeUserEmail(opts),
                     (ConsolidateWallet opts) => RunConsolidate(opts),
                     (ProcessFiatDeposit opts) => RunProcessFiatDeposit(opts),
                     (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawal(opts),
                     (ProcessChainWithdrawal opts) => RunProcessChainWithdrawal(opts),
                     (ShowPendingChainWithdrawals opts) => RunShowPendingChainWithdrawals(opts),
                     (CheckChainDeposits opts) => RunCheckChainDeposits(opts),
-                    (ProcessBrokerOrder opts) => RunProcessBrokerOrder(opts),
                     (KafkaOrderUpdates opts) => RunKafkaOrderUpdates(opts),
                     errs => 1);
             }
