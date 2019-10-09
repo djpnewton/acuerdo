@@ -31,4 +31,4 @@
     @await Html.PartialAsync("_ChartScriptsPartial")
 }
 
-<script src="~/js/orderbook.js" data-market="@Model.Market"></script>
+<script src="~/js/orderbook.js" data-market="@Model.Market" data-price-unit="@Model.OrderBook.PriceUnit"></script>

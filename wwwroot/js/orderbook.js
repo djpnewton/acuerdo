@@ -5,6 +5,7 @@ document.currentScript = document.currentScript || (function() {
 })();
 
 var market = document.currentScript.getAttribute('data-market');
+var priceUnit = document.currentScript.getAttribute('data-price-unit');
 
 function ready(fn) {
     if (document.readyState != 'loading'){
@@ -41,14 +42,15 @@ function loadChart(intervalCode) {
     var start = unixTimestamp - intervalSeconds * 30;
     var url = "/Market/klines?market=" + market + "&start=" + start + "&end=" + unixTimestamp + "&interval=" + intervalSeconds;
     $.getJSON(url, function(data) {
-        viachart.load(data);
+        viachart.load(data, priceUnit);
     });
 }
 
 ready(function() {
     viachart.create("#chart");
-    loadChart("1H");
+    loadChart("1D");
     $(document).on('click', '.loadchart', function() {
         loadChart($(this).attr('data-period'));
+        return false;
     });
 });

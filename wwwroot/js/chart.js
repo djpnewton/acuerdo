@@ -65,6 +65,7 @@ var viachart = (function () {
 
     var svg = null;
     var coordsText = null;
+    var priceAxisText = null;
 
     function enter() {
         coordsText.style("display", "inline");
@@ -106,8 +107,11 @@ var viachart = (function () {
                     .append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-            coordsText = svg.append('text')
+            coordsText = svg.append("g")
+                    .attr("class", "coords")
+                    .append('text')
                     .style("text-anchor", "end")
+                    .style("display", "none")
                     .attr("class", "coords")
                     .attr("x", width - 25)
                     .attr("y", 15);
@@ -122,24 +126,26 @@ var viachart = (function () {
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + height + ")");
 
-            svg.append("g")
+            var priceAxis = svg.append("g")
                     .attr("class", "y axis price")
-                    .attr("transform", "translate(" + width + ",0)")
-                    .append("text")
+                    .attr("transform", "translate(" + width + ",0)");
+
+            priceAxisText = priceAxis.append("text")
                     .attr("transform", "rotate(-90)")
                     .attr("y", -12)
                     .attr("dy", ".71em")
                     .style("text-anchor", "end")
-                    .text("Price ($)");
+                    .text("Price (...)");
 
             svg.append("g")
                     .attr("class", "y axis volume")
                     .append("text")
                     .attr("transform", "rotate(-90)")
+                    .attr("x", -360)
                     .attr("y", 6)
                     .attr("dy", ".71em")
                     .style("text-anchor", "end")
-                    ;//.text("Volume");
+                    .text("Volume");
 
             svg.append("g")
                     .attr("class", "close annotation up");
@@ -153,7 +159,7 @@ var viachart = (function () {
                     .each(function(d) { move(d); }); // Display the current data
         },
 
-        load: function(data) {
+        load: function(data, priceUnit) {
             var accessor = candlestick.accessor();
 
             data = data.map(function(d) {
@@ -168,6 +174,8 @@ var viachart = (function () {
             }).sort(function(a, b) { return d3.ascending(accessor.d(a), accessor.d(b)); });
 
             draw(data);
+
+            priceAxisText.text("Price (" + priceUnit + ")");
         },
     };
 })();

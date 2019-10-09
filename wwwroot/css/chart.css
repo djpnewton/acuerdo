@@ -36,6 +36,10 @@ path.candle.down {
     text-shadow:none;
 }
 
+.coords text{
+    font-size: 10px!important;
+}
+
 .crosshair {
     cursor: crosshair;
 }
@@ -47,6 +51,15 @@ path.candle.down {
 
 .crosshair .axisannotation path {
     fill: #DDDDDD;
+}
+
+.axisannotation text{
+    font-size: 10px!important;
+}
+
+.axis text{
+    font-size: 10px!important;
+    fill: #000;
 }
 
 path.volume {
