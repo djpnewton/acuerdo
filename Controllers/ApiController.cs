@@ -36,9 +36,10 @@ namespace viafront3.Controllers
         const string INSUFFICIENT_BALANCE = "insufficient balance";
         const string INSUFFICIENT_LIQUIDITY = "insufficient liquidity";
         const string INVALID_ORDER = "invalid order";
-        const string AMOUNT_TOO_LOW = "amount too low";
+        const string AMOUNT_TOO_LOW = "amount too low (minumum is: {0})";
         const string INVALID_RECIPIENT = "invalid recipient";
         const string INVALID_INTERVAL = "invalid interval";
+        const string INVALID_AMOUNT = "invalid amount";
 
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
@@ -904,13 +905,19 @@ namespace viafront3.Controllers
             error = null;
             avgPrice = 0;
             var marketSettings = _settings.Markets[market];
+            // validate amount
+            if (!decimal.TryParse(amount, out var amountDec))
+            {
+                error = INVALID_AMOUNT;
+                return null;
+            }
             // validate minimum order
             if (_apiSettings.Broker.MinimumOrderAmount.ContainsKey(market))
             {
                 var minAmount = _apiSettings.Broker.MinimumOrderAmount[market];
-                if (decimal.Parse(amount) < minAmount)
+                if (amountDec < minAmount)
                 {
-                    error = AMOUNT_TOO_LOW;
+                    error = string.Format(AMOUNT_TOO_LOW, minAmount);
                     return null;
                 }
             }
@@ -925,7 +932,7 @@ namespace viafront3.Controllers
                 decimal amountReceive = 0;
                 var assetSend = "";
                 var assetReceive = "";
-                var amountLeft = decimal.Parse(amount);
+                var amountLeft = amountDec;
                 if (side == OrderSide.Bid)
                 {
                     assetSend = marketSettings.PriceUnit;

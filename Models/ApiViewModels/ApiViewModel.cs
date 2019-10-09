@@ -8,6 +8,7 @@ namespace viafront3.Models.ApiViewModels
 {
     public struct ApiToken
     {
+        [Required]
         public string Token;
     }
 
@@ -20,19 +21,25 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiAccountCreate
     {
+        [Required]
         public string Email { get; set; }
+        [Required]
         public string DeviceName { get; set; }
     }
 
     public class ApiKeyCreate
     {
+        [Required]
         public string Email { get; set; }
+        [Required]
         public string DeviceName { get; set; }
     }
 
     public class ApiAuth
     {
+        [Required]
         public String Key { get; set; }
+        [Required]
         public long Nonce { get; set; }
     }
 
@@ -64,6 +71,7 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiAccountKycRequestStatus : ApiAuth
     {
+        [Required]
         public String Token { get; set; }
     }
 
@@ -91,6 +99,7 @@ namespace viafront3.Models.ApiViewModels
     
     public class ApiMarketPeriod
     {
+        [Required]
         public string Market { get; set; }
         public int? Period { get; set; }
     }
@@ -107,6 +116,7 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiMarket
     {
+        [Required]
         public string Market { get; set; }
     }
 
@@ -123,7 +133,9 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiMarketDepth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public string Merge { get; set; }
         public int? Limit { get; set; }
     }
@@ -136,6 +148,7 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiMarketHistory
     {
+        [Required]
         public string Market { get; set; }
         public int? Limit { get; set; }
     }
@@ -155,9 +168,13 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiMarketChart
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public int Start { get; set; }
+        [Required]
         public int End { get; set; }
+        [Required]
         public int Interval { get; set; }
     }
 
@@ -214,8 +231,11 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiOrders: ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public int Offset { get; set; }
+        [Required]
         public int Limit { get; set; }       
     }
 
@@ -228,18 +248,23 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiOrderPendingStatus: ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public int Id { get; set; }
     }
 
     public class ApiOrderExecutedStatus: ApiAuth
     {
+        [Required]
         public int Id { get; set; }
     }
 
     public class ApiOrderCancel: ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public int Id { get; set; }
     }
 
@@ -280,8 +305,11 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiBrokerQuote : ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public string Side { get; set; }
+        [Required]
         public string Amount { get; set; }
     }
 
@@ -305,6 +333,7 @@ namespace viafront3.Models.ApiViewModels
     
     public class ApiBrokerCreate : ApiBrokerQuote
     {
+        [Required]
         public string Recipient { get; set; }
     }
     
@@ -327,6 +356,7 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiBrokerStatus : ApiAuth
     {
+        [Required]
         public string Token { get; set; }
     }
 }
