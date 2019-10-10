@@ -16,6 +16,7 @@ namespace viafront3.Services
         IFiatWallet GetFiat(string asset);
         string ConsolidatedFundsTag();
         ChainAssetSettings ChainAssetSettings(string asset);
+        string AmountToString(string asset, decimal amount);
     }
 
     public class WalletProvider : IWalletProvider
@@ -95,6 +96,23 @@ namespace viafront3.Services
             if (_walletSettings.ChainAssetSettings.ContainsKey(asset))
                 return _walletSettings.ChainAssetSettings[asset];
             throw new Exception(string.Format("Wallet '{0}' not supported", asset));
+        }
+
+        public string AmountToString(string asset, decimal amount)
+        {
+            if (IsChain(asset))
+            {
+                var wallet = GetChain(asset);
+                if (wallet != null)
+                    return wallet.AmountToString(amount);
+            }
+            else
+            {
+                var wallet = GetFiat(asset);
+                if (wallet != null)
+                    return wallet.AmountToString(amount);
+            }
+            return null;
         }
     }
 }

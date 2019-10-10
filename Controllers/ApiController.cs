@@ -300,13 +300,17 @@ namespace viafront3.Controllers
                 kycLevel = _kycSettings.Levels[level];
             else
                 return BadRequest(INTERNAL_ERROR);
+            var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
+            var withdrawalTotalThisPeriodString = _walletProvider.AmountToString(_kycSettings.WithdrawalAsset, withdrawalTotalThisPeriod);
+            if (withdrawalTotalThisPeriodString == null)
+                withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
             var model = new ApiAccountKyc
             {
                 Level = level.ToString(),
                 WithdrawalLimit = kycLevel.WithdrawalLimit,
                 WithdrawalAsset = _kycSettings.WithdrawalAsset,
                 WithdrawalPeriod = _kycSettings.WithdrawalPeriod.ToString(),
-                WithdrawalTotal = user.WithdrawalTotalThisPeriod(_kycSettings).ToString(),
+                WithdrawalTotal = withdrawalTotalThisPeriodString,
 
             };
             return model;

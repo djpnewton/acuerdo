@@ -604,19 +604,9 @@ namespace viafront3.Controllers
                 level = _kycSettings.Levels[levelNum];
             var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
             // convert withdrawal amount to string
-            var withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
-            if (_walletProvider.IsChain(_kycSettings.WithdrawalAsset))
-            {
-                var wallet = _walletProvider.GetChain(_kycSettings.WithdrawalAsset);
-                if (wallet != null)
-                    withdrawalTotalThisPeriodString = wallet.AmountToString(withdrawalTotalThisPeriod);
-            }
-            else
-            {
-                var wallet = _walletProvider.GetFiat(_kycSettings.WithdrawalAsset);
-                if (wallet != null)
-                    withdrawalTotalThisPeriodString = wallet.AmountToString(withdrawalTotalThisPeriod);
-            }
+            var withdrawalTotalThisPeriodString = _walletProvider.AmountToString(_kycSettings.WithdrawalAsset, withdrawalTotalThisPeriod);
+            if (withdrawalTotalThisPeriodString == null)
+                withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
 
             var model = new KycViewModel
             {

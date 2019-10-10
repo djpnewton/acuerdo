@@ -140,9 +140,13 @@ namespace viafront3.Controllers
             if (user.Kyc != null && user.Kyc.Level < _kycSettings.Levels.Count)
                 kycLevel = _kycSettings.Levels[user.Kyc.Level];
             if (decimal.Parse(kycLevel.WithdrawalLimit) <= newWithdrawalTotal)
+            {
+                var withdrawalTotalThisPeriodString = _walletProvider.AmountToString(_kycSettings.WithdrawalAsset, withdrawalTotalThisPeriod);
+                if (withdrawalTotalThisPeriodString == null)
+                    withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
                 return (false, 0,
-                    $"Your withdrawal limit is {kycLevel.WithdrawalLimit} {_kycSettings.WithdrawalAsset} equivalent, your current withdrawal total this period ({_kycSettings.WithdrawalPeriod}) is {withdrawalTotalThisPeriod} {_kycSettings.WithdrawalAsset}");
-
+                    $"Your withdrawal limit is {kycLevel.WithdrawalLimit} {_kycSettings.WithdrawalAsset} equivalent, your current withdrawal total this period ({_kycSettings.WithdrawalPeriod}) is {withdrawalTotalThisPeriodString} {_kycSettings.WithdrawalAsset}");
+            }
             return (true, withdrawalAssetAmount, null);
         }
     }
