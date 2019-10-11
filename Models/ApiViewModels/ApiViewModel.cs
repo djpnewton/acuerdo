@@ -285,8 +285,11 @@ namespace viafront3.Models.ApiViewModels
 
     public class ApiTrades: ApiAuth
     {
+        [Required]
         public string Market { get; set; }
+        [Required]
         public int Offset { get; set; }
+        [Required]
         public int Limit { get; set; }       
     }
 
@@ -339,6 +342,7 @@ namespace viafront3.Models.ApiViewModels
     
     public class ApiBrokerOrder
     {
+        public long Date { get; set; }
         public string AssetSend { get; set; }
         public string AmountSend { get; set; }
         public string AssetReceive { get; set; }
@@ -358,5 +362,21 @@ namespace viafront3.Models.ApiViewModels
     {
         [Required]
         public string Token { get; set; }
+    }
+
+    public class ApiBrokerOrders : ApiAuth
+    {
+        [Required]
+        public int Offset { get; set; }
+        [Required]
+        public int Limit { get; set; }
+        public string Status { get; set; }     
+    }
+
+    public class ApiBrokerOrdersResponse
+    {
+        public int Offset { get; set; }
+        public int Limit { get; set; }       
+        public IList<ApiBrokerOrder> Orders;   
     }
 }

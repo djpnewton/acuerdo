@@ -185,6 +185,19 @@ def construct_parser():
     parser_broker_status.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
     parser_broker_status.add_argument("token", metavar="TOKEN", type=str, help="the brokerage order token")
 
+    parser_broker_orders = subparsers.add_parser("broker_orders", help="Get you list of brokerage orders")
+    parser_broker_orders.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_broker_orders.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
+    parser_broker_orders.add_argument("offset", metavar="OFFSET", type=int, help="the offset")
+    parser_broker_orders.add_argument("limit", metavar="LIMIT", type=int, help="the limit")
+    parser_broker_orders.add_argument("status", metavar="STATUS", type=str, nargs="?", default="", help="the status to filter by")
+
+    ## Debug
+    parser_funds_add = subparsers.add_parser("funds_give", help="DEBUG: give funds to a user")
+    parser_funds_add.add_argument("email", metavar="EMAIL", type=str, help="the users email address")
+    parser_funds_add.add_argument("asset", metavar="ASSET", type=str, help="the asset to give")
+    parser_funds_add.add_argument("amount", metavar="AMOunT", type=str, help="the amount to give")
+
     return parser
 
 def create_sig(api_key, api_secret, message):
@@ -451,7 +464,31 @@ def broker_status(args):
     print(r.text)
     print(" - payment address: %s" % r.json()["paymentAddress"])
     print(" - amount: %s" % r.json()["amountSend"])
-    print(" - attachement: {\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"])
+    print(" - attachment: {\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"])
+    addr = r.json()["paymentAddress"]
+    asset_id = "CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe"
+    import decimal
+    amount = int(decimal.Decimal(r.json()["amountSend"]) * 100)
+    attachment = "{\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"]
+    uri = "waves://%s?asset=%s&amount=%d&attachment=%s" % (addr, asset_id, amount, attachment)
+    print(" - uri: %s" % uri)
+
+def broker_orders(args):
+    print(":: calling broker orders..")
+    params = {"offset": args.offset, "limit": args.limit, "status": args.status}
+    r = req("BrokerOrders", params, args.key, args.secret)
+    check_request_status(r)
+    print(r.text)
+
+def funds_give(args):
+    global URL_BASE
+    URL_BASE = "http://localhost:5000/api/dev/"
+
+    print(":: calling funds give..")
+    params = {"email": args.email, "asset": args.asset, "amount": args.amount}
+    r = req("UserFundGive", params)
+    check_request_status(r)
+    print(r.text)
 
 if __name__ == "__main__":
     # parse arguments
@@ -524,6 +561,10 @@ if __name__ == "__main__":
         function = broker_accept
     elif args.command == "broker_status":
         function = broker_status
+    elif args.command == "broker_orders":
+        function = broker_orders
+    elif args.command == "funds_give":
+        function = funds_give
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)

@@ -40,6 +40,7 @@ namespace viafront3.Controllers
         const string INVALID_RECIPIENT = "invalid recipient";
         const string INVALID_INTERVAL = "invalid interval";
         const string INVALID_AMOUNT = "invalid amount";
+        const string INVALID_BROKER_STATUS = "invalid broker status";
 
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
@@ -1086,6 +1087,7 @@ namespace viafront3.Controllers
         {
             return new ApiBrokerOrder
             {
+                Date = order.Date,
                 AssetReceive = order.AssetReceive,
                 AmountReceive = FormatOrderValue(walletProvider, order.AssetReceive, order.AmountReceive),
                 AssetSend = order.AssetSend,
@@ -1284,6 +1286,28 @@ namespace viafront3.Controllers
             if (order == null)
                 return BadRequest(INTERNAL_ERROR);
             return FormatOrder(_walletProvider, order);
+        }
+
+        [HttpPost]
+        public ActionResult<ApiBrokerOrdersResponse> BrokerOrders([FromBody] ApiBrokerOrders req)
+        {
+            // validate auth
+            var apikey = AuthKey(req.Key, req.Nonce, out string error);
+            if (apikey == null)
+                return BadRequest(error);
+            // get orders
+            var orders = _context.BrokerOrders.Where(o => o.ApplicationUserId == apikey.ApplicationUserId);
+            if (!string.IsNullOrEmpty(req.Status))
+            {
+                if (!Enum.TryParse(req.Status, true, out BrokerOrderStatus status))
+                    return BadRequest(INVALID_BROKER_STATUS);
+                orders = orders.Where(o => o.Status == req.Status);
+            }
+            orders = orders.OrderByDescending(o => o.Date);
+            var formattedOrders = new List<ApiBrokerOrder>();
+            foreach (var order in orders)
+                formattedOrders.Add(FormatOrder(_walletProvider, order));
+            return new ApiBrokerOrdersResponse { Offset = req.Offset, Limit = req.Limit, Orders = formattedOrders };
         }
     }
 }
