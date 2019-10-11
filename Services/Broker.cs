@@ -121,8 +121,7 @@ namespace viafront3.Services
                     try
                     {
                         var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(att);
-                        if (dict.ContainsKey("InvoiceId"))
-                            invoiceId = dict["InvoiceId"];
+                        invoiceId = dict.FirstOrDefault(x => String.Equals(x.Key, "InvoiceId", StringComparison.OrdinalIgnoreCase)).Value;
                     }
                     catch {}
                 }
