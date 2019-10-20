@@ -1005,7 +1005,7 @@ namespace viafront3.Controllers
                     if (amountAsQuoteCurrency)
                     {
                         // selling XXX/YYY with "Amount" units of YYY
-                        amountSend = amountDec;
+                        amountReceive = amountDec;
                         while (amountLeft > 0)
                         {
                             if (!getNextDepthItem(depth, out var priceItem, out var amountItem, out error))
@@ -1014,10 +1014,10 @@ namespace viafront3.Controllers
                             var amountToUse = priceUnits;
                             if (amountLeft < priceUnits)
                                 amountToUse = amountLeft;
-                            amountReceive += amountToUse / priceItem;
+                            amountSend += amountToUse / priceItem;
                             amountLeft -= amountToUse;
                         }
-                        amountReceive *= (1 - _apiSettings.Broker.Fee);
+                        amountSend *= (1 + _apiSettings.Broker.Fee);
                     }
                     else
                     {
