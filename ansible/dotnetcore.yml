@@ -16,17 +16,23 @@
         url: https://packages.microsoft.com/keys/microsoft.asc
         state: present
 
-    - name: .NET | Add repo for Ubuntu Trusty
+    - name: .NET | Add repo for Ubuntu Trusty (14.04)
       apt_repository:
         repo: deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-trusty-prod trusty main
         state: present
       when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "14"
 
-    - name: .NET | Add repo for Ubuntu Xenial
+    - name: .NET | Add repo for Ubuntu Xenial (16.04)
       apt_repository:
         repo: deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main
         state: present
       when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "16"
+
+    - name: .NET | Add repo for Ubuntu Bionic (18.04)
+      apt_repository:
+        repo: deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-bionic-prod bionic main
+        state: present
+      when: ansible_distribution == "Ubuntu" and ansible_distribution_major_version == "18"
 
     - name: .NET | Install dotnet core SDK
       package:
