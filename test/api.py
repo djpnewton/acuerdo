@@ -439,14 +439,14 @@ def broker_markets(args):
 
 def broker_quote(args):
     print(":: calling broker quote..")
-    params = {"market": args.market, "side": args.side, "amount": args.amount, "amount_as_quote_currency": args.amount_as_quote_currency}
+    params = {"market": args.market, "side": args.side, "amount": args.amount, "amountasquotecurrency": args.amount_as_quote_currency}
     r = req("BrokerQuote", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def broker_create(args):
     print(":: calling broker create..")
-    params = {"market": args.market, "side": args.side, "amount": args.amount, "amount_as_quote_currency": args.amount_as_quote_currency, "recipient": args.recipient}
+    params = {"market": args.market, "side": args.side, "amount": args.amount, "amountasquotecurrency": args.amount_as_quote_currency, "recipient": args.recipient}
     r = req("BrokerCreate", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
