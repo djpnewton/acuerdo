@@ -905,7 +905,23 @@ namespace viafront3.Controllers
             return true;
         }
 
-        ApiBrokerQuoteInternal _brokerQuote(string market, string amount, OrderSide side, out string error, out decimal avgPrice)
+        bool getNextDepthItem(IList<IList<string>> depth, out decimal price, out decimal amount, out string error)
+        {
+            price = 0;
+            amount = 0;
+            error = null;
+            if (depth.Count() == 0)
+            {
+                error = INSUFFICIENT_LIQUIDITY;
+                return false;
+            }
+            price = decimal.Parse(depth[0][0]);
+            amount = decimal.Parse(depth[0][1]);
+            depth.RemoveAt(0);
+            return true;
+        }
+
+        ApiBrokerQuoteInternal _brokerQuote(string market, string amount, OrderSide side, bool amountAsQuoteCurrency, out string error, out decimal avgPrice)
         {
             error = null;
             avgPrice = 0;
@@ -940,57 +956,87 @@ namespace viafront3.Controllers
                 var amountLeft = amountDec;
                 if (side == OrderSide.Bid)
                 {
+                    var depth = orderDepth.asks;
                     assetSend = marketSettings.PriceUnit;
                     assetReceive = marketSettings.AmountUnit;
-                    amountReceive = amountLeft;
 
-                    var depth = orderDepth.asks;
-                    while (amountLeft > 0)
+                    if (amountAsQuoteCurrency)
                     {
-                        if (depth.Count() == 0)
+                        // buying XXX/YYY with "Amount" units of YYY
+                        amountSend = amountDec; 
+                        while (amountLeft > 0)
                         {
-                            error = INSUFFICIENT_LIQUIDITY;
-                            return null;
+                            if (!getNextDepthItem(depth, out var priceItem, out var amountItem, out error))
+                                return null;
+                            var priceUnits = amountItem * priceItem;
+                            var amountToUse = priceUnits;
+                            if (amountLeft < priceUnits)
+                                amountToUse = amountLeft;
+                            amountReceive += amountToUse / priceItem;
+                            amountLeft -= amountToUse;
                         }
-                        var priceItem = decimal.Parse(depth[0][0]);
-                        var amountItem = decimal.Parse(depth[0][1]);
-                        depth.RemoveAt(0);
-                        var amountToUse = amountItem;
-                        if (amountLeft < amountItem)
-                            amountToUse = amountLeft;
-                        amountSend += priceItem * amountToUse;
-                        amountLeft -= amountToUse;
+                        amountReceive *= (1 - _apiSettings.Broker.Fee);
+                    }
+                    else
+                    {
+                        // buying XXX/YYY, "Amount" units of XXX
+                        amountReceive = amountLeft;
+                        while (amountLeft > 0)
+                        {
+                            if (!getNextDepthItem(depth, out var priceItem, out var amountItem, out error))
+                                return null;
+                            var amountToUse = amountItem;
+                            if (amountLeft < amountItem)
+                                amountToUse = amountLeft;
+                            amountSend += priceItem * amountToUse;
+                            amountLeft -= amountToUse;
+                        }
+                        amountSend *= (1 + _apiSettings.Broker.Fee);
                     }
                     if (amountSend > 0)
                         avgPrice = amountReceive / amountSend;
-                    amountSend *= (1 + _apiSettings.Broker.Fee);
                 }
                 else
                 {
+                    var depth = orderDepth.bids;
                     assetSend = marketSettings.AmountUnit;
                     assetReceive = marketSettings.PriceUnit;
-                    amountSend = amountLeft;
 
-                    var depth = orderDepth.bids;
-                    while (amountLeft > 0)
+                    if (amountAsQuoteCurrency)
                     {
-                        if (depth.Count() == 0)
+                        // selling XXX/YYY with "Amount" units of YYY
+                        amountSend = amountDec;
+                        while (amountLeft > 0)
                         {
-                            error = INSUFFICIENT_LIQUIDITY;
-                            return null;
+                            if (!getNextDepthItem(depth, out var priceItem, out var amountItem, out error))
+                                return null;
+                            var priceUnits = amountItem * priceItem;
+                            var amountToUse = priceUnits;
+                            if (amountLeft < priceUnits)
+                                amountToUse = amountLeft;
+                            amountReceive += amountToUse / priceItem;
+                            amountLeft -= amountToUse;
                         }
-                        var priceItem = decimal.Parse(depth[0][0]);
-                        var amountItem = decimal.Parse(depth[0][1]);
-                        depth.RemoveAt(0);
-                        var amountToUse = amountItem;
-                        if (amountLeft < amountItem)
-                            amountToUse = amountLeft;
-                        amountReceive += priceItem * amountToUse;
-                        amountLeft -= amountToUse;
+                        amountReceive *= (1 - _apiSettings.Broker.Fee);
                     }
-                    if (amountSend > 0)
+                    else
+                    {
+                        // selling XXX/YYY, "Amount" units of XXX
+                        amountSend = amountLeft;
+                        while (amountLeft > 0)
+                        {
+                            if (!getNextDepthItem(depth, out var priceItem, out var amountItem, out error))
+                                return null;
+                            var amountToUse = amountItem;
+                            if (amountLeft < amountItem)
+                                amountToUse = amountLeft;
+                            amountReceive += priceItem * amountToUse;
+                            amountLeft -= amountToUse;
+                        }
+                        amountReceive *= (1 - _apiSettings.Broker.Fee);
+                    }
+                    if (amountReceive > 0)
                         avgPrice = amountSend / amountReceive;
-                    amountReceive *= (1 - _apiSettings.Broker.Fee);
                 }
                 var model = new ApiBrokerQuoteInternal
                 {
@@ -1039,7 +1085,10 @@ namespace viafront3.Controllers
                 return BadRequest(INTERNAL_ERROR);
             }
             // get quote
-            var modelInternal = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
+            var amountAsQuoteCurrency = false;
+            if (req.AmountAsQuoteCurrency.HasValue)
+                amountAsQuoteCurrency = req.AmountAsQuoteCurrency.Value;
+            var modelInternal = _brokerQuote(req.Market, req.Amount, side, amountAsQuoteCurrency, out error, out decimal avgPrice);
             if (modelInternal == null)
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");
@@ -1123,7 +1172,10 @@ namespace viafront3.Controllers
             if (apikey == null)
                 return BadRequest(error);
             // get quote
-            var quote = _brokerQuote(req.Market, req.Amount, side, out error, out decimal avgPrice);
+            var amountAsQuoteCurrency = false;
+            if (req.AmountAsQuoteCurrency.HasValue)
+                amountAsQuoteCurrency = req.AmountAsQuoteCurrency.Value;
+            var quote = _brokerQuote(req.Market, req.Amount, side, amountAsQuoteCurrency, out error, out decimal avgPrice);
             if (quote == null)
             {
                 _logger.LogError($"Failed to create broker quote (market: {req.Market}, amount: {req.Amount}, side: {side})");

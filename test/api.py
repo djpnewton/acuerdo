@@ -166,6 +166,7 @@ def construct_parser():
     parser_broker_quote.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_broker_quote.add_argument("side", metavar="SIDE", type=str, help="'buy' or 'sell'")
     parser_broker_quote.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
+    parser_broker_quote.add_argument("amount_as_quote_currency", metavar="AMOUNT_AS_QUOTE_CURRENCY", type=bool, nargs="?", default=False, help="Denominate the amount parameter as the 'quote currency' of the market ticker")
 
     parser_broker_create = subparsers.add_parser("broker_create", help="Create a brokerage order")
     parser_broker_create.add_argument("key", metavar="KEY", type=str, help="the api key")
@@ -173,6 +174,7 @@ def construct_parser():
     parser_broker_create.add_argument("market", metavar="MARKET", type=str, help="the market to query")
     parser_broker_create.add_argument("side", metavar="SIDE", type=str, help="'buy' or 'sell'")
     parser_broker_create.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
+    parser_broker_create.add_argument("amount_as_quote_currency", metavar="AMOUNT_AS_QUOTE_CURRENCY", type=bool, nargs="?", default=False, help="Denominate the amount parameter as the 'quote currency' of the market ticker")
     parser_broker_create.add_argument("recipient", metavar="RECIPIENT", type=str, help="The recipient (cryptocurrency address or bank account number")
 
     parser_broker_accept = subparsers.add_parser("broker_accept", help="Accept a brokerage order")
@@ -437,14 +439,14 @@ def broker_markets(args):
 
 def broker_quote(args):
     print(":: calling broker quote..")
-    params = {"market": args.market, "side": args.side, "amount": args.amount}
+    params = {"market": args.market, "side": args.side, "amount": args.amount, "amount_as_quote_currency": args.amount_as_quote_currency}
     r = req("BrokerQuote", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
 
 def broker_create(args):
     print(":: calling broker create..")
-    params = {"market": args.market, "side": args.side, "amount": args.amount, "recipient": args.recipient}
+    params = {"market": args.market, "side": args.side, "amount": args.amount, "amount_as_quote_currency": args.amount_as_quote_currency, "recipient": args.recipient}
     r = req("BrokerCreate", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)

@@ -314,6 +314,7 @@ namespace viafront3.Models.ApiViewModels
         public string Side { get; set; }
         [Required]
         public string Amount { get; set; }
+        public bool? AmountAsQuoteCurrency { get; set; }
     }
 
         public class ApiBrokerQuoteInternal
