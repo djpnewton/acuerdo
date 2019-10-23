@@ -318,7 +318,7 @@ namespace viafront3.Controllers
         }
 
         [HttpPost]
-        public ActionResult<ApiAccountKycRequest> AccountKycUpgrade([FromBody] ApiAuth req) 
+        public async Task<ActionResult<ApiAccountKycRequest>> AccountKycUpgrade([FromBody] ApiAuth req) 
         {
             if (!_kycSettings.KycServerEnabled)
             {
@@ -329,7 +329,7 @@ namespace viafront3.Controllers
             if (apikey == null)
                 return BadRequest(error);
             // call kyc server to create request
-            var model = RestUtils.CreateKycRequest(_logger, _context, _kycSettings, apikey.ApplicationUserId);
+            var model = await RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);

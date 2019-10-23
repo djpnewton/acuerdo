@@ -157,12 +157,13 @@ namespace viafront3
             return null;
         }
     
-        public static viafront3.Models.ApiViewModels.ApiAccountKycRequest CreateKycRequest(ILogger logger, ApplicationDbContext context, KycSettings kycSettings, string applicationUserId)
+        public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CreateKycRequest(ILogger logger, ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId)
         {
             // check request does not already exist
             var kycReq = context.KycRequests.Where(r => r.ApplicationUserId == applicationUserId).FirstOrDefault();
             if (kycReq != null)
-                return null;
+                return await CheckKycRequest(logger, context, userManager, kycSettings, applicationUserId, kycReq.Token);
             // call kyc server to create request
             var token = Utils.CreateToken();
             var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token });
@@ -193,7 +194,7 @@ namespace viafront3
             return null;
         }
 
-        public static async Task<viafront3.Models.ApiViewModels.ApiAccountKycRequest> CheckKycRequest(ILogger logger, ApplicationDbContext context, 
+        public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CheckKycRequest(ILogger logger, ApplicationDbContext context, 
             UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string token)
         {
             var jsonBody = JsonConvert.SerializeObject(new { token = token });

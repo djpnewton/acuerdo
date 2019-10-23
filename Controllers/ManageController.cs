@@ -632,7 +632,7 @@ namespace viafront3.Controllers
             }
             var user = await GetUser(required: true);
 
-            var _model = RestUtils.CreateKycRequest(_logger, _context, _kycSettings, user.Id);
+            var _model = RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, user.Id);
             if (_model != null)
                 this.FlashSuccess("Created KYC upgrade request");
 
