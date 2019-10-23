@@ -6,6 +6,7 @@
 
   vars:
     dotnet_run_env: "{{ 'export ASPNETCORE_ENVIRONMENT=Development;' if DEPLOY_TYPE == 'test' else '' }}"
+    dotnet_configuration: "{{ 'Debug' if DEPLOY_TYPE == 'test' else 'Release' }}"
     kyc_enabled: "{{ 'true' if kyc_url else 'false' }}"
     fiat_payment_enabled: "{{ 'true' if fiat_server_url else 'false' }}"
     fiat_payout_enabled: "{{ 'true' if fiat_server_url else 'false' }}"
@@ -229,6 +230,12 @@
     - name: install npm & node
       apt:
         name: ['nodejs-legacy', 'npm']
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('16.04', '<=')
+
+    - name: install npm & node
+      apt:
+        name: ['nodejs', 'npm']
+      when: ansible_distribution == 'Ubuntu' and ansible_distribution_version is version('16.04', '>')
 
     - name: install bower
       shell: cd /opt/viafront; npm install bower
@@ -241,7 +248,7 @@
       become_user: viafront
 
     - name: dotnet build
-      shell: cd /opt/viafront; dotnet build;
+      shell: cd /opt/viafront; dotnet build -c {{dotnet_configuration}};
       become: yes
       become_user: viafront
 
