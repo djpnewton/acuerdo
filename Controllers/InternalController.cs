@@ -338,7 +338,7 @@ namespace viafront3.Controllers
             return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
 
-        public IActionResult Broker(int offset=0, int limit=20, string orderStatus=null)
+        public IActionResult Broker(int offset=0, int limit=20, string orderStatus=null, string notOrderStatus=null)
         {
             var user = GetUser(required: true).Result;
 
@@ -347,6 +347,8 @@ namespace viafront3.Controllers
                 orderStatus = null;
             if (orderStatus != null)
                 orders = orders.Where(o => o.Status == orderStatus);
+            if (notOrderStatus != null)
+                orders = orders.Where(o => o.Status != notOrderStatus);
             orders = orders.OrderByDescending(o => o.Date);
 
             var model = new BrokerViewModel
@@ -357,6 +359,7 @@ namespace viafront3.Controllers
                 Limit = limit,
                 Count = orders.Count(),
                 OrderStatus = orderStatus,
+                NotOrderStatus = notOrderStatus,
                 AssetSettings = _settings.Assets,
             };
             return View(model);

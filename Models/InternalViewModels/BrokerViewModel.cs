@@ -16,6 +16,7 @@ namespace viafront3.Models.InternalViewModels
         public int Limit { get; set; }
         public int Count { get; set; }
         public string OrderStatus { get; set; }
+        public string NotOrderStatus { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
 }

@@ -306,7 +306,7 @@ namespace viafront3.Services
             var paymentReq = RestUtils.GetFiatPaymentRequest(_fiatSettings, order.Token);
             if (paymentReq == null)
             {
-                _logger.LogError("Failed to get fiat payment request");
+                _logger.LogError($"Failed to get fiat payment request (token: {order.Token})");
                 return;
             }
             if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
@@ -363,7 +363,7 @@ namespace viafront3.Services
                     _context.SaveChanges();
                 }
                 // expire orders
-                var ordersToExpire = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString());
+                var ordersToExpire = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Created.ToString() || o.Status == BrokerOrderStatus.Ready.ToString());
                 foreach (var order in ordersToExpire)
                 {
                     if (date > order.Expiry + _apiSettings.Broker.TimeLimitGracePeriod)

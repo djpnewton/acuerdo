@@ -18,12 +18,20 @@
                     <input type="hidden" asp-for="Offset" value="@Model.Offset" />
                     <input type="hidden" asp-for="Limit" value="@Model.Limit" />
                     <div class="form-group">
+                        Show only:
                         <select asp-for="OrderStatus" class="onchange-submit">
                             <option value="@(BrokerOrderStatus.Confirmed)" selected="@(Model.OrderStatus == BrokerOrderStatus.Confirmed.ToString() ? "selected" : null)">@BrokerOrderStatus.Confirmed</option>
                             <option value="@(BrokerOrderStatus.PayoutWait)" selected="@(Model.OrderStatus == BrokerOrderStatus.PayoutWait.ToString() ? "selected" : null)">@BrokerOrderStatus.PayoutWait</option>
                             <option value="@(BrokerOrderStatus.Sent)" selected="@(Model.OrderStatus == BrokerOrderStatus.Sent.ToString() ? "selected" : null)">@BrokerOrderStatus.Sent</option>
                             <option value="@(BrokerOrderStatus.Error)" selected="@(Model.OrderStatus == BrokerOrderStatus.Error.ToString() ? "selected" : null)">@BrokerOrderStatus.Error</option>
                             <option value="" selected="@(Model.OrderStatus == null ? "selected" : null)">All</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        Exclude:
+                        <select asp-for="NotOrderStatus" class="onchange-submit">
+                            <option value="@(BrokerOrderStatus.Expired)" selected="@(Model.NotOrderStatus == BrokerOrderStatus.Expired.ToString() ? "selected" : null)">@BrokerOrderStatus.Expired</option>
+                            <option value="" selected="@(Model.NotOrderStatus == null ? "selected" : null)">None</option>
                         </select>
                     </div>
                 </form>
