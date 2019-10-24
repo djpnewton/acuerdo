@@ -43,6 +43,9 @@ logs/
 .vs/
 sln/
 
+# nuget
+.store/
+
 # vagrant
 .vagrant
 

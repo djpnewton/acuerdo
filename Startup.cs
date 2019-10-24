@@ -242,6 +242,7 @@ namespace viafront3
             services.AddSingleton<ITripwire, Tripwire>();
             services.AddSingleton<IDepositsWithdrawals, DepositsWithdrawals>();
             services.AddSingleton<IUserLocks, UserLocks>();
+            services.AddTransient<IAppVersion, AppVersion>();
 
             services.AddMvc(options =>
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));

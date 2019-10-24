@@ -3,6 +3,10 @@
     padding-bottom: 20px;
 }
 
+footer {
+    font-size: 10px;
+}
+
 /* Wrapping element */
 /* Set some basic padding to keep content from hitting the edges */
 .body-content {
