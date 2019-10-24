@@ -109,7 +109,7 @@ namespace viafront3.Models.TradeViewModels
         static public TradeViewModel Construct(ApplicationUser loggedInUser, ApplicationUser tradeUser, string market, string side, string amount, string price, ExchangeSettings settings)
         {
             var via = new ViaJsonRpc(settings.AccessHttpUrl);
-            var balances = via.BalanceQuery(tradeUser.Exchange.Id);
+            var balances = Utils.GetUsedBalances(settings, via, tradeUser.Exchange);
             var ordersPending = via.OrdersPendingQuery(tradeUser.Exchange.Id, market, 0, 10);
             var now = DateTimeOffset.Now.ToUnixTimeSeconds();
             var bidOrdersCompleted = via.OrdersCompletedQuery(tradeUser.Exchange.Id, market, 1, now, 0, 10, OrderSide.Bid);

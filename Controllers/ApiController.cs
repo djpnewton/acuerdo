@@ -275,7 +275,7 @@ namespace viafront3.Controllers
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
                 var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var balances = via.BalanceQuery(xch.Id);
+                var balances = Utils.GetUsedBalances(_settings, via, xch);
                 var model = new ApiAccountBalance { Assets = balances };
                 return model;
             }

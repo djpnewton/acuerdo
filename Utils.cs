@@ -207,5 +207,14 @@ namespace viafront3
             }
             return x * IntPow(x, exp - 1);
         }
+
+        public static Dictionary<string, Balance> GetUsedBalances(ExchangeSettings settings, ViaJsonRpc via, Exchange xch)
+        {
+            var balances = via.BalanceQuery(xch.Id);
+            foreach (var key in balances.Keys.ToList())
+                if (!settings.Assets.ContainsKey(key))
+                    balances.Remove(key);
+            return balances;
+        }
     }
 }

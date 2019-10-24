@@ -213,7 +213,7 @@ namespace viafront3.Controllers
             var userInspect = _userManager.FindByIdAsync(id).Result;
             //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-            var balances = via.BalanceQuery(userInspect.Exchange.Id);
+            var balances = Utils.GetUsedBalances(_settings, via, userInspect.Exchange);
 
             var model = new UserViewModel
             {
