@@ -127,30 +127,31 @@ discover_service $KYC_DIR kyc KYC_URL KYC_API_KEY KYC_API_SECRET
 FIAT_SERVER_DIR=creds/$DEPLOY_TYPE
 discover_service $FIAT_SERVER_DIR fiat_server FIAT_SERVER_URL FIAT_SERVER_API_KEY FIAT_SERVER_API_SECRET
 
-# create archive
-(cd ../; ./git-archive-all.sh --format zip --tree-ish HEAD)
+# create git hash
+GIT_BRANCH=$(git name-rev --name-only HEAD)
+GIT_REMOTE=$(git config branch.$GIT_BRANCH.remote)
+GIT_REPO=$(git config --get remote.$GIT_REMOTE.url)
+GIT_HASH=$(git rev-parse HEAD)
 
 # print variables
 echo ":: DEPLOYMENT DETAILS ::"
-echo "   - DEPLOY_USER:     $DEPLOY_USER"
-echo "   - DEPLOY_HOST:     $DEPLOY_HOST"
-echo "   - DEPLOY_LEVEL:    $DEPLOY_LEVEL"
-echo "   - TESTNET:         $TESTNET"
-echo "   - ADMIN_EMAIL:     $ADMIN_EMAIL"
-echo "   - ADMIN_HOST:      $ADMIN_HOST"
-echo "   - BACKEND_HOST:    $BACKEND_HOST"
-echo "   - BACKEND_IP:      $BACKEND_IP"
-echo "   - BLOCKCHAIN_HOST: $BLOCKCHAIN_HOST"
-echo "   - BLOCKCHAIN_IP:   $BLOCKCHAIN_IP"
-echo "   - INTERNAL_IP:     $INTERNAL_IP"
-echo "   - MYSQL_USER:      $MYSQL_USER"
-echo "   - MYSQL_PASS:      *${#MYSQL_PASS} chars*"
-echo "   - USE_SSH_USERS:   $USE_SSH_USERS"
-echo "   - SSH_USERS:       $SSH_USERS"
-echo "   - INFLUXDB_SERVER: $INFLUXDB_SERVER"
-echo "   - KYC_URL:         $KYC_URL"
-echo "   - FIAT_SERVER_URL: $FIAT_SERVER_URL"
-echo "   - CODE ARCHIVE:    acuerdo.zip"
+echo "   - DEPLOY_USER:        $DEPLOY_USER"
+echo "   - DEPLOY_HOST:        $DEPLOY_HOST"
+echo "   - DEPLOY_LEVEL:       $DEPLOY_LEVEL"
+echo "   - TESTNET:            $TESTNET"
+echo "   - ADMIN_EMAIL:        $ADMIN_EMAIL"
+echo "   - ADMIN_HOST:         $ADMIN_HOST"
+echo "   - BACKEND_HOST/IP:    $BACKEND_HOST/$BACKEND_IP"
+echo "   - BLOCKCHAIN_HOST/IP: $BLOCKCHAIN_HOST/$BLOCKCHAIN_IP"
+echo "   - INTERNAL_IP:        $INTERNAL_IP"
+echo "   - MYSQL_USER:         $MYSQL_USER"
+echo "   - USE_SSH_USERS:      $USE_SSH_USERS"
+echo "   - SSH_USERS:          $SSH_USERS"
+echo "   - INFLUXDB_SERVER:    $INFLUXDB_SERVER"
+echo "   - KYC_URL:            $KYC_URL"
+echo "   - FIAT_SERVER_URL:    $FIAT_SERVER_URL"
+echo "   - GIT Details:        Branch: $GIT_BRANCH, Remote: $GIT_REMOTE, Commit: $GIT_HASH"
+echo "   - GIT REPO:           $GIT_REPO"
 
 # ask user to continue
 read -p "Are you sure? " -n 1 -r
@@ -166,7 +167,7 @@ then
     SSH_VARS="{\"use_ssh_users\": $USE_SSH_USERS, \"ssh_users\": $SSH_USERS, \"ssh_user_pubkeys\": $SSH_USER_PUBKEYS}"
     echo "$SSH_VARS" > ssh_vars.json
     ansible-playbook --inventory "$INVENTORY_HOST," --user "$DEPLOY_USER" -v \
-        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE" \
+        --extra-vars "admin_email=$ADMIN_EMAIL deploy_type=$DEPLOY_TYPE local=$LOCAL deploy_host=$DEPLOY_HOST backend_host=$BACKEND_HOST backend_ip=$BACKEND_IP blockchain_host=$BLOCKCHAIN_HOST blockchain_ip=$BLOCKCHAIN_IP internal_ip=$INTERNAL_IP full_deploy=$FULL_DEPLOY vagrant=$VAGRANT testnet=$TESTNET admin_host=$ADMIN_HOST DEPLOY_TYPE=$DEPLOY_TYPE git_repo=$GIT_REPO git_hash=$GIT_HASH" \
         --extra-vars "mysql_user=$MYSQL_USER mysql_pass=$MYSQL_PASS" \
         --extra-vars "influxdb_server=$INFLUXDB_SERVER influxdb_user=$INFLUXDB_USER influxdb_pass=$INFLUXDB_PASS" \
         --extra-vars "@ssh_vars.json" \

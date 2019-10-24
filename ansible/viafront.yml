@@ -24,16 +24,13 @@
         system: yes
         state: present
 
-    - name: copy acuerdo.zip
-      copy:
-        src: ../acuerdo.zip
-        dest: /opt/acuerdo.zip
-
-    - name: extract acuerdo.zip
-      shell: unzip -o /opt/acuerdo.zip -d /opt/viafront
-
-    - name: extract submodule zip files
-      shell: cd /opt/viafront; unzip -o '*.zip'
+    - name: git clone/checkout acuerdo
+      git:
+        repo: '{{git_repo}}'
+        dest: /opt/viafront
+        version: '{{git_hash}}'
+        accept_hostkey: yes
+        key_file: '/root/.ssh/id_rsa'
 
     - name: set viafront files owner
       file:
