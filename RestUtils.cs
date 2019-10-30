@@ -158,7 +158,7 @@ namespace viafront3
         }
     
         public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CreateKycRequest(ILogger logger, ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId)
+            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string email)
         {
             // check request does not already exist
             var kycReq = context.KycRequests.Where(r => r.ApplicationUserId == applicationUserId).FirstOrDefault();
@@ -166,7 +166,7 @@ namespace viafront3
                 return await CheckKycRequest(logger, context, userManager, kycSettings, applicationUserId, kycReq.Token);
             // call kyc server to create request
             var token = Utils.CreateToken();
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token });
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token, email = email });
             var response = RestUtils.ServiceRequest(kycSettings.KycServerUrl, "request", kycSettings.KycServerApiSecret, jsonBody);
             if (response.IsSuccessful)
             {

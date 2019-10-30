@@ -328,8 +328,11 @@ namespace viafront3.Controllers
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
+            var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
+            if (user == null)
+                return BadRequest(INTERNAL_ERROR);
             // call kyc server to create request
-            var model = await RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId);
+            var model = await RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId, user.Email);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);
