@@ -31,6 +31,7 @@
         version: '{{git_hash}}'
         accept_hostkey: yes
         key_file: '/root/.ssh/id_rsa'
+        force: yes
 
     - name: set viafront files owner
       file:
