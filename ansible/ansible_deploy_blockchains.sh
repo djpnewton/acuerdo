@@ -50,9 +50,15 @@ FRONTEND_HOST=internal.$DOMAIN
 TESTNET=
 ADMIN_HOST=123.123.123.123
 
+clr=$'\e[0m'
+# red background for production deploy
+color=$'\e[48;2;255;0;0m'
+
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then
+    # yellow background for production deploy
+    color=$'\e[48;2;255;255;0m'
     DEPLOY_HOST=blockchain.test.$DOMAIN
     DEPLOY_HOST_INTERNAL=blockchain-internal.test.$DOMAIN
     FRONTEND_HOST=test-internal.$DOMAIN
@@ -62,6 +68,7 @@ fi
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then
+    color=$white
     DEPLOY_HOST=10.50.1.100
     DEPLOY_HOST_INTERNAL=10.50.1.100
     FRONTEND_HOST=$DEPLOY_HOST
@@ -80,7 +87,7 @@ SSH_USERS_DIR=creds/$DEPLOY_TYPE/ssh_users
 discover_ssh_users $SSH_USERS_DIR USE_SSH_USERS SSH_USERS SSH_USER_PUBKEYS
 
 # print variables
-echo ":: DEPLOYMENT DETAILS ::"
+echo $color":: DEPLOYMENT DETAILS ::"$clr
 echo "   - DEPLOY_USER:     $DEPLOY_USER"
 echo "   - DEPLOY_HOST:     $DEPLOY_HOST"
 echo "   - TESTNET:         $TESTNET"

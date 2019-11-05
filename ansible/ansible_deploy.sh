@@ -77,9 +77,15 @@ TESTNET=
 LOCAL=
 ADMIN_HOST=123.123.123.123
 
+clr=$'\e[0m'
+# red background for production deploy
+color=$'\e[48;2;255;0;0m'
+
 # set deploy variables for test
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_TEST" ) ]]
 then 
+    # yellow background for production deploy
+    color=$'\e[48;2;255;255;0m'
     DEPLOY_HOST=test.$DOMAIN
     BACKEND_HOST=backend-internal.test.$DOMAIN
     BLOCKCHAIN_HOST=blockchain-internal.test.$DOMAIN
@@ -89,6 +95,7 @@ fi
 # set deploy variables for local
 if [[ ( $DEPLOY_TYPE == "$DEPLOY_LOCAL" ) ]]
 then 
+    color=$white
     DEPLOY_HOST=10.50.1.100
     BACKEND_HOST=10.50.1.100
     BLOCKCHAIN_HOST=10.50.1.100
@@ -133,8 +140,9 @@ GIT_REMOTE=$(git config branch.$GIT_BRANCH.remote)
 GIT_REPO=$(git config --get remote.$GIT_REMOTE.url)
 GIT_HASH=$(git rev-parse HEAD)
 
+
 # print variables
-echo ":: DEPLOYMENT DETAILS ::"
+echo $color":: DEPLOYMENT DETAILS ::"$clr
 echo "   - DEPLOY_USER:        $DEPLOY_USER"
 echo "   - DEPLOY_HOST:        $DEPLOY_HOST"
 echo "   - DEPLOY_LEVEL:       $DEPLOY_LEVEL"
