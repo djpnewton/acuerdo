@@ -512,7 +512,7 @@ namespace viafront3.Controllers
             }
         }
 
-        ApiOrder FormatOrder(Order order)
+        ApiOrder FormatOrder(Order order, bool active)
         {
             var status = "not executed";
             var dealStock = decimal.Parse(order.deal_stock, System.Globalization.NumberStyles.Any);
@@ -537,8 +537,9 @@ namespace viafront3.Controllers
                 FeePaid = order.deal_fee,
                 MakerFeeRate = order.maker_fee,
                 TakerFeeRate = order.taker_fee,
+                Active = active,
             };
-            return model;        
+            return model;
         }
 
         [HttpPost]
@@ -572,7 +573,7 @@ namespace viafront3.Controllers
                     if (error2 != null)
                         return BadRequest(error2);
                     var order = via.OrderLimitQuery(xch.Id, req.Market, side, req.Amount, req.Price, _settings.TakerFeeRate, _settings.MakerFeeRate, "viafront api");
-                    return FormatOrder(order);
+                    return FormatOrder(order, true);
                 }
             }
             catch (ViaJsonException ex)
@@ -619,7 +620,7 @@ namespace viafront3.Controllers
                         order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api", _settings.MarketOrderBidAmountMoney);
                     else
                         order = via.OrderMarketQuery(xch.Id, req.Market, side, req.Amount, _settings.TakerFeeRate, "viafront api");
-                    return FormatOrder(order);
+                    return FormatOrder(order, true);
                 }
             }
             catch (ViaJsonException ex)
@@ -651,7 +652,7 @@ namespace viafront3.Controllers
                 var ordersPending = via.OrdersPendingQuery(xch.Id, req.Market, req.Offset, req.Limit);
                 var model = new ApiOrdersResponse { Offset = ordersPending.offset, Limit = ordersPending.limit, Orders = new List<ApiOrder>() };
                 foreach (var order in ordersPending.records)
-                    model.Orders.Add(FormatOrder(order));
+                    model.Orders.Add(FormatOrder(order, true));
                 return model;
             }
             catch (ViaJsonException ex)
@@ -679,7 +680,7 @@ namespace viafront3.Controllers
                 var ordersCompleted = via.OrdersCompletedQuery(xch.Id, req.Market, 0, 0, req.Offset, req.Limit, OrderSide.Any);
                 var model = new ApiOrdersResponse { Offset = ordersCompleted.offset, Limit = ordersCompleted.limit, Orders = new List<ApiOrder>() };
                 foreach (var order in ordersCompleted.records)
-                    model.Orders.Add(FormatOrder(order));
+                    model.Orders.Add(FormatOrder(order, false));
                 return model;
             }
             catch (ViaJsonException ex)
@@ -709,7 +710,7 @@ namespace viafront3.Controllers
                     return BadRequest(INVALID_ORDER);
                 if (order.user != xch.Id)
                     return BadRequest(INVALID_ORDER);
-                return FormatOrder(order);
+                return FormatOrder(order, true);
             }
             catch (ViaJsonException ex)
             {
@@ -736,7 +737,7 @@ namespace viafront3.Controllers
                     return BadRequest(INVALID_ORDER);
                 if (order.user != xch.Id)
                     return BadRequest(INVALID_ORDER);
-                return FormatOrder(order);
+                return FormatOrder(order, false);
             }
             catch (ViaJsonException ex)
             {
@@ -762,7 +763,7 @@ namespace viafront3.Controllers
             {
                 var order = via.OrderPendingDetails(req.Market, req.Id);
                 if (order != null && order.user == xch.Id)
-                    return FormatOrder(order);
+                    return FormatOrder(order, true);
             }
             catch (ViaJsonException)
             {}
@@ -770,7 +771,7 @@ namespace viafront3.Controllers
             {
                 var order = via.OrderCompletedDetails(req.Id);
                 if (order != null && order.user == xch.Id && order.market == req.Market)
-                    return FormatOrder(order);
+                    return FormatOrder(order, false);
             }
             catch (ViaJsonException)
             {}
@@ -798,11 +799,13 @@ namespace viafront3.Controllers
                     var order = via.OrderCancelQuery(xch.Id, req.Market, req.Id);
                     if (order == null)
                         return BadRequest(INVALID_ORDER);
-                    return FormatOrder(order);
+                    return FormatOrder(order, false);
                 }
             }
             catch (ViaJsonException ex)
             {
+                if (ex.Err == ViaError.ORDER_QUERY__ORDER_NOT_FOUND)
+                    return BadRequest(INVALID_ORDER);
                 _logger.LogError(ex, "error cancelling order");
                 return BadRequest(INTERNAL_ERROR);
             }

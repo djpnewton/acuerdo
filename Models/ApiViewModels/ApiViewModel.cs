@@ -227,6 +227,7 @@ namespace viafront3.Models.ApiViewModels
         public string FeePaid { get; set; }
         public string MakerFeeRate { get; set; }
         public string TakerFeeRate { get; set; }
+        public bool Active { get; set; }
     }
 
     public class ApiOrders: ApiAuth

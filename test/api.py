@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import os
 import sys
 import argparse
 import requests
@@ -8,8 +9,10 @@ import hmac
 import hashlib
 import base64
 import json
+from decimal import Decimal, ROUND_DOWN
 
 URL_BASE = "http://localhost:5000/api/v1/"
+URL_BASE = "https://test.bronze.exchange/api/v1/"
 
 EXIT_NO_COMMAND = 1
 EXIT_INVALID_SIDE = 2
@@ -198,7 +201,18 @@ def construct_parser():
     parser_funds_add = subparsers.add_parser("funds_give", help="DEBUG: give funds to a user")
     parser_funds_add.add_argument("email", metavar="EMAIL", type=str, help="the users email address")
     parser_funds_add.add_argument("asset", metavar="ASSET", type=str, help="the asset to give")
-    parser_funds_add.add_argument("amount", metavar="AMOunT", type=str, help="the amount to give")
+    parser_funds_add.add_argument("amount", metavar="AMOUNT", type=str, help="the amount to give")
+
+    ## Basic market maker
+    parser_funds_add = subparsers.add_parser("market_maker", help="basic market maker")
+    parser_funds_add.add_argument("key", metavar="KEY", type=str, help="the api key")
+    parser_funds_add.add_argument("secret", metavar="SECRET", type=str, help="the api secret")
+    parser_funds_add.add_argument("market", metavar="MARKET", type=str, help="the market")
+    parser_funds_add.add_argument("price_buy", metavar="PRICE_BUY", type=str, help="the buy price")
+    parser_funds_add.add_argument("price_sell", metavar="PRICE_SELL", type=str, help="the sell price")
+    parser_funds_add.add_argument("increments", metavar="INCREMENTS", type=str, help="the price increments (or decrements if selling)")
+    parser_funds_add.add_argument("inc_num", metavar="NUM_INCREMENTS", type=int, help="the the number of price increments")
+    parser_funds_add.add_argument("do_it", metavar="DO_IT", type=bool, nargs="?", default=False, help="actually create the orders")
 
     return parser
 
@@ -209,10 +223,13 @@ def create_sig(api_key, api_secret, message):
     return signature
 
 def req(endpoint, params=None, api_key=None, api_secret=None):
+    body_without_auth = ""
+    if params:
+        body_without_auth = json.dumps(params)
     if api_key:
         if not params:
             params = {}
-        params["nonce"] = int(time.time())
+        params["nonce"] = int(time.time() * 1000)
         params["key"] = api_key
     url = URL_BASE + endpoint
     if params:
@@ -220,7 +237,7 @@ def req(endpoint, params=None, api_key=None, api_secret=None):
         body = json.dumps(params)
         if api_key:
             headers["X-Signature"] = create_sig(api_key, api_secret, body)
-        print("   POST - " + url)
+        print("   POST - " + url + " - " + body_without_auth)
         r = requests.post(url, headers=headers, data=body)
     else:
         print("   GET - " + url)
@@ -469,8 +486,7 @@ def broker_status(args):
     print(" - attachment: {\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"])
     addr = r.json()["paymentAddress"]
     asset_id = "CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe"
-    import decimal
-    amount = int(decimal.Decimal(r.json()["amountSend"]) * 100)
+    amount = int(Decimal(r.json()["amountSend"]) * 100)
     attachment = "{\"InvoiceId\":\"%s\"}" % r.json()["invoiceId"]
     uri = "waves://%s?asset=%s&amount=%d&attachment=%s" % (addr, asset_id, amount, attachment)
     print(" - uri: %s" % uri)
@@ -491,6 +507,135 @@ def funds_give(args):
     r = req("UserFundGive", params)
     check_request_status(r)
     print(r.text)
+
+def _update_order(order):
+    if "active" in order and not order["active"]:
+        return
+    params = {"market": args.market, "id": order["id"]}
+    r = req("OrderStatus", params, args.key, args.secret)
+    if r.status_code == 400 and r.text == "\"invalid order\"":
+        order["active"] = False
+        return
+    check_request_status(r)
+    for key, value in r.json().items():
+        order[key] = value
+
+def _cancel_order(order):
+    if "active" in order and not order["active"]:
+        return
+    params = {"market": args.market, "id": order["id"]}
+    r = req("OrderCancel", params, args.key, args.secret)
+    check_request_status(r)
+    order["active"] = False
+
+def _write_market_maker_state(filename, mm_state):
+    with open(filename, "w") as f:
+        f.write(json.dumps(mm_state, sort_keys=True, indent=4, separators=(",", ": ")))
+
+def market_maker(args):
+    print(":: starting market maker..")
+
+    # get market info
+    r = req("MarketDetail", {"market": args.market})
+    check_request_status(r)
+    price_asset = r.json()["priceAsset"]
+    trade_asset = r.json()["tradeAsset"]
+    min_amount = Decimal(r.json()["minAmount"])
+
+    # read state from disk
+    filename = "market_maker_%s.json" % args.market
+    if os.path.exists(filename):
+        mm_state = json.loads(open(filename, "r").read())
+    else:
+        mm_state = {}
+    if "buy_orders" not in mm_state:
+        mm_state["buy_orders"] = []
+    if "sell_orders" not in mm_state:
+        mm_state["sell_orders"] = []
+
+    # update current order statuses
+    for order in mm_state["buy_orders"]:
+        _update_order(order)
+    for order in mm_state["sell_orders"]:
+        _update_order(order)
+    _write_market_maker_state(filename, mm_state)
+
+    # get balances
+    r = req("AccountBalance", None, args.key, args.secret)
+    check_request_status(r)
+    price_asset_available = Decimal(r.json()["assets"][price_asset]["available"])
+    price_asset_frozen = Decimal(r.json()["assets"][price_asset]["freeze"])
+    trade_asset_available = Decimal(r.json()["assets"][trade_asset]["available"])
+    trade_asset_frozen = Decimal(r.json()["assets"][trade_asset]["freeze"])
+
+    # check if we should reset our orders
+    if price_asset_available > price_asset_frozen or trade_asset_available > trade_asset_frozen:
+
+        if not args.do_it:
+            print("not doing it, EXITING..")
+            return
+
+        # cancel all orders
+        for order in mm_state["buy_orders"]:
+            _cancel_order(order)
+        for order in mm_state["sell_orders"]:
+            _cancel_order(order)
+        _write_market_maker_state(filename, mm_state)
+
+        # get balances (again)
+        r = req("AccountBalance", None, args.key, args.secret)
+        check_request_status(r)
+        price_asset_available = Decimal(r.json()["assets"][price_asset]["available"])
+        price_asset_frozen = Decimal(r.json()["assets"][price_asset]["freeze"])
+        trade_asset_available = Decimal(r.json()["assets"][trade_asset]["available"])
+        trade_asset_frozen = Decimal(r.json()["assets"][trade_asset]["freeze"])
+
+        # calc buy orders
+        inc = Decimal(args.increments)
+        price = Decimal(args.price_buy)
+        prices = [price + i * inc for i in range(args.inc_num)]
+        avg_price = reduce(lambda x, y: x + y, prices) / args.inc_num
+        amount_for_price_asset_available = price_asset_available / avg_price
+        amount_per_order = amount_for_price_asset_available / args.inc_num
+        amount_per_order = amount_per_order.quantize(min_amount, rounding=ROUND_DOWN)
+        buy_orders = []
+        if amount_per_order > min_amount:
+            for i in range(args.inc_num):
+                buy_orders.append((price, amount_per_order))
+                price -= inc
+
+        # calc sell orders
+        price = Decimal(args.price_sell)
+        amount_per_order = trade_asset_available / args.inc_num
+        amount_per_order = amount_per_order.quantize(min_amount, rounding=ROUND_DOWN)
+        sell_orders = []
+        if amount_per_order > min_amount:
+            for i in range(args.inc_num):
+                sell_orders.append((price, amount_per_order))
+                price += Decimal(args.increments)
+
+        print(buy_orders)
+        print(sell_orders)
+
+        # create buy orders
+        for o in buy_orders:
+            params = {"market": args.market, "side": "buy", "amount": str(o[1]), "price": str(o[0])}
+            r = req("OrderLimit", params, args.key, args.secret)
+            check_request_status(r)
+            order = r.json()
+            mm_state["buy_orders"].append(order)
+            _write_market_maker_state(filename, mm_state)
+            print(order)
+
+        # create sell orders
+        for o in sell_orders:
+            params = {"market": args.market, "side": "sell", "amount": str(o[1]), "price": str(o[0])}
+            r = req("OrderLimit", params, args.key, args.secret)
+            check_request_status(r)
+            order = r.json()
+            mm_state["sell_orders"].append(order)
+            _write_market_maker_state(filename, mm_state)
+            print(order)
 
 if __name__ == "__main__":
     # parse arguments
@@ -567,6 +712,8 @@ if __name__ == "__main__":
         function = broker_orders
     elif args.command == "funds_give":
         function = funds_give
+    elif args.command == "market_maker":
+        function = market_maker
     else:
         parser.print_help()
         sys.exit(EXIT_NO_COMMAND)
