@@ -117,13 +117,15 @@
       replace:
         path: /opt/viafront/appsettings.json
         regexp: '("NodeUrl": )"http:\/\/10\.50\.1\.100:6869"'
-        replace: '\1"http://{{blockchain_host}}:6869"'
+        # port 5100 to use wavescache
+        replace: '\1"http://{{blockchain_host}}:5100"'
 
     - name: set zap node url
       replace:
         path: /opt/viafront/appsettings.json
         regexp: '("NodeUrl": )"http:\/\/10\.50\.1\.100:6869"'
-        replace: '\1"http://{{blockchain_host}}:6869"'
+        # port 5100 to use wavescache
+        replace: '\1"http://{{blockchain_host}}:5100"'
 
     - name: set nbxexplorer url
       replace:

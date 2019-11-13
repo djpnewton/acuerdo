@@ -78,6 +78,9 @@ fi
 IF_EXTERNAL=eth0
 IF_INTERNAL=eth1
 
+# create wavescache archive
+(cd ../xchwallet/wavescache; git archive --format=zip HEAD > ../wavescache.zip)
+
 # read influxdb details 
 INFLUXDB_DIR=creds/$DEPLOY_TYPE
 discover_influxdb $INFLUXDB_DIR INFLUXDB_SERVER INFLUXDB_USER INFLUXDB_PASS
