@@ -140,7 +140,7 @@ namespace viafront3.Controllers
             return View(model);
         }
 
-        public IActionResult FiatWalletPendingTxs(string asset, int offset = 0, int limit = 10, bool onlyIncomplete = true)
+        public IActionResult FiatWalletPendingTxs(string asset, int offset = 0, int limit = 10, bool onlyIncomplete = true, WalletDirection? direction = null)
         {
             var user = GetUser(required: true).Result;
 
@@ -148,6 +148,8 @@ namespace viafront3.Controllers
             var pendingTxs = wallet.GetTransactions();
             if (onlyIncomplete)
                 pendingTxs = pendingTxs.Where(t => t.BankTx == null);
+            if (direction.HasValue)
+                pendingTxs = pendingTxs.Where(t => t.Direction == direction.Value);
             pendingTxs = pendingTxs.OrderByDescending(t => t.Date);
 
             var model = new FiatWalletPendingTxsViewModel
@@ -159,6 +161,7 @@ namespace viafront3.Controllers
                 Limit = limit,
                 Count = pendingTxs.Count(),
                 OnlyIncomplete = onlyIncomplete,
+                Direction = direction,
                 PendingTxs = pendingTxs.Skip(offset).Take(limit),
                 Wallet = wallet,
             };

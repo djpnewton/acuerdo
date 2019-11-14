@@ -17,6 +17,7 @@ namespace viafront3.Services
     {
         void ProcessChainDeposits();
         void ProcessChainWithdrawals();
+        void ProcessFiatWithdrawals();
     }
 
     public class DepositsWithdrawals : IDepositsWithdrawals
@@ -165,6 +166,108 @@ namespace viafront3.Services
                                     emailSender.SendEmailChainWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(wtx.AmountInputs() - wtx.ChainTx.Fee), wtx.ChainTx.TxId).GetAwaiter().GetResult();
                                     _logger.LogInformation($"Sent email to {user.Email}");
                                 }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void ProcessFiatWithdrawals()
+        {
+            if (!_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting ProcessFiatWithdrawls()");
+                return;
+            }
+            lock (lockObj)
+            {
+                // if lockfile exists exit early
+                var lockFile = new LockFile(_logger, "fiat_withdrawals");
+                if (lockFile.IsPresent())
+                {
+                    _logger.LogError($"lockfile ('{lockFile.MkPath()}) exists");
+                    return;
+                }
+
+                using (var scope = _services.CreateScope())
+                {
+                    var settings = scope.ServiceProvider.GetRequiredService<IOptions<WalletSettings>>().Value;
+                    var fiatSettings = scope.ServiceProvider.GetRequiredService<IOptions<FiatProcessorSettings>>().Value;
+                    var exchangeSettings = scope.ServiceProvider.GetRequiredService<IOptions<ExchangeSettings>>().Value;
+                    var walletProvider = scope.ServiceProvider.GetRequiredService<IWalletProvider>();
+                    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                    var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+
+                    foreach (var asset in settings.BankAccounts.Keys)
+                    {
+                        if (!fiatSettings.PayoutsEnabled || !fiatSettings.PaymentsAssets.Contains(asset))
+                        {
+                            // exit as there is no fiat payment server
+                            continue;
+                        }
+
+                        // get wallet
+                        var wallet = walletProvider.GetFiat(asset);
+                        // get pending withdrawals
+                        var withdrawals = wallet.GetPendingWithdrawals();
+                        foreach (var withdrawal in withdrawals)
+                        {
+                            // recheck tripwire
+                            if (!_tripwire.WithdrawalsEnabled())
+                            {
+                                _logger.LogError("Tripwire tripped, exiting ProcessFiatWithdrawls()");
+                                return;
+                            }
+
+                            // check and create lockfile to make sure we cant send withdrawals twice
+                            if (lockFile.IsPresent())
+                            {
+                                _logger.LogError($"lockfile ('{lockFile.MkPath()}) exists");
+                                return;
+                            }
+                            var contents = $"Pending fiat withdrawal: {withdrawal.DepositCode}, {withdrawal.Date}, {withdrawal.Amount} {asset} cents";
+                            if (!lockFile.CreateIfNotPresent(contents))
+                            {
+                                _logger.LogError($"failed to create lockfile ('{lockFile.MkPath()})");
+                                return;
+                            }
+
+                            _logger.LogInformation($"Pending Fiat Withdrawal: {withdrawal.DepositCode}, Date: {withdrawal.Date}, Amount: {withdrawal.Amount}, To: {withdrawal.AccountNumber}");
+                            // process withdrawal
+
+                            var payoutReq = RestUtils.GetFiatPayoutRequest(fiatSettings, withdrawal.DepositCode);
+                            if (payoutReq == null)
+                            {
+                                payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, exchangeSettings, fiatSettings, withdrawal.DepositCode, asset, wallet.AmountToDecimal(withdrawal.Amount), withdrawal.AccountNumber);
+                                if (payoutReq == null)
+                                    _logger.LogError($"fiat payout request creation failed ({withdrawal.DepositCode})");
+                            }
+                            else if (payoutReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
+                            {
+                                wallet.UpdateWithdrawal(payoutReq.Token, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), Convert.ToInt64(payoutReq.Amount), "");
+                                _logger.LogInformation($"Payout confirmed for withdrawal {withdrawal.DepositCode}");
+                            }
+
+                            // save wallet
+                            wallet.Save();
+                            _logger.LogInformation($"Saved {asset} wallet");
+
+                            // remove lock file now that we have saved wallet status
+                            if (!lockFile.RemoveIfPresent())
+                                _logger.LogError($"Failed to remove lockfile ({lockFile.MkPath()})");
+
+                            // send email if withdrawal completed
+                            if (wallet.GetTx(withdrawal.DepositCode).BankTx != null)
+                            {
+                                // get user
+                                System.Diagnostics.Debug.Assert(withdrawal.Tag != null);
+                                var user = userManager.FindByIdAsync(withdrawal.Tag.Tag).GetAwaiter().GetResult();
+                                System.Diagnostics.Debug.Assert(user != null);
+
+                                // send email
+                                emailSender.SendEmailFiatWithdrawalConfirmedAsync(user.Email, asset, wallet.AmountToString(withdrawal.Amount), withdrawal.DepositCode).GetAwaiter().GetResult();
+                                _logger.LogInformation($"Sent email to {user.Email}");
                             }
                         }
                     }

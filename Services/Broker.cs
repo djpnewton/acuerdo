@@ -255,7 +255,7 @@ namespace viafront3.Services
                 CheckTxs(brokerUser, wallets, order);
             else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
             {
-                if (_fiatSettings.PayoutsEnabled || _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
+                if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
                     var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient);
                     if (payoutReq == null)
@@ -269,7 +269,7 @@ namespace viafront3.Services
             }
             else if (order.Status == BrokerOrderStatus.PayoutWait.ToString())
             {
-                if (_fiatSettings.PayoutsEnabled || _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
+                if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
                     var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, order.Token);
                     if (payoutReq == null)

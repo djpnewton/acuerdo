@@ -48,5 +48,6 @@ namespace viafront3.Models.InternalViewModels
     {
         public IFiatWallet Wallet { get; set; }
         public IEnumerable<FiatWalletTx> PendingTxs { get; set; }
+        public WalletDirection? Direction { get; set; }
     }
 }
