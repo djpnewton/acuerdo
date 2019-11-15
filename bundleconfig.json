@@ -56,5 +56,23 @@
     "inputFiles": [
       "wwwroot/js/apikey-deletion.js"
     ]
+  },
+  {
+    "outputFileName": "wwwroot/js/withdrawal-creation.min.js",
+    "inputFiles": [
+      "wwwroot/js/withdrawal-creation.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/fiat-deposit-creation.min.js",
+    "inputFiles": [
+      "wwwroot/js/fiat-deposit-creation.js"
+    ]
+  },
+  {
+    "outputFileName": "wwwroot/js/fiat-withdrawal-creation.min.js",
+    "inputFiles": [
+      "wwwroot/js/fiat-withdrawal-creation.js"
+    ]
   }
 ]

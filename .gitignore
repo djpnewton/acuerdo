@@ -26,7 +26,7 @@ wwwroot/lib/
 # npm output
 node_modules/
 
-# minitfied
+# minified
 wwwroot/css/site.min.css
 wwwroot/js/site.min.js
 wwwroot/css/chart.min.css
@@ -35,6 +35,9 @@ wwwroot/js/pad-decimals.min.js
 wwwroot/js/order-creation.min.js
 wwwroot/js/order-cancellation.min.js
 wwwroot/js/apikey-deletion.min.js
+wwwroot/js/withdrawal-creation.min.js
+wwwroot/js/fiat-deposit-creation.min.js
+wwwroot/js/fiat-withdrawal-creation.min.js
 
 # logs
 logs/
