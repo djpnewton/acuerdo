@@ -261,6 +261,16 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Withdraw(WithdrawViewModel model)
         {
+            var user = await GetUser(required: true);
+
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+            // fill in model in case we need to error out early
+            model.User = user;
+            model.AssetSettings = _settings.Assets;
+            model.BalanceAvailable = balance.Available;
+
             // if tripwire tripped cancel
             if (!_tripwire.WithdrawalsEnabled())
             {
@@ -269,8 +279,6 @@ namespace viafront3.Controllers
                 return View(model);
             }
             await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
-
-            var user = await GetUser(required: true);
 
             if (!ModelState.IsValid)
             {
@@ -295,8 +303,7 @@ namespace viafront3.Controllers
             lock (_userLocks.GetLock(user.Id))
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+                balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
                 model.BalanceAvailable = balance.Available;
 
                 var wallet = _walletProvider.GetChain(model.Asset);
@@ -441,6 +448,16 @@ namespace viafront3.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> WithdrawFiat(WithdrawFiatViewModel model)
         {
+            var user = await GetUser(required: true);
+
+            //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+            // fill in model in case we need to error out early
+            model.User = user;
+            model.AssetSettings = _settings.Assets;
+            model.BalanceAvailable = balance.Available;
+
             // if tripwire tripped cancel
             if (!_tripwire.WithdrawalsEnabled())
             {
@@ -449,8 +466,6 @@ namespace viafront3.Controllers
                 return View(model);
             }
             await _tripwire.RegisterEvent(TripwireEventType.WithdrawalAttempt);
-
-            var user = await GetUser(required: true);
 
             // check 2fa authentication
             if (user.TwoFactorEnabled)
@@ -489,8 +504,7 @@ namespace viafront3.Controllers
             lock (_userLocks.GetLock(user.Id))
             {
                 //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
+                balance = via.BalanceQuery(user.Exchange.Id, model.Asset);
                 // validate amount
                 var availableInt = wallet.StringToAmount(balance.Available);
                 if (amountInt > availableInt)
