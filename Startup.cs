@@ -287,6 +287,8 @@ namespace viafront3
             };
             app.UseHangfireDashboard("/hangfire", options);
             app.UseHangfireServer();
+            RecurringJob.AddOrUpdate<IWalletProvider>(
+                provider => provider.UpdateBlockchainWallets(), "0 */5 * ? * *"); // every 5 minutes
             RecurringJob.AddOrUpdate<IBroker>(
                 broker => broker.ProcessOrders(), "0 */5 * ? * *"); // every 5 minutes
             RecurringJob.AddOrUpdate<IDepositsWithdrawals>(

@@ -67,12 +67,9 @@ namespace viafront3.Controllers
                 {
                     if (_walletProvider.IsChain(asset))
                     {
-                        var wallet = _walletProvider.GetChain(asset);
-                        var dbtx = wallet.BeginDbTransaction();
-                        wallet.UpdateFromBlockchain(dbtx); // get updated data
-                        wallet.Save();
-                        dbtx.Commit();
+                        _walletProvider.UpdateBlockchainWallet(asset);
 
+                        var wallet = _walletProvider.GetChain(asset);
                         var tags = wallet.GetTags();
                         var balance = new ChainWalletBalance{ Total = 0, Consolidated = 0};
                         foreach (var tag in tags)

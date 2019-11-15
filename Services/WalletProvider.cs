@@ -17,10 +17,16 @@ namespace viafront3.Services
         string ConsolidatedFundsTag();
         ChainAssetSettings ChainAssetSettings(string asset);
         string AmountToString(string asset, decimal amount);
+        DateTimeOffset LastBlockchainWalletUpdate(string asset);
+        void UpdateBlockchainWallet(string asset);
+        void UpdateBlockchainWallets();
     }
 
     public class WalletProvider : IWalletProvider
     {
+        readonly static Object walletUpdateLock = new Object();
+        readonly static Dictionary<string, DateTimeOffset> walletUpdateTimes = new Dictionary<string, DateTimeOffset>();
+
         private readonly ILogger _logger;
         private readonly WalletSettings _walletSettings;
 
@@ -113,6 +119,37 @@ namespace viafront3.Services
                     return wallet.AmountToString(amount);
             }
             return null;
+        }
+
+        public DateTimeOffset LastBlockchainWalletUpdate(string asset)
+        {
+            if (walletUpdateTimes.ContainsKey(asset))
+                return walletUpdateTimes[asset];
+            return DateTimeOffset.FromUnixTimeSeconds(0);
+        }
+
+        public void UpdateBlockchainWallet(string asset)
+        {
+            lock (walletUpdateLock)
+            {
+                // get wallet
+                var wallet = GetChain(asset);
+                var assetSettings = ChainAssetSettings(asset);
+
+                // update wallet
+                var dbtx = wallet.BeginDbTransaction();
+                wallet.UpdateFromBlockchain(dbtx);
+                wallet.Save();
+                dbtx.Commit();
+                walletUpdateTimes[asset] = DateTimeOffset.Now;
+                _logger.LogInformation("Completed wallet.UpdateFromBlockchain() for '{0}'", asset);
+            }
+        }
+
+        public void UpdateBlockchainWallets()
+        {
+            foreach (var asset in _walletSettings.ChainAssetSettings.Keys)
+                UpdateBlockchainWallet(asset);
         }
     }
 }

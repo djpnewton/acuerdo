@@ -57,12 +57,6 @@ namespace viafront3.Services
                         var wallet = walletProvider.GetChain(asset);
                         var assetSettings = walletProvider.ChainAssetSettings(asset);
 
-                        // update wallet
-                        var dbtx = wallet.BeginDbTransaction();
-                        wallet.UpdateFromBlockchain(dbtx);
-                        wallet.Save();
-                        dbtx.Commit();
-
                         // update for each user
                         foreach (var user in userManager.Users)
                         {

@@ -93,21 +93,10 @@ namespace viafront3.Services
             return true;
         }
 
-        void CheckTxs(ApplicationUser brokerUser, Dictionary<string, IWallet> wallets, BrokerOrder order)
+        void CheckTxs(ApplicationUser brokerUser, BrokerOrder order)
         {
             // get wallet and only update from the blockchain one time
-            IWallet wallet;
-            if (wallets.ContainsKey(order.AssetSend))
-                wallet = wallets[order.AssetSend];
-            else
-            {
-                wallet = _walletProvider.GetChain(order.AssetSend);
-                var dbtx = wallet.BeginDbTransaction();
-                wallet.UpdateFromBlockchain(dbtx);
-                wallet.Save();
-                dbtx.Commit();
-                wallets[order.AssetSend] = wallet;
-            }
+            IWallet wallet = _walletProvider.GetChain(order.AssetSend);
 
             var txs = wallet.GetAddrUnacknowledgedTransactions(order.PaymentAddress);
             var ackTxs = new List<WalletTx>();
@@ -241,8 +230,16 @@ namespace viafront3.Services
             return true;
         }
 
-        void ProcessOrderChain(Dictionary<string, IWallet> wallets, BrokerOrder order)
+        void ProcessOrderChain(BrokerOrder order)
         {
+            // check wallet has been updated
+            var time = _walletProvider.LastBlockchainWalletUpdate(order.AssetSend);
+            if (time < DateTimeOffset.Now.AddMinutes(-5))
+            {
+                _logger.LogWarning($"Not processing broker order ({order.Token}) as the wallet ({order.AssetSend}) was not updated since {time}");
+                return;
+            }
+
             // get broker user
             var brokerUser = _userManager.FindByNameAsync(_apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
             if (brokerUser == null)
@@ -252,7 +249,7 @@ namespace viafront3.Services
             }
 
             if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
-                CheckTxs(brokerUser, wallets, order);
+                CheckTxs(brokerUser, order);
             else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
             {
                 if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
@@ -345,7 +342,6 @@ namespace viafront3.Services
             lock(lockObj)
             {
                 _logger.LogInformation("Process Orders - Broker");
-                var wallets = new Dictionary<string, IWallet>();
                 var date = DateTimeOffset.Now.ToUnixTimeSeconds();
                 // process created orders
                 var orders = _context.BrokerOrders.Where(o => o.Status == BrokerOrderStatus.Ready.ToString() || o.Status == BrokerOrderStatus.Incomming.ToString() ||
@@ -353,7 +349,7 @@ namespace viafront3.Services
                 foreach (var order in orders)
                 {
                     if (_walletProvider.IsChain(order.AssetSend))
-                        ProcessOrderChain(wallets, order);
+                        ProcessOrderChain(order);
                     else
                         ProcessOrderFiat(order);
 
