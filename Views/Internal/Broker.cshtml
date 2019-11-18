@@ -44,10 +44,19 @@
                             Token
                         </th>
                         <th>
+                            InvoiceId
+                        </th>
+                        <th>
+                            User
+                        </th>
+                        <th>
                             Market
                         </th>
                         <th>
                             Asset Receive
+                        </th>
+                        <th>
+                            Payment Address
                         </th>
                         <th class="pad-decimals">
                             Amount Receive
@@ -73,10 +82,23 @@
                                         @item.Token
                                     </td>
                                     <td>
+                                        @item.InvoiceId
+                                    </td>
+                                    <td>
+                                        <a asp-action="UserInspect" asp-route-id="@item.ApplicationUserId">
+                                            @item.ApplicationUserId.Substring(0, 5)..
+                                        </a>
+                                    </td>
+                                    <td>
                                         @item.Market
                                     </td>
                                     <td>
                                         @item.AssetReceive
+                                    </td>
+                                    <td>
+                                        <a href="data:,@item.PaymentAddress">
+                                            @item.PaymentAddress.Substring(0, 5)..
+                                        </a>
                                     </td>
                                     <td>
                                         <span class="pad-decimals-data">
@@ -101,15 +123,15 @@
                     var limit = Model.Limit;
                     if (offset >= limit)
                     {
-                        <a asp-action="Broker" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">prev</a>
+                        <a asp-action="Broker" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
                     }
                     else if (offset > 0)
                     {
-                        <a asp-action="Broker" asp-route-offset="0" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">prev</a>
+                        <a asp-action="Broker" asp-route-offset="0" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
                     }
                     if (count - offset > limit)
                     {
-                        <a asp-action="Broker" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus">next</a>
+                        <a asp-action="Broker" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">next</a>
                     }
                 }
             </div>

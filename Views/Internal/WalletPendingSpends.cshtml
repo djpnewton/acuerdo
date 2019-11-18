@@ -60,7 +60,9 @@
                                         @item.SpendCode
                                     </td>
                                     <td>
-                                        @item.Tag.Tag
+                                        <a asp-action="UserInspect" asp-route-id="@item.Tag.Tag">
+                                            @item.Tag.Tag
+                                        </a>
                                     </td>
                                     <td>
                                         <a asp-action="UserInspect" asp-route-id="@item.TagFor.Tag">

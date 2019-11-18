@@ -71,7 +71,9 @@
                                         @item.Direction
                                     </td>
                                     <td>
-                                        @item.Tag.Tag
+                                        <a asp-action="UserInspect" asp-route-id="@item.Tag.Tag">
+                                            @item.Tag.Tag
+                                        </a>
                                     </td>
                                     <td>
                                         @(item.BankTx == null ? "Incomplete" : "Complete")

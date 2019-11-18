@@ -55,7 +55,7 @@ namespace viafront3.Controllers
             return View(BaseViewModel());
         }
 
-        public IActionResult Wallets()
+        public IActionResult Wallets(bool update=false)
         {
             var user = GetUser(required: true).Result;
 
@@ -67,7 +67,8 @@ namespace viafront3.Controllers
                 {
                     if (_walletProvider.IsChain(asset))
                     {
-                        _walletProvider.UpdateBlockchainWallet(asset);
+                        if (update)
+                            _walletProvider.UpdateBlockchainWallet(asset);
 
                         var wallet = _walletProvider.GetChain(asset);
                         var tags = wallet.GetTags();
