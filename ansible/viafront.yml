@@ -65,6 +65,12 @@
         regexp: '("Password": )"not_production"'
         replace: '\1"{{mysql_pass}}"'
 
+    - name: set Mainet var for wallets
+      replace:
+        path: /opt/viafront/appsettings.json
+        regexp: '("Mainnet": )false'
+        replace: '\1{{ "false" if testnet else "true" }}'
+
     - name: set mysql host for wallets db
       replace:
         path: /opt/viafront/appsettings.json
