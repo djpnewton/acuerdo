@@ -97,7 +97,7 @@
                                     </td>
                                     <td>
                                         <a href="data:,@item.PaymentAddress">
-                                            @item.PaymentAddress.Substring(0, 5)..
+                                            @(item.PaymentAddress?.Substring(0, 5) ?? "")..
                                         </a>
                                     </td>
                                     <td>
