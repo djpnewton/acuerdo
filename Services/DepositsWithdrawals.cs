@@ -233,7 +233,13 @@ namespace viafront3.Services
                             var payoutReq = RestUtils.GetFiatPayoutRequest(fiatSettings, withdrawal.DepositCode);
                             if (payoutReq == null)
                             {
-                                payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, exchangeSettings, fiatSettings, withdrawal.DepositCode, asset, wallet.AmountToDecimal(withdrawal.Amount), withdrawal.AccountNumber);
+                                var user = userManager.FindByIdAsync(withdrawal.Tag.Tag).GetAwaiter().GetResult();
+                                if (user == null)
+                                {
+                                    _logger.LogError($"failed to find user for withdrawal ('{withdrawal.DepositCode})");
+                                    continue;
+                                }
+                                payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, exchangeSettings, fiatSettings, withdrawal.DepositCode, asset, wallet.AmountToDecimal(withdrawal.Amount), withdrawal.AccountNumber, user.Email);
                                 if (payoutReq == null)
                                     _logger.LogError($"fiat payout request creation failed ({withdrawal.DepositCode})");
                             }

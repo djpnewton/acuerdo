@@ -254,7 +254,13 @@ namespace viafront3.Services
             {
                 if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
-                    var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient);
+                    var user = _userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
+                    if (user == null)
+                    {
+                        _logger.LogError($"Failed to find order user ('{order.ApplicationUserId}')");
+                        return;
+                    }
+                    var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient, user.Email);
                     if (payoutReq == null)
                         _logger.LogError($"fiat payout request creation failed ({order.Token})");
                     else 

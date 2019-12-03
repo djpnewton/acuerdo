@@ -101,13 +101,13 @@ namespace viafront3
         }
 
 
-        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, ExchangeSettings settings, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, string account_number)
+        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, ExchangeSettings settings, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, string account_number, string email)
         {
             var cents = amount * Utils.IntPow(10, settings.Assets[asset].Decimals);
             var centsInt = Convert.ToInt64(cents);
 
             // call payment server to create request
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = centsInt, account_number = account_number, account_name = "broker user", reference = fiatSettings.PayoutsReference, code = token });
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = centsInt, account_number = account_number, account_name = email, reference = fiatSettings.PayoutsReference, code = token });
             var response = ServiceRequest(fiatSettings.FiatServerUrl, "payout_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
