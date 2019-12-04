@@ -156,7 +156,22 @@ namespace viafront3
             }
             return null;
         }
-    
+
+        public static bool CheckBankAccount(FiatProcessorSettings fiatSettings, string bankaccount)
+        {
+            var jsonBody = JsonConvert.SerializeObject(new { account = bankaccount });
+            var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "bankaccount_is_valid", null, jsonBody);
+            if (response.IsSuccessful)
+            {
+                var json = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Content);
+                if (json.ContainsKey("result") && json["result"] is bool)
+                {
+                    return (bool)json["result"];
+                }
+            }
+            return true;
+        }
+
         public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CreateKycRequest(ILogger logger, ApplicationDbContext context,
             UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string email)
         {

@@ -1123,7 +1123,12 @@ namespace viafront3.Controllers
                 return wallet.ValidateAddress(recipient);
             }
             else
+            {
+
+                if (_fiatSettings.PaymentsEnabled)
+                    return RestUtils.CheckBankAccount(_fiatSettings, recipient);
                 return Utils.ValidateBankAccount(recipient);
+            }
         }
 
         private static string FormatOrderValue(IWalletProvider walletProvider, string asset, decimal value)
