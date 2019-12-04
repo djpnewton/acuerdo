@@ -241,7 +241,7 @@ namespace viafront3.Services
         {
             // check wallet has been updated
             var time = _walletProvider.LastBlockchainWalletUpdate(order.AssetSend);
-            if (time < DateTimeOffset.Now.AddMinutes(-5))
+            if (time < DateTimeOffset.Now.AddMinutes(-(_apiSettings.Broker.TimeLimitGracePeriod/2)))
             {
                 _logger.LogWarning($"Not processing broker order ({order.Token}) as the wallet ({order.AssetSend}) was not updated since {time}");
                 return;
