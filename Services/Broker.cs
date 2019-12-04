@@ -31,6 +31,7 @@ namespace viafront3.Services
         private readonly ExchangeSettings _settings;
         private readonly ITripwire _tripwire;
         private readonly FiatProcessorSettings _fiatSettings;
+        private readonly IEmailSender _emailSender;
 
         public Broker(ILogger<Broker> logger,
             ApplicationDbContext context,
@@ -39,7 +40,8 @@ namespace viafront3.Services
             UserManager<ApplicationUser> userManager,
             IOptions<ExchangeSettings> settings,
             ITripwire tripwire,
-            IOptions<FiatProcessorSettings> fiatSettings)
+            IOptions<FiatProcessorSettings> fiatSettings,
+            IEmailSender emailSender)
         {
             _logger = logger;
             _context = context;
@@ -49,6 +51,7 @@ namespace viafront3.Services
             _settings = settings.Value;
             _tripwire = tripwire;
             _fiatSettings = fiatSettings.Value;
+            _emailSender = emailSender;
         }
 
         bool DepositAndCreateTrade(ApplicationUser brokerUser, BrokerOrder order)
@@ -93,7 +96,7 @@ namespace viafront3.Services
             return true;
         }
 
-        void CheckTxs(ApplicationUser brokerUser, BrokerOrder order)
+        void CheckTxs(ApplicationUser brokerUser, ApplicationUser user, BrokerOrder order)
         {
             // get wallet and only update from the blockchain one time
             IWallet wallet = _walletProvider.GetChain(order.AssetSend);
@@ -132,6 +135,10 @@ namespace viafront3.Services
                                 order.TxIdPayment = tx.ChainTx.TxId;
                                 _context.BrokerOrders.Update(order);
                                 _logger.LogInformation($"Payment detected for order {order.Token}, {tx}");
+
+                                // send email
+                                _emailSender.SendEmailBrokerSeenIncomingFunds(user.Email, order.AssetSend, wallet.AmountToString(order.AmountSend), order.InvoiceId).GetAwaiter().GetResult();
+                                _logger.LogInformation($"Sent email to {user.Email}");
                             }
                             else if (order.Status == BrokerOrderStatus.Incomming.ToString() &&
                                 tx.ChainTx.Confirmations >= _walletProvider.ChainAssetSettings(order.AssetSend).MinConf)
@@ -247,19 +254,19 @@ namespace viafront3.Services
                 _logger.LogError("Failed to find broker user");
                 return;
             }
+            var user = _userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
+            if (user == null)
+            {
+                _logger.LogError($"Failed to find order user ('{order.ApplicationUserId}')");
+                return;
+            }
 
             if (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString())
-                CheckTxs(brokerUser, order);
+                CheckTxs(brokerUser, user, order);
             else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
             {
                 if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
-                    var user = _userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
-                    if (user == null)
-                    {
-                        _logger.LogError($"Failed to find order user ('{order.ApplicationUserId}')");
-                        return;
-                    }
                     var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient, user.Email);
                     if (payoutReq == null)
                         _logger.LogError($"fiat payout request creation failed ({order.Token})");
@@ -282,6 +289,13 @@ namespace viafront3.Services
                         order.Status = BrokerOrderStatus.Sent.ToString();
                         _context.BrokerOrders.Update(order);
                         _logger.LogInformation($"Payout confirmed for order {order.Token}");
+
+                        // send email
+                        var sendWallet = _walletProvider.GetChain(order.AssetSend);
+                        var receiveWallet = _walletProvider.GetFiat(order.AssetReceive);
+                        _emailSender.SendEmailBrokerSentOutgoingFunds(user.Email, order.AssetSend, sendWallet.AmountToString(order.AmountSend), order.AssetReceive,
+                            receiveWallet.AmountToString(order.AmountReceive), order.InvoiceId).GetAwaiter().GetResult();
+                        _logger.LogInformation($"Sent email to {user.Email}");
                     }
                 }
             }

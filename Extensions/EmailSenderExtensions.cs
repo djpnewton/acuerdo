@@ -132,5 +132,17 @@ namespace viafront3.Services
             return emailSender.SendEmailAsync(email, "Confirm API KEY creation",
                 $"Someone has requested to create an API KEY for your account. Only click the link if it was you who created this request.<br/>Confirm your new API KEY creation by clicking this link: <a href='{HtmlEncoder.Default.Encode(link)}'>link</a> (expires in {expiryMins} minutes)");
         }
+
+        public static Task SendEmailBrokerSeenIncomingFunds(this IEmailSender emailSender, string email, string assetSent, string amountSent, string invoiceId)
+        {
+            return emailSender.SendEmailAsync(email, "Order initiated",
+                $"The incoming funds of {amountSent} {assetSent} for your order ({invoiceId}) have arrived we are now processing the order.");
+        }
+
+        public static Task SendEmailBrokerSentOutgoingFunds(this IEmailSender emailSender, string email, string assetSent, string amountSent, string assetReceive, string amountReceive, string invoiceId)
+        {
+            return emailSender.SendEmailAsync(email, "Order completed funds sent",
+                $"Your order ({invoiceId}) to sell {amountSent} {assetSent} has completed and {amountReceive} {assetReceive} has been sent to you.");
+        }
     }
 }
