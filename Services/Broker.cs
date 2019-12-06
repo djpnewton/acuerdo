@@ -212,6 +212,101 @@ namespace viafront3.Services
                 wallet.Save();
                 var businessId = spend.Id;
 
+                try
+                {
+                    // link pending withdrawal to broker order
+                    var bow = new BrokerOrderChainWithdrawal { BrokerOrderId = order.Id, SpendCode = spend.SpendCode };
+                    _context.BrokerOrderChainWithdrawals.Add(bow);
+                    // we save changes here so that we a broker order cannot be processed twice(BrokerOrderChainWithdrawal.BrokerOrderId is unique)
+                    _context.SaveChanges();
+                }
+                catch
+                {
+                    _logger.LogError($"unable to create BrokerOrderChainWithdrawal object ({order.Id}, {spend.SpendCode}");
+                    throw;
+                }
+
+                // register withdrawal with the exchange backend
+                var negativeAmount = -amount;
+                try
+                {
+                    via.BalanceUpdateQuery(brokerUser.Exchange.Id, asset, "withdraw", businessId, negativeAmount.ToString(), null);
+                }
+                catch (ViaJsonException ex)
+                {
+                    _logger.LogError(ex, "Failed to update (withdraw) user balance (xch id: {0}, asset: {1}, businessId: {2}, amount {3}",
+                        brokerUser.Exchange.Id, asset, businessId, negativeAmount);
+                    if (ex.Err == ViaError.BALANCE_UPDATE__BALANCE_NOT_ENOUGH)
+                    {
+                        dbtx.Rollback();
+                        _logger.LogError("balance not enough");
+                        return false;
+                    }
+                    throw;
+                }
+
+                dbtx.Commit();
+            }
+
+            return true;
+        }
+
+        bool FiatWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order)
+        {
+            var asset = order.AssetReceive;
+            var amount = order.AmountReceive;
+
+            var wallet = _walletProvider.GetFiat(asset);
+            if (wallet == null)
+            {
+                _logger.LogError($"No fiat wallet for {asset}");
+                return false;
+            }
+
+            var via = new ViaJsonRpc(_settings.AccessHttpUrl);
+            var balance = via.BalanceQuery(brokerUser.Exchange.Id, asset);
+
+            // validate amount
+            var amountInt = wallet.AmountToLong(amount);
+            var availableInt = wallet.StringToAmount(balance.Available);
+            if (amountInt > availableInt)
+            {
+                _logger.LogError("broker available balance is too small");
+                return false;
+            }
+            if (amountInt <= 0)
+            {
+                _logger.LogError("amount must be greather then or equal to 0");
+                return false;
+            }
+
+            using (var dbtx = wallet.BeginDbTransaction())
+            {
+                // register withdrawal with wallet
+                var acct = new BankAccount { AccountNumber = order.Recipient };
+                var tx = wallet.RegisterPendingWithdrawal(brokerUser.Id, amountInt, acct);
+                if (tx == null)
+                {
+                    _logger.LogError($"Failed to create fiat withdrawal ('{order.Token}')");
+                    return false;
+                }
+                wallet.Save();
+                var businessId = tx.Id;
+
+                try
+                {
+                    // link pending withdrawal to broker order
+                    var bow = new BrokerOrderFiatWithdrawal { BrokerOrderId = order.Id, DepositCode = tx.DepositCode };
+                    _context.BrokerOrderFiatWithdrawals.Add(bow);
+                    // we save changes here so that we a broker order cannot be processed twice(BrokerOrderChainWithdrawal.BrokerOrderId is unique)
+                    _context.SaveChanges();
+                }
+                catch
+                {
+                    _logger.LogError($"unable to create BrokerOrderChainWithdrawal object ({order.Id}, {tx.DepositCode}");
+                    throw;
+                }
+
                 // register withdrawal with the exchange backend
                 var negativeAmount = -amount;
                 try
@@ -254,6 +349,8 @@ namespace viafront3.Services
                 _logger.LogError("Failed to find broker user");
                 return;
             }
+
+            // get order user
             var user = _userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
             if (user == null)
             {
@@ -265,25 +362,29 @@ namespace viafront3.Services
                 CheckTxs(brokerUser, user, order);
             else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
             {
-                if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
+                if (FiatWithdrawToCustomer(brokerUser, order))
                 {
-                    var payoutReq = RestUtils.CreateFiatPayoutRequest(_logger, _settings, _fiatSettings, order.Token, order.AssetReceive, order.AmountReceive, order.Recipient, user.Email);
-                    if (payoutReq == null)
-                        _logger.LogError($"fiat payout request creation failed ({order.Token})");
-                    else 
-                    {
-                        order.Status = BrokerOrderStatus.PayoutWait.ToString();
-                        _context.BrokerOrders.Update(order);
-                    }
+                    order.Status = BrokerOrderStatus.PayoutWait.ToString();
+                    _context.BrokerOrders.Update(order);
+                    _logger.LogError($"Sent fiat for order ('{order.Token}')");
                 }
+                else
+                    _logger.LogError($"failed to send fiat for order ({order.Token})");
             }
             else if (order.Status == BrokerOrderStatus.PayoutWait.ToString())
             {
                 if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
                 {
-                    var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, order.Token);
+                    var bow = _context.BrokerOrderFiatWithdrawals.SingleOrDefault(o => o.BrokerOrderId == order.Id);
+                    if (bow == null)
+                    {
+                        _logger.LogWarning($"broker order withdrawal not found ({order.Token})");
+                        return;
+                    }
+
+                    var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, bow.DepositCode);
                     if (payoutReq == null)
-                        _logger.LogError($"fiat payout request not found ({order.Token})");
+                        _logger.LogWarning($"fiat payout request not found ({order.Token})");
                     else if (payoutReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
                     {
                         order.Status = BrokerOrderStatus.Sent.ToString();
@@ -320,6 +421,15 @@ namespace viafront3.Services
                 _logger.LogError("Failed to find broker user");
                 return;
             }
+
+            // get order user
+            var user = _userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
+            if (user == null)
+            {
+                _logger.LogError($"Failed to find order user ('{order.ApplicationUserId}')");
+                return;
+            }
+
             var paymentReq = RestUtils.GetFiatPaymentRequest(_fiatSettings, order.Token);
             if (paymentReq == null)
             {
@@ -335,18 +445,72 @@ namespace viafront3.Services
                     _context.BrokerOrders.Update(order);
                     _logger.LogInformation($"Payment confirmed for order {order.Token}");
                     DepositAndCreateTrade(brokerUser, order);
+
+                    // send email
+                    var wallet = _walletProvider.GetFiat(order.AssetSend);
+                    if (wallet == null)
+                    {
+                        _logger.LogError($"Failed to get fiat wallet for order (token: {order.Token})");
+                        return;
+                    }
+                    _emailSender.SendEmailBrokerSeenIncomingFunds(user.Email, order.AssetSend, wallet.AmountToString(order.AmountSend), order.InvoiceId).GetAwaiter().GetResult();
+                    _logger.LogInformation($"Sent email to {user.Email}");
                 }
             }
             else if (order.Status == BrokerOrderStatus.Confirmed.ToString())
             {
                 if (ChainWithdrawToCustomer(brokerUser, order))
                 {
-                    order.Status = BrokerOrderStatus.Sent.ToString();
+                    order.Status = BrokerOrderStatus.PayoutWait.ToString();
                     _context.BrokerOrders.Update(order);
                     _logger.LogInformation($"Sent funds for order {order.Token}");
                 }
                 else
                     _logger.LogError($"failed to send funds for order ({order.Token})");
+            }
+            else if (order.Status == BrokerOrderStatus.PayoutWait.ToString())
+            {
+                var bow = _context.BrokerOrderChainWithdrawals.SingleOrDefault(o => o.BrokerOrderId == order.Id);
+                if (bow == null)
+                {
+                    _logger.LogWarning($"broker order withdrawal not found ({order.Token})");
+                    return;
+                }
+
+                var asset = order.AssetReceive;
+                var wallet = _walletProvider.GetChain(asset);
+                if (wallet == null)
+                {
+                    _logger.LogError($"No chain wallet for {asset}");
+                    return;
+                }
+                var brokerWalletTag = wallet.GetTag(brokerUser.Id);
+                if (brokerWalletTag == null)
+                {
+                    _logger.LogError($"No tag for broker {brokerUser.Id}");
+                    return;
+                }
+
+                var spend = wallet.PendingSpendsGet(brokerWalletTag.Tag).SingleOrDefault(s => s.SpendCode == bow.SpendCode);
+                if (spend == null)
+                {
+                    _logger.LogError($"No pending spend for broker {bow.SpendCode}");
+                    return;
+                }
+
+                if (spend.State == PendingSpendState.Complete)
+                {
+                    order.Status = BrokerOrderStatus.Sent.ToString();
+                    _context.BrokerOrders.Update(order);
+                    _logger.LogInformation($"Payout confirmed for order {order.Token}");
+
+                    // send email
+                    var sendWallet = _walletProvider.GetChain(order.AssetSend);
+                    var receiveWallet = _walletProvider.GetFiat(order.AssetReceive);
+                    _emailSender.SendEmailBrokerSentOutgoingFunds(user.Email, order.AssetSend, sendWallet.AmountToString(order.AmountSend), order.AssetReceive,
+                        receiveWallet.AmountToString(order.AmountReceive), order.InvoiceId).GetAwaiter().GetResult();
+                    _logger.LogInformation($"Sent email to {user.Email}");
+                }
             }
         }
 

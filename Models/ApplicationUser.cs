@@ -230,6 +230,20 @@ namespace viafront3.Models
         public string Status { get; set; }
     }
 
+    public class BrokerOrderFiatWithdrawal
+    {
+        public int Id { get; set; }
+        public int BrokerOrderId { get; set; }
+        public string DepositCode { get; set; }
+    }
+
+    public class BrokerOrderChainWithdrawal
+    {
+        public int Id { get; set; }
+        public int BrokerOrderId { get; set; }
+        public string SpendCode { get; set; }
+    }
+
     public class AuthenticationTicket
     {
         public Guid Id { get; set; }
