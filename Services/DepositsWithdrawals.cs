@@ -189,9 +189,11 @@ namespace viafront3.Services
                     var settings = scope.ServiceProvider.GetRequiredService<IOptions<WalletSettings>>().Value;
                     var fiatSettings = scope.ServiceProvider.GetRequiredService<IOptions<FiatProcessorSettings>>().Value;
                     var exchangeSettings = scope.ServiceProvider.GetRequiredService<IOptions<ExchangeSettings>>().Value;
+                    var apiSettings = scope.ServiceProvider.GetRequiredService<IOptions<ApiSettings>>().Value;
                     var walletProvider = scope.ServiceProvider.GetRequiredService<IWalletProvider>();
                     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
                     var emailSender = scope.ServiceProvider.GetRequiredService<IEmailSender>();
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
                     foreach (var asset in settings.BankAccounts.Keys)
                     {
@@ -234,6 +236,17 @@ namespace viafront3.Services
                             if (payoutReq == null)
                             {
                                 var user = userManager.FindByIdAsync(withdrawal.Tag.Tag).GetAwaiter().GetResult();
+                                if (user != null && user.UserName == apiSettings.Broker.BrokerTag)
+                                {
+                                    user = null;
+                                    var bow = context.BrokerOrderFiatWithdrawals.SingleOrDefault(o => o.DepositCode == withdrawal.DepositCode);
+                                    if (bow != null)
+                                    {
+                                        var order = context.BrokerOrders.SingleOrDefault(o => o.Id == bow.BrokerOrderId);
+                                        if (order != null)
+                                            user = userManager.FindByIdAsync(order.ApplicationUserId).GetAwaiter().GetResult();
+                                    }
+                                }
                                 if (user == null)
                                 {
                                     _logger.LogError($"failed to find user for withdrawal ('{withdrawal.DepositCode})");
