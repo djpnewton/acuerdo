@@ -7,6 +7,7 @@ namespace viafront3.Services
 {
     public interface IEmailSender
     {
+        String SiteName { get; }
         Task SendEmailAsync(string email, string subject, string message);
     }
 }

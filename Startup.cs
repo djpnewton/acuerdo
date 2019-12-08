@@ -97,6 +97,7 @@ namespace viafront3
         public string SmtpPass { get; set; }
         public int SmtpPort { get; set; }
         public bool SmtpSsl { get; set; }
+        public string Signature { get; set; }
     }
 
     public class Broker

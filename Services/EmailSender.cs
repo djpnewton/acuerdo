@@ -15,20 +15,30 @@ namespace viafront3.Services
     {
         readonly ILogger<EmailSender> _logger;
         readonly EmailSenderSettings _settings;
+        readonly GeneralSettings _genSettings;
 
-        public EmailSender(ILogger<EmailSender> logger, IOptions<EmailSenderSettings> optionsAccessor)
+        public EmailSender(ILogger<EmailSender> logger, IOptions<EmailSenderSettings> optionsAccessor, IOptions<GeneralSettings> genAccessor)
         {
             _logger = logger;
             _settings = optionsAccessor.Value;
+            _genSettings = genAccessor.Value;
         }
+
+        public String SiteName { get { return _genSettings.SiteName; } }
 
         public Task SendEmailAsync(string email, string subject, string message)
         {
+            // update subject and message
+            subject = $"{SiteName}: {subject}";
+            if (!string.IsNullOrEmpty(_settings.Signature))
+                message = $"{message}<br/><br/>{_settings.Signature}";
+            // check for null email
             if (email == null)
             {
                 _logger.LogError($"Email parameter is null when sending email (subject '{subject}')");
                 return Task.CompletedTask;
             }
+            // send email
             bool useHangfire = true;
             try
             {
