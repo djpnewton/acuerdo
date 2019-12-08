@@ -52,6 +52,18 @@
         src: templates/telegraf_wallet.conf.j2
         dest: /etc/telegraf/telegraf.d/wallet.conf
 
+    # hangire
+    - name: install hangire telegraf script
+      template:
+        src: templates/telegraf_hangfire.py
+        dest: /opt/telegraf/telegraf_hangfire.py
+        mode: 0755
+
+    - name: install telegraf hangfire config
+      template:
+        src: templates/telegraf_hangfire.conf.j2
+        dest: /etc/telegraf/telegraf.d/hangfire.conf
+
     # sshd
     - name: install pam sshd script
       template:

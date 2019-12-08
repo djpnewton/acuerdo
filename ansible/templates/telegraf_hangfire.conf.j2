@@ -1,0 +1,6 @@
+[[inputs.exec]]
+    interval = "2m"
+    commands = ["/opt/telegraf/telegraf_hangfire.py"]
+    name_prefix = "hangfire_stats_"
+    data_format = "json"
+    timeout = "20s"
