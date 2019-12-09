@@ -17,6 +17,7 @@ namespace viafront3.Services
     public interface IBroker
     {
         void ProcessOrders();
+        bool FiatWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order);
     }
 
     public class Broker : IBroker
@@ -251,7 +252,7 @@ namespace viafront3.Services
             return true;
         }
 
-        bool FiatWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order)
+        public bool FiatWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order)
         {
             var asset = order.AssetReceive;
             var amount = order.AmountReceive;

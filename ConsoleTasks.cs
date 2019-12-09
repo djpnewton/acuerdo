@@ -213,6 +213,72 @@ namespace viafront3
             await ProcessFiat(serviceProvider, false, asset, depositCode, date, amount, bankMetadata);
         }
 
+        public static async Task CompletedFiatWithdrawForBrokerOrder(IServiceProvider serviceProvider, string token)
+        {
+            var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+            var walletProvider = serviceProvider.GetRequiredService<IWalletProvider>();
+            var broker = serviceProvider.GetRequiredService<IBroker>();
+            var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
+            var apiSettings = serviceProvider.GetRequiredService<IOptions<ApiSettings>>().Value;
+
+            // find broker order
+            var order = context.BrokerOrders.SingleOrDefault(o => o.Token == token);
+            if (order == null)
+            {
+                Console.WriteLine($"ERROR: could not find order ({token})");
+                return;
+            }
+            // check BrokerOrderFiatWithdrawal does not exist
+            var bow = context.BrokerOrderFiatWithdrawals.SingleOrDefault(b => b.BrokerOrderId == order.Id);
+            if (bow != null)
+            {
+                Console.WriteLine($"ERROR: BrokerOrderFiatWithdrawal object already exists for this order");
+                return;
+            }
+            // check receive asset is fiat
+            if (!walletProvider.IsFiat(order.AssetReceive))
+            {
+                Console.WriteLine($"ERROR: order.AssetReceive ({order.AssetReceive}) is not fiat");
+                return;
+            }
+            // get fiat wallet
+            var wallet = walletProvider.GetFiat(order.AssetReceive);
+            if (wallet == null)
+            {
+                Console.WriteLine($"ERROR: could not get wallet ({order.AssetReceive})");
+                return;
+            }
+            // get broker user
+            var brokerUser = userManager.FindByNameAsync(apiSettings.Broker.BrokerTag).GetAwaiter().GetResult();
+            if (brokerUser == null)
+            {
+                Console.WriteLine("Failed to find broker user");
+                return;
+            }
+            // create BrokerOrderFiatWithdrawal and pending wallet withdrawal
+            if (!broker.FiatWithdrawToCustomer(brokerUser, order))
+            {
+                Console.WriteLine("Failed call to FiatWithdrawToCustomer");
+                return;
+            }
+            // find created BrokerOrderFiatWithdrawal
+            bow = context.BrokerOrderFiatWithdrawals.SingleOrDefault(b => b.BrokerOrderId == order.Id);
+            if (bow == null)
+            {
+                Console.WriteLine($"ERROR: BrokerOrderFiatWithdrawal object does not exist (we should have just created it)");
+                return;
+            }
+            // update newly created withdrawal and set to processed
+            var amountInt = wallet.AmountToLong(order.AmountReceive);
+            var fiatTx = wallet.UpdateWithdrawal(bow.DepositCode, DateTimeOffset.UtcNow.ToUnixTimeSeconds(), amountInt, "");
+            if (fiatTx == null)
+            {
+                Console.WriteLine("Failed call to wallet.UpdateWithdrawal");
+                return;
+            }
+            wallet.Save();
+        }
+
         public static void ProcessChainWithdrawal(IServiceProvider serviceProvider, string asset, string spendCode)
         {
             // get wallet

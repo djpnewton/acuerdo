@@ -85,6 +85,13 @@ namespace viafront3
             public string BankMetadata { get; set; }
         }
 
+        [Verb("__temp_completed_fiat_withdraw_for_broker_order", HelpText = "[TEMP] Add a completed fiat withdrawal for broker order")]
+        class CompletedFiatWithdrawForBrokerOrder
+        {
+            [Option('t', "token", Required = true, HelpText = "Broker order token")]
+            public string Token { get; set; }
+        }
+
         [Verb("__process_chain_withdrawal", HelpText = "Process a blockchain withdrawal")]
         class ProcessChainWithdrawal
         { 
@@ -154,6 +161,13 @@ namespace viafront3
             return 0;
         }
 
+        static int RunCompletedFiatWithdrawForBrokerOrder(CompletedFiatWithdrawForBrokerOrder opts)
+        {
+            var sp = GetServiceProvider();
+            ConsoleTasks.CompletedFiatWithdrawForBrokerOrder(sp, opts.Token).GetAwaiter().GetResult();
+            return 0;
+        }
+
         static int RunProcessChainWithdrawal(ProcessChainWithdrawal opts)
         {
             var sp = GetServiceProvider();
@@ -189,7 +203,7 @@ namespace viafront3
                 var argsList = args.ToList();
                 argsList.RemoveAt(0);
                 return CommandLine.Parser.Default.ParseArguments<InitRoles, AddRole, ChangeUserEmail,
-                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits,
+                        ConsolidateWallet, ProcessFiatDeposit, ProcessFiatWithdrawal, CompletedFiatWithdrawForBrokerOrder, ProcessChainWithdrawal, ShowPendingChainWithdrawals, CheckChainDeposits,
                         KafkaOrderUpdates>(argsList)
                     .MapResult(
                     (InitRoles opts) => RunInitRoles(opts),
@@ -198,6 +212,7 @@ namespace viafront3
                     (ConsolidateWallet opts) => RunConsolidate(opts),
                     (ProcessFiatDeposit opts) => RunProcessFiatDeposit(opts),
                     (ProcessFiatWithdrawal opts) => RunProcessFiatWithdrawal(opts),
+                    (CompletedFiatWithdrawForBrokerOrder opts) => RunCompletedFiatWithdrawForBrokerOrder(opts),
                     (ProcessChainWithdrawal opts) => RunProcessChainWithdrawal(opts),
                     (ShowPendingChainWithdrawals opts) => RunShowPendingChainWithdrawals(opts),
                     (CheckChainDeposits opts) => RunCheckChainDeposits(opts),
