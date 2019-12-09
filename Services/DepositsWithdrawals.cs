@@ -197,7 +197,7 @@ namespace viafront3.Services
 
                     foreach (var asset in settings.BankAccounts.Keys)
                     {
-                        if (!fiatSettings.PayoutsEnabled || !fiatSettings.PaymentsAssets.Contains(asset))
+                        if (!fiatSettings.PayoutsEnabled || !fiatSettings.PayoutsAssets.Contains(asset))
                         {
                             // exit as there is no fiat payment server
                             continue;

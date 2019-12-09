@@ -374,31 +374,28 @@ namespace viafront3.Services
             }
             else if (order.Status == BrokerOrderStatus.PayoutWait.ToString())
             {
-                if (_fiatSettings.PayoutsEnabled && _fiatSettings.PaymentsAssets.Contains(order.AssetReceive))
+                var bow = _context.BrokerOrderFiatWithdrawals.SingleOrDefault(o => o.BrokerOrderId == order.Id);
+                if (bow == null)
                 {
-                    var bow = _context.BrokerOrderFiatWithdrawals.SingleOrDefault(o => o.BrokerOrderId == order.Id);
-                    if (bow == null)
-                    {
-                        _logger.LogWarning($"broker order withdrawal not found ({order.Token})");
-                        return;
-                    }
+                    _logger.LogWarning($"broker order withdrawal not found ({order.Token})");
+                    return;
+                }
 
-                    var payoutReq = RestUtils.GetFiatPayoutRequest(_fiatSettings, bow.DepositCode);
-                    if (payoutReq == null)
-                        _logger.LogWarning($"fiat payout request not found ({order.Token})");
-                    else if (payoutReq.Status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
-                    {
-                        order.Status = BrokerOrderStatus.Sent.ToString();
-                        _context.BrokerOrders.Update(order);
-                        _logger.LogInformation($"Payout confirmed for order {order.Token}");
+                // check fiat withdrawal is completed
+                var wallet = _walletProvider.GetFiat(order.AssetReceive);
+                var fiatTx = wallet.GetTx(bow.DepositCode);
+                if (fiatTx != null && fiatTx.BankTx != null)
+                {
+                    order.Status = BrokerOrderStatus.Sent.ToString();
+                    _context.BrokerOrders.Update(order);
+                    _logger.LogInformation($"Payout confirmed for order {order.Token}");
 
-                        // send email
-                        var sendWallet = _walletProvider.GetChain(order.AssetSend);
-                        var receiveWallet = _walletProvider.GetFiat(order.AssetReceive);
-                        _emailSender.SendEmailBrokerSentOutgoingFunds(user.Email, order.AssetSend, sendWallet.AmountToString(order.AmountSend), order.AssetReceive,
-                            receiveWallet.AmountToString(order.AmountReceive), order.InvoiceId).GetAwaiter().GetResult();
-                        _logger.LogInformation($"Sent email to {user.Email}");
-                    }
+                    // send email
+                    var sendWallet = _walletProvider.GetChain(order.AssetSend);
+                    var receiveWallet = _walletProvider.GetFiat(order.AssetReceive);
+                    _emailSender.SendEmailBrokerSentOutgoingFunds(user.Email, order.AssetSend, sendWallet.AmountToString(order.AmountSend), order.AssetReceive,
+                        receiveWallet.AmountToString(order.AmountReceive), order.InvoiceId).GetAwaiter().GetResult();
+                    _logger.LogInformation($"Sent email to {user.Email}");
                 }
             }
         }
