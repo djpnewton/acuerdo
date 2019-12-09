@@ -21,8 +21,16 @@ namespace viafront3.Controllers
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            // only allow from localhost
+            // get remote ip
             var remoteIp = context.HttpContext.Connection.RemoteIpAddress;
+            // check if request was from proxy server and get real ip
+            if (context.HttpContext.Connection.LocalPort != 80 && context.HttpContext.Connection.LocalPort != 443)
+            {
+                if (context.HttpContext.Request.Headers.TryGetValue("X-Real-IP", out var realIpStr))
+                    if (IPAddress.TryParse(realIpStr, out var realIp))
+                        remoteIp = realIp;
+            }
+            // only allow from localhost
             if (!IPAddress.IsLoopback(remoteIp))
             {
                 context.Result = new UnauthorizedResult();
