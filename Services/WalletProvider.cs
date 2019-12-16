@@ -13,7 +13,9 @@ namespace viafront3.Services
         bool IsChain(string asset);
         bool IsFiat(string asset);
         IWallet GetChain(string asset);
+        IWallet2 GetFastChain(string asset);
         IFiatWallet GetFiat(string asset);
+        IFiatWallet2 GetFastFiat(string asset);
         string ConsolidatedFundsTag();
         ChainAssetSettings ChainAssetSettings(string asset);
         string AmountToString(string asset, decimal amount);
@@ -58,7 +60,7 @@ namespace viafront3.Services
             if (_walletSettings.ChainAssetSettings.ContainsKey(asset))
                 cas = _walletSettings.ChainAssetSettings[asset];
             IWallet wallet = null;
-            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false);
+            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false, true);
             switch (asset)
             {
                 case "WAVES":
@@ -77,6 +79,18 @@ namespace viafront3.Services
             return wallet;
         }
 
+        public IWallet2 GetFastChain(string asset)
+        {
+            if (!IsChain(asset))
+                throw new Exception($"Wallet '{asset}' not supported");
+
+            string dbName = null;
+            if (_walletSettings.DbNames.ContainsKey(asset))
+                dbName = _walletSettings.DbNames[asset];
+            var db = WalletContext.CreateMySqlWalletContext<WalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false, false);
+            return new FastWallet(_logger, db, _walletSettings.Mainnet, asset);
+        }
+
         public IFiatWallet GetFiat(string asset)
         {
             if (!IsFiat(asset))
@@ -88,9 +102,22 @@ namespace viafront3.Services
             BankAccount account = null;
             if (_walletSettings.BankAccounts.ContainsKey(asset))
                 account = _walletSettings.BankAccounts[asset];
-            var wallet = new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false), asset, account);
-            return wallet;
-        } 
+            return new FiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false, true), asset, account);
+        }
+
+        public IFiatWallet2 GetFastFiat(string asset)
+        {
+            if (!IsFiat(asset))
+                throw new Exception($"Wallet '{asset}' not supported");
+
+            string dbName = null;
+            if (_walletSettings.DbNames.ContainsKey(asset))
+                dbName = _walletSettings.DbNames[asset];
+            BankAccount account = null;
+            if (_walletSettings.BankAccounts.ContainsKey(asset))
+                account = _walletSettings.BankAccounts[asset];
+            return new FastFiatWallet(_logger, WalletContext.CreateMySqlWalletContext<FiatWalletContext>(_walletSettings.MySql.Host, dbName, _walletSettings.MySql.User, _walletSettings.MySql.Password, false, false, false), asset, account);
+        }
 
         public string ConsolidatedFundsTag()
         {

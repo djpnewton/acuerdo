@@ -70,13 +70,11 @@ namespace viafront3.Controllers
                         if (update)
                             _walletProvider.UpdateBlockchainWallet(asset);
 
-                        var wallet = _walletProvider.GetChain(asset);
-                        var tags = wallet.GetTags();
+                        var wallet = _walletProvider.GetFastChain(asset);
                         var balance = new ChainWalletBalance{ Total = 0, Consolidated = 0};
-                        foreach (var tag in tags)
-                            balance.Total += wallet.GetBalance(tag.Tag);
+                        balance.Total = wallet.GetBalance();
                         balance.Consolidated = wallet.GetBalance(_walletSettings.ConsolidatedFundsTag);
-                        balance.Wallet = wallet;
+                        balance.Wallet = _walletProvider.GetChain(asset);
                         chainBalances[asset] = balance;
                     }
                 }
@@ -88,12 +86,10 @@ namespace viafront3.Controllers
                 {
                     if (_walletProvider.IsFiat(asset))
                     {
-                        var wallet = _walletProvider.GetFiat(asset);
-                        var tags = wallet.GetTags();
+                        var wallet = _walletProvider.GetFastFiat(asset);
                         var balance = new FiatWalletBalance{ Total = 0 };
-                        foreach (var tag in tags)
-                            balance.Total += wallet.GetBalance(tag.Tag);
-                        balance.Wallet = wallet;
+                        balance.Total = wallet.GetBalance();
+                        balance.Wallet = _walletProvider.GetFiat(asset);
                         fiatBalances[asset] = balance;
                     }
                 }
