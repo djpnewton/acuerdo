@@ -958,13 +958,17 @@ namespace viafront3.Controllers
                 decimal amountSend = 0;
                 decimal amountReceive = 0;
                 var assetSend = "";
+                var assetSendDecimals = 0;
                 var assetReceive = "";
+                var assetReceiveDecimals = 0;
                 var amountLeft = amountDec;
                 if (side == OrderSide.Bid)
                 {
                     var depth = orderDepth.asks;
                     assetSend = marketSettings.PriceUnit;
+                    assetSendDecimals = marketSettings.PriceDecimals;
                     assetReceive = marketSettings.AmountUnit;
+                    assetReceiveDecimals = marketSettings.AmountDecimals;
 
                     if (amountAsQuoteCurrency)
                     {
@@ -1006,7 +1010,9 @@ namespace viafront3.Controllers
                 {
                     var depth = orderDepth.bids;
                     assetSend = marketSettings.AmountUnit;
+                    assetSendDecimals = marketSettings.AmountDecimals;
                     assetReceive = marketSettings.PriceUnit;
+                    assetReceiveDecimals = marketSettings.PriceDecimals;
 
                     if (amountAsQuoteCurrency)
                     {
@@ -1044,6 +1050,10 @@ namespace viafront3.Controllers
                     if (amountReceive > 0)
                         avgPrice = amountSend / amountReceive;
                 }
+                // round to max decimals for the assets
+                amountSend = decimal.Round(amountSend, assetSendDecimals, MidpointRounding.AwayFromZero);
+                amountReceive = decimal.Round(amountReceive, assetReceiveDecimals, MidpointRounding.AwayFromZero);
+                // return quote model
                 var model = new ApiBrokerQuoteInternal
                 {
                     AssetSend = assetSend,
