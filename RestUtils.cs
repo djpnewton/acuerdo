@@ -48,7 +48,8 @@ namespace viafront3
         public static viafront3.Models.ApiViewModels.ApiFiatPaymentRequest CreateFiatPaymentRequest(ILogger logger, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount)
         {
             // call payment server to create request
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount, return_url = "" });
+            var amount_cents =  Convert.ToInt32(amount * 100);
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount_cents, return_url = "" });
             var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
