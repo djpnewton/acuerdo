@@ -497,8 +497,8 @@ namespace viafront3.Services
                     _logger.LogInformation($"Payout confirmed for order {order.Token}");
 
                     // send email
-                    var sendWallet = _walletProvider.GetChain(order.AssetSend);
-                    var receiveWallet = _walletProvider.GetFiat(order.AssetReceive);
+                    var sendWallet = _walletProvider.GetFiat(order.AssetSend);
+                    var receiveWallet = _walletProvider.GetChain(order.AssetReceive);
                     _emailSender.SendEmailBrokerSentOutgoingFunds(user.Email, order.AssetSend, sendWallet.AmountToString(order.AmountSend), order.AssetReceive,
                         receiveWallet.AmountToString(order.AmountReceive), order.InvoiceId).GetAwaiter().GetResult();
                     _logger.LogInformation($"Sent email to {user.Email}");
