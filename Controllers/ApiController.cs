@@ -1295,7 +1295,7 @@ namespace viafront3.Controllers
             // create payment details
             if (order.Status == BrokerOrderStatus.Ready.ToString())
             {
-                string invoiceId = null;
+                string invoiceId = Utils.CreateToken();
                 string paymentAddress = null;
                 string paymentUrl = null;
                 if (_walletProvider.IsChain(order.AssetSend))
@@ -1309,7 +1309,6 @@ namespace viafront3.Controllers
                     }
                     if (assetSettings.LedgerModel == LedgerModel.Account)
                     {
-                        invoiceId = Utils.CreateToken();
                         paymentAddress = wallet.NewOrExistingAddress(brokerUser.Id).Address;
                     }
                     else // UTXO

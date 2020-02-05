@@ -482,14 +482,8 @@ namespace viafront3.Services
                     _logger.LogError($"No chain wallet for {asset}");
                     return;
                 }
-                var brokerWalletTag = wallet.GetTag(brokerUser.Id);
-                if (brokerWalletTag == null)
-                {
-                    _logger.LogError($"No tag for broker {brokerUser.Id}");
-                    return;
-                }
 
-                var spend = wallet.PendingSpendsGet(brokerWalletTag.Tag).SingleOrDefault(s => s.SpendCode == bow.SpendCode);
+                var spend = wallet.PendingSpendsGet().SingleOrDefault(s => s.SpendCode == bow.SpendCode);
                 if (spend == null)
                 {
                     _logger.LogError($"No pending spend for broker {bow.SpendCode}");
