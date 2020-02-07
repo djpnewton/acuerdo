@@ -50,7 +50,7 @@ namespace viafront3
     {
         public const string AdminRole = "admin";
         public const string FinanceRole = "finance";
-        public const string AdminAndFinanceRoles = AdminRole + "," + FinanceRole;
+        public const string AdminOrFinanceRole = AdminRole + "," + FinanceRole;
         public const string EmailConfirmedRole = "emailconfirmed";
 
         public struct AddressIncommingTxs

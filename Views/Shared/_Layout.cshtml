@@ -53,9 +53,9 @@
                         {
                     <li><a asp-area="" asp-controller="Internal" asp-action="Index">Internal</a></li>
                         }
-                        @if(User.IsInRole(Utils.FinanceRole))
+                        @if(User.IsInRole(Utils.AdminRole) || User.IsInRole(Utils.FinanceRole))
                         {
-                    <li><a asp-area="" asp-controller="Internal" asp-action="Broker">Broker</a></li>
+                    <li><a asp-area="" asp-controller="Report" asp-action="Index">Report</a></li>
                         }
                     }
                     <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
