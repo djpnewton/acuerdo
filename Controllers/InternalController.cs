@@ -1,16 +1,15 @@
 ﻿using System;
-using System.Text;
+using System.IO;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Numerics;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
+using CsvHelper;
 using viafront3.Models;
 using viafront3.Models.InternalViewModels;
 using viafront3.Models.TradeViewModels;
@@ -335,11 +334,23 @@ namespace viafront3.Controllers
             return View(OrdersCompletedViewModel.Construct(user, user, market, OrderSide.Ask, _settings, offset, limit));
         }
 
-        public IActionResult Broker(int offset=0, int limit=20, string orderStatus=null, string notOrderStatus=null)
+        [Authorize(Roles = Utils.AdminAndFinanceRoles)]
+        public IActionResult Broker(int offset=0, int limit=20, DateTime? startDate=null, DateTime? endDate=null, string orderStatus=null, string notOrderStatus=null, bool csv=false)
         {
             var user = GetUser(required: true).Result;
 
             var orders = _context.BrokerOrders.AsEnumerable();
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            if (startDate.HasValue)
+            {
+                var unixTimestamp = (startDate.Value.ToUniversalTime() - epoch).TotalSeconds;
+                orders = orders.Where(o => o.Date >= unixTimestamp);
+            }
+            if (endDate.HasValue)
+            {
+                var unixTimestamp = (endDate.Value.ToUniversalTime() - epoch).TotalSeconds;
+                orders = orders.Where(o => o.Date <= unixTimestamp);
+            }
             if (orderStatus == "")
                 orderStatus = null;
             if (orderStatus != null)
@@ -348,18 +359,33 @@ namespace viafront3.Controllers
                 orders = orders.Where(o => o.Status != notOrderStatus);
             orders = orders.OrderByDescending(o => o.Date);
 
-            var model = new BrokerViewModel
+            if (csv)
             {
-                User = user,
-                Orders = orders.Skip(offset).Take(limit),
-                Offset = offset,
-                Limit = limit,
-                Count = orders.Count(),
-                OrderStatus = orderStatus,
-                NotOrderStatus = notOrderStatus,
-                AssetSettings = _settings.Assets,
-            };
-            return View(model);
+                var stream = new MemoryStream();
+                var writeFile = new StreamWriter(stream);
+                var csvWriter = new CsvWriter(writeFile, System.Globalization.CultureInfo.InvariantCulture);
+                csvWriter.WriteRecords(orders);
+                csvWriter.Flush();
+                stream.Position = 0; //reset stream
+                return File(stream, "application/octet-stream", "broker.csv");
+            }
+            else
+            {
+                var model = new BrokerViewModel
+                {
+                    User = user,
+                    Orders = orders.Skip(offset).Take(limit),
+                    Offset = offset,
+                    Limit = limit,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    Count = orders.Count(),
+                    OrderStatus = orderStatus,
+                    NotOrderStatus = notOrderStatus,
+                    AssetSettings = _settings.Assets,
+                };
+                return View(model);
+            }
         }
 
         [AllowAnonymous]

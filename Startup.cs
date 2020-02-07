@@ -247,6 +247,8 @@ namespace viafront3
 
             services.AddMvc(options =>
                 options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+
+            System.ComponentModel.TypeDescriptor.AddAttributes(typeof(DateTime), new System.ComponentModel.TypeConverterAttribute(typeof(NzDateTimeConverter)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

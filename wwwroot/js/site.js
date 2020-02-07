@@ -18,4 +18,7 @@ ready(function() {
             this.form.submit();
         });
     });
+
+    // init datepicker elements
+    $(".datepicker").datepicker({ format: 'yyyy/mm/dd', autoclose: true, todayBtn: 'linked' });
 });

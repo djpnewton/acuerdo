@@ -25,7 +25,7 @@ namespace viafront3
         {
             // create roles if they dont exist
             var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            string[] roleNames = { Utils.AdminRole, Utils.EmailConfirmedRole };
+            string[] roleNames = { Utils.AdminRole, Utils.FinanceRole, Utils.EmailConfirmedRole };
             foreach (var roleName in roleNames)
             {
                 var roleExist = await roleManager.RoleExistsAsync(roleName);

@@ -19,9 +19,38 @@ using via_jsonrpc;
 
 namespace viafront3
 {
+    public class NzDateTimeConverter : System.ComponentModel.TypeConverter
+    {
+        // Overrides the CanConvertFrom method of TypeConverter.
+        // The ITypeDescriptorContext interface provides the context for the
+        // conversion. Typically, this interface is used at design time to 
+        // provide information about the design-time container.
+        public override bool CanConvertFrom(System.ComponentModel.ITypeDescriptorContext context, Type sourceType)
+        {
+            if (sourceType == typeof(string))
+            {
+                return true;
+            }
+            return base.CanConvertFrom(context, sourceType);
+        }
+        // Overrides the ConvertFrom method of TypeConverter.
+        public override object ConvertFrom(System.ComponentModel.ITypeDescriptorContext context,
+           System.Globalization.CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
+                if (DateTime.TryParse(((string)value), new System.Globalization.CultureInfo("nz-NZ") /*or use culture*/, System.Globalization.DateTimeStyles.None, out DateTime date))
+                    return date;
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
+    }
+
     public static class Utils
     {
         public const string AdminRole = "admin";
+        public const string FinanceRole = "finance";
+        public const string AdminAndFinanceRoles = AdminRole + "," + FinanceRole;
         public const string EmailConfirmedRole = "emailconfirmed";
 
         public struct AddressIncommingTxs

@@ -1,5 +1,6 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using viafront3.Services
+@using viafront3
 
 @inject SignInManager<ApplicationUser> SignInManager
 @inject IAppVersion AppVersion
@@ -13,11 +14,13 @@
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-datepicker/dist/css/bootstrap-datepicker3.css" />
         <link rel="stylesheet" href="/lib/Font-Awesome/css/all.css" />
         <link rel="stylesheet" href="~/css/site.css" />
     </environment>
     <environment exclude="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/lib/bootstrap-datepicker/dist/css/bootstrap-datepicker3.min.css" />
         <link rel="stylesheet" href="/lib/Font-Awesome/css/all.min.css" />
         <link rel="stylesheet" href="~/css/site.min.css" asp-append-version="true" />
     </environment>
@@ -46,9 +49,13 @@
                     {
                     <li><a asp-area="" asp-controller="Trade" asp-action="Index">Trade</a></li>
                     <li><a asp-area="" asp-controller="Wallet" asp-action="Index">Wallet</a></li>
-                        @if(User.IsInRole("admin"))
+                        @if(User.IsInRole(Utils.AdminRole))
                         {
                     <li><a asp-area="" asp-controller="Internal" asp-action="Index">Internal</a></li>
+                        }
+                        @if(User.IsInRole(Utils.FinanceRole))
+                        {
+                    <li><a asp-area="" asp-controller="Internal" asp-action="Broker">Broker</a></li>
                         }
                     }
                     <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
@@ -72,13 +79,13 @@
     <environment include="Development">
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script src="~/lib/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="~/lib/bootstrap-datepicker/dist/js/bootstrap-datepicker.js"></script>
         <script src="~/js/site.js" asp-append-version="true"></script>
     </environment>
     <environment exclude="Development">
-        <script src="~/lib/jquery/dist/jquery.min.js">
-        </script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.min.js">
-        </script>
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="~/lib/bootstrap-datepicker/dist/js/bootstrap-datepicker.min.js"></script>
         <script src="~/js/site.min.js" asp-append-version="true"></script>
     </environment>
 
