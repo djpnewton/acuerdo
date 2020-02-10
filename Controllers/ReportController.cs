@@ -20,12 +20,29 @@ namespace viafront3.Controllers
     [Route("[controller]/[action]")]
     public class ReportController : BaseSettingsController
     {
+        static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
         public ReportController(
             ILogger<InternalController> logger,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
             IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings)
         {
+        }
+
+        static DateTime StartOfDay(DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, 0);
+        }
+
+        static DateTime EndOfDay(DateTime date)
+        {
+            return new DateTime(date.Year, date.Month, date.Day, 23, 59, 59, 999);
+        }
+
+        static double DateTimeToUnix(DateTime date)
+        {
+            return (date.ToUniversalTime() - epoch).TotalSeconds;
         }
 
         public IActionResult Index()
@@ -38,15 +55,16 @@ namespace viafront3.Controllers
             var user = GetUser(required: true).Result;
 
             var orders = _context.BrokerOrders.AsEnumerable();
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             if (startDate.HasValue)
             {
-                var unixTimestamp = (startDate.Value.ToUniversalTime() - epoch).TotalSeconds;
+                startDate = StartOfDay(startDate.Value);
+                var unixTimestamp = DateTimeToUnix(startDate.Value);
                 orders = orders.Where(o => o.Date >= unixTimestamp);
             }
             if (endDate.HasValue)
             {
-                var unixTimestamp = (endDate.Value.ToUniversalTime() - epoch).TotalSeconds;
+                endDate = EndOfDay(endDate.Value);
+                var unixTimestamp = DateTimeToUnix(endDate.Value);
                 orders = orders.Where(o => o.Date <= unixTimestamp);
             }
             if (orderStatus == "")
@@ -60,12 +78,13 @@ namespace viafront3.Controllers
             if (csv)
             {
                 var stream = new MemoryStream();
-                var writeFile = new StreamWriter(stream);
-                var csvWriter = new CsvWriter(writeFile, System.Globalization.CultureInfo.InvariantCulture);
-                csvWriter.WriteRecords(orders);
-                csvWriter.Flush();
-                stream.Position = 0; //reset stream
-                return File(stream, "application/octet-stream", "broker.csv");
+                var streamWriter = new StreamWriter(stream);
+                streamWriter.AutoFlush = true;
+                using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
+                {
+                    csvWriter.WriteRecords(orders);
+                    return File(stream.GetBuffer(), "application/octet-stream", "broker.csv");
+                }
             }
             else
             {

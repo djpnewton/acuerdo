@@ -493,6 +493,7 @@ namespace viafront3.Services
                 if (spend.State == PendingSpendState.Complete)
                 {
                     order.Status = BrokerOrderStatus.Sent.ToString();
+                    order.TxIdRecipient = spend.TxIds;
                     _context.BrokerOrders.Update(order);
                     _logger.LogInformation($"Payout confirmed for order {order.Token}");
 

@@ -116,8 +116,9 @@
                                         </span>
                                     </td>
                                     <td>
-                                        @item.Recipient
-                                        @(item.TxIdRecipient != null ? $"&nbsp;({item.TxIdRecipient}" : "")
+                                        <a href="data:,@item.Recipient">
+                                            @(item.Recipient?.Substring(0, 5) ?? "")..
+                                        </a>
                                     </td>
                                     <td>
                                         @item.Status
