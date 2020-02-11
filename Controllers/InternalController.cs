@@ -160,7 +160,7 @@ namespace viafront3.Controllers
             return View(model);
         }
 
-        public IActionResult Users(int offset=0, int limit=10, string role=null, string emailSearch=null, string nameSearch=null)
+        public IActionResult Users(int offset=0, int limit=20, string role=null, string emailSearch=null, string nameSearch=null)
         {
             var user = GetUser(required: true).Result;
 
