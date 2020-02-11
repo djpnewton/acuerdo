@@ -210,6 +210,7 @@ namespace viafront3.Models
     {
         public int Id { get; set; }
         public string ApplicationUserId { get; set; }
+        public virtual ApplicationUser User { get; set; }
         public long Date { get; set; }
         public long Expiry { get; set; }
         public string Token { get; set; }

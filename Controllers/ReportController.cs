@@ -10,12 +10,36 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
 using CsvHelper;
+using CsvHelper.Configuration;
 using viafront3.Models;
 using viafront3.Models.InternalViewModels;
 using viafront3.Data;
 
 namespace viafront3.Controllers
 {
+    public sealed class BrokerOrderMap : ClassMap<BrokerOrder>
+    {
+        public BrokerOrderMap()
+        {
+            Map(m => m.Date);
+            Map(m => m.User).ConvertUsing(row => row.User.Email);
+            Map(m => m.Token);
+            Map(m => m.InvoiceId);
+            Map(m => m.Market);
+            Map(m => m.Price);
+            Map(m => m.AssetSend);
+            Map(m => m.AmountSend);
+            Map(m => m.AssetReceive);
+            Map(m => m.AmountReceive);
+            Map(m => m.Fee);
+            Map(m => m.PaymentAddress);
+            Map(m => m.PaymentUrl);
+            Map(m => m.TxIdPayment);
+            Map(m => m.TxIdRecipient);
+            Map(m => m.Status);
+        }
+    }
+
     [Authorize(Roles = Utils.AdminOrFinanceRole)]
     [Route("[controller]/[action]")]
     public class ReportController : BaseSettingsController
@@ -82,6 +106,7 @@ namespace viafront3.Controllers
                 streamWriter.AutoFlush = true;
                 using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
                 {
+                    csvWriter.Configuration.RegisterClassMap<BrokerOrderMap>();
                     csvWriter.WriteRecords(orders);
                     return File(stream.GetBuffer(), "application/octet-stream", "broker.csv");
                 }

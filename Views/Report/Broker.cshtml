@@ -92,14 +92,18 @@
                                         <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
                                     </td>
                                     <td>
-                                        @item.Token
+                                        <a href="data:,@item.Token">
+                                            @(item.Token?.Substring(0, 5) ?? "")..
+                                        </a>
                                     </td>
                                     <td>
-                                        @item.InvoiceId
+                                        <a href="data:,@item.InvoiceId">
+                                            @(item.InvoiceId?.Substring(0, 5) ?? "")..
+                                        </a>
                                     </td>
                                     <td>
                                         <a asp-controller="Internal" asp-action="UserInspect" asp-route-id="@item.ApplicationUserId">
-                                            @item.ApplicationUserId.Substring(0, 5)..
+                                            @item.User.Email
                                         </a>
                                     </td>
                                     <td>
