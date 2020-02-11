@@ -27,7 +27,12 @@
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
                         <label for="EmailSearch" class="col-2 col-form-label">Email</label>
-                        <input class="form-control input-sm" asp-for="EmailSearch" value="@Model.EmailSearch">
+                        <input class="form-control input-sm onenter-submit" asp-for="EmailSearch" value="@Model.EmailSearch">
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        <label for="NameSearch" class="col-2 col-form-label">Name</label>
+                        <input class="form-control input-sm onenter-submit" asp-for="NameSearch" value="@Model.NameSearch">
                     </div>
                 </form>
                 <table class="table table-condensed table-responsive table-hover">
@@ -93,15 +98,15 @@
                 var limit = Model.Limit;
                 if (offset >= limit)
                 {
-                    <a asp-action="Users" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">prev</a>
+                    <a asp-action="Users" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">prev</a>
                 }
                 else if (offset > 0)
                 {
-                    <a asp-action="Users" asp-route-offset="0" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">prev</a>
+                    <a asp-action="Users" asp-route-offset="0" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">prev</a>
                 }
                 if (count - offset > limit)
                 {
-                    <a asp-action="Users" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch">next</a>
+                    <a asp-action="Users" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">next</a>
                 }
             }
             </div>

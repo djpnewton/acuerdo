@@ -23,6 +23,7 @@ namespace viafront3.Models.InternalViewModels
         public int Count { get; set; }
         public string Role { get; set; }
         public string EmailSearch { get; set; }
+        public string NameSearch { get; set; }
         public string UserId { get; set; }
     }
 

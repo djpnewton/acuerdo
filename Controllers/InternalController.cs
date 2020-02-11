@@ -160,7 +160,7 @@ namespace viafront3.Controllers
             return View(model);
         }
 
-        public IActionResult Users(int offset=0, int limit=10, string role=null, string emailSearch=null)
+        public IActionResult Users(int offset=0, int limit=10, string role=null, string emailSearch=null, string nameSearch=null)
         {
             var user = GetUser(required: true).Result;
 
@@ -177,6 +177,10 @@ namespace viafront3.Controllers
                 emailSearch = null;
             if (emailSearch != null)
                 userInfos = userInfos.Where(ui => ui.User.NormalizedEmail.Contains(emailSearch.ToUpper()));
+            if (nameSearch == "")
+                nameSearch = null;
+            if (nameSearch != null)
+                userInfos = userInfos.Where(ui => ui.User.NormalizedUserName.Contains(nameSearch.ToUpper()));
 
             var model = new UsersViewModel
             {
@@ -187,6 +191,7 @@ namespace viafront3.Controllers
                 Count = userInfos.Count(),
                 Role = role,
                 EmailSearch = emailSearch,
+                NameSearch = nameSearch,
             };
             return View(model);
         }

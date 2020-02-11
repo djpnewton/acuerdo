@@ -19,6 +19,15 @@ ready(function() {
         });
     });
 
+    // submit the form when enter pressed
+    $(".onenter-submit").each(function(index) {
+        $(this).keypress(function(e) {
+            if (e.which == 13) {
+                this.form.submit();
+            }
+        });
+    });
+
     // init datepicker elements
     $(".datepicker").datepicker({ format: 'yyyy/mm/dd', autoclose: true, todayBtn: 'linked' });
 });
