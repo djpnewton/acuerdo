@@ -15,7 +15,7 @@
                 Broker Orders
             </div>
             <div class="panel-body">
-                <form asp-action="Broker" method="get" class="form-group">
+                <form asp-action="Broker" method="get" class="form-group form-inline">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     <input type="hidden" asp-for="Offset" value="@Model.Offset" />
                     <input type="hidden" asp-for="Limit" value="@Model.Limit" />
@@ -23,10 +23,12 @@
                         Start date:
                         <input type="text" asp-for="StartDate" class="datepicker onchange-submit" autocomplete="off" value="@startDate"/>
                     </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
                         End date:
                         <input type="text" asp-for="EndDate" class="datepicker onchange-submit" autocomplete="off" value="@endDate"/>
                     </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
                         Show only:
                         <select asp-for="OrderStatus" class="onchange-submit">
@@ -37,6 +39,7 @@
                             <option value="" selected="@(Model.OrderStatus == null ? "selected" : null)">All</option>
                         </select>
                     </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
                         Exclude:
                         <select asp-for="NotOrderStatus" class="onchange-submit">
@@ -95,7 +98,7 @@
                                         @item.InvoiceId
                                     </td>
                                     <td>
-                                        <a asp-action="UserInspect" asp-route-id="@item.ApplicationUserId">
+                                        <a asp-controller="Internal" asp-action="UserInspect" asp-route-id="@item.ApplicationUserId">
                                             @item.ApplicationUserId.Substring(0, 5)..
                                         </a>
                                     </td>
