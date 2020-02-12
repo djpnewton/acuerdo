@@ -1,8 +1,8 @@
-﻿@using viafront3.Models.InternalViewModels
+﻿@using viafront3.Models.ReportViewModels
 @using viafront3.Views
 @model BrokerViewModel
 @{
-    ViewData["Title"] = "Broker";
+    ViewData["Title"] = "Broker Report";
     var startDate = Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "";
     var endDate = Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "";
 }

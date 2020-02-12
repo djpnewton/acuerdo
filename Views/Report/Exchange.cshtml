@@ -1,0 +1,159 @@
+﻿@using viafront3.Models.ReportViewModels
+@using viafront3.Views
+@model ExchangeViewModel
+@{
+    ViewData["Title"] = "Exchange Report";
+    var startDate = Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "";
+    var endDate = Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "";
+}
+<h4>@ViewData["Title"]</h4>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Broker Orders
+            </div>
+            <div class="panel-body">
+                <form asp-action="Exchange" method="get" class="form-group form-inline">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="Offset" value="@Model.Offset" />
+                    <input type="hidden" asp-for="Limit" value="@Model.Limit" />
+                    <div class="form-group">
+                        Start date:
+                        <input type="text" asp-for="StartDate" class="datepicker onchange-submit" autocomplete="off" value="@startDate"/>
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        End date:
+                        <input type="text" asp-for="EndDate" class="datepicker onchange-submit" autocomplete="off" value="@endDate"/>
+                    </div>
+                </form>
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Date
+                        </th>
+                        <th>
+                            User Id
+                        </th>
+                        <th>
+                            Market
+                        </th>
+                        <th>
+                            Deal Id
+                        </th>
+                        <th>
+                            Order Id
+                        </th>
+                        <th>
+                            Deal Order Id
+                        </th>
+                        <th>
+                            Side
+                        </th>
+                        <th>
+                            Role
+                        </th>
+                        <th class="pad-decimals">
+                            Price
+                        </th>
+                        <th class="pad-decimals">
+                            Amount
+                        </th>
+                        <th class="pad-decimals">
+                            Deal
+                        </th>
+                        <th class="pad-decimals">
+                            Fee
+                        </th>
+                        <th class="pad-decimals">
+                            Deal Fee
+                        </th>
+                    </tr>
+                    <tbody>
+                        @{
+                            foreach (var item in Model.Deals)
+                            {
+                                <tr>
+                                    <td>
+                                        <nobr>@ViewUtils.FormatUnixTime((long)@item.time)</nobr>
+                                    </td>
+                                    <td>
+                                        @item.user_id
+                                    </td>
+                                    <td>
+                                        @item.market
+                                    </td>
+                                    <td>
+                                        @item.deal_id
+                                    </td>
+                                    <td>
+                                        @item.order_id
+                                    </td>
+                                    <td>
+                                        @item.deal_order_id
+                                    </td>
+                                    <td>
+                                        @item.side
+                                    </td>
+                                    <td>
+                                        @item.role
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.price
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.amount
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.deal
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.fee
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @item.deal_fee
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                @{
+                    var count = Model.Count;
+                    var offset = Model.Offset;
+                    var limit = Model.Limit;
+                    if (offset >= limit)
+                    {
+                        <a asp-action="Exchange" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate">prev</a>
+                    }
+                    else if (offset > 0)
+                    {
+                        <a asp-action="Exchange" asp-route-offset="0" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate">prev</a>
+                    }
+                    if (count - offset > limit)
+                    {
+                        <a asp-action="Exchange" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate">next</a>
+                    }
+                    <br/>
+                    <a asp-action="Exchange" asp-route-offset="-1" asp-route-limit="-1" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-csv="true">csv</a>
+                }
+            </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+}

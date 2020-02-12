@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace viafront3.Models.InternalViewModels
+namespace viafront3.Models.ReportViewModels
 {
     public class BrokerViewModel : BaseViewModel
     {

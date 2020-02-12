@@ -12,8 +12,9 @@ using Microsoft.Extensions.Primitives;
 using CsvHelper;
 using CsvHelper.Configuration;
 using viafront3.Models;
-using viafront3.Models.InternalViewModels;
+using viafront3.Models.ReportViewModels;
 using viafront3.Data;
+using via_jsonrpc.sql;
 
 namespace viafront3.Controllers
 {
@@ -37,6 +38,26 @@ namespace viafront3.Controllers
             Map(m => m.TxIdPayment);
             Map(m => m.TxIdRecipient);
             Map(m => m.Status);
+        }
+    }
+
+    public sealed class DealMap : ClassMap<via_jsonrpc.sql.Deal>
+    {
+        public DealMap()
+        {
+            Map(m => m.time);
+            Map(m => m.user_id);
+            Map(m => m.market);
+            Map(m => m.deal_id);
+            Map(m => m.order_id);
+            Map(m => m.deal_order_id);
+            Map(m => m.side);
+            Map(m => m.role);
+            Map(m => m.price);
+            Map(m => m.amount);
+            Map(m => m.deal);
+            Map(m => m.fee);
+            Map(m => m.deal_fee);
         }
     }
 
@@ -64,9 +85,9 @@ namespace viafront3.Controllers
             return new DateTime(date.Year, date.Month, date.Day, 23, 59, 59, 999);
         }
 
-        static double DateTimeToUnix(DateTime date)
+        static long DateTimeToUnix(DateTime date)
         {
-            return (date.ToUniversalTime() - epoch).TotalSeconds;
+            return Convert.ToInt64((date.ToUniversalTime() - epoch).TotalSeconds);
         }
 
         public IActionResult Index()
@@ -124,6 +145,55 @@ namespace viafront3.Controllers
                     Count = orders.Count(),
                     OrderStatus = orderStatus,
                     NotOrderStatus = notOrderStatus,
+                    AssetSettings = _settings.Assets,
+                };
+                return View(model);
+            }
+        }
+
+        public IActionResult Exchange(int offset = 0, int limit = 20, DateTime? startDate = null, DateTime? endDate = null, string orderStatus = null, string notOrderStatus = null, bool csv = false)
+        {
+            var user = GetUser(required: true).Result;
+
+            var startUnixTimestamp = 0L;
+            var endUnixTimestamp = 0L;
+            if (startDate.HasValue)
+            {
+                startDate = StartOfDay(startDate.Value);
+                startUnixTimestamp = DateTimeToUnix(startDate.Value);
+            }
+            if (endDate.HasValue)
+            {
+                endDate = EndOfDay(endDate.Value);
+                endUnixTimestamp = DateTimeToUnix(endDate.Value);
+            }
+
+            if (csv)
+            {
+                var deals = ViaSql.ExchangeDeals(_logger, _settings.MySql.Host, _settings.MySql.Database, _settings.MySql.User, _settings.MySql.Password, startUnixTimestamp, endUnixTimestamp);
+                var stream = new MemoryStream();
+                var streamWriter = new StreamWriter(stream);
+                streamWriter.AutoFlush = true;
+                using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
+                {
+                    csvWriter.Configuration.RegisterClassMap<DealMap>();
+                    csvWriter.WriteRecords(deals);
+                    return File(stream.GetBuffer(), "application/octet-stream", "exchange.csv");
+                }
+            }
+            else
+            {
+                var deals = ViaSql.ExchangeDeals(_logger, _settings.MySql.Host, _settings.MySql.Database, _settings.MySql.User, _settings.MySql.Password, startUnixTimestamp, endUnixTimestamp, offset, limit);
+                var count = ViaSql.ExchangeDealsCount(_logger, _settings.MySql.Host, _settings.MySql.Database, _settings.MySql.User, _settings.MySql.Password, startUnixTimestamp, endUnixTimestamp);
+                var model = new ExchangeViewModel
+                {
+                    User = user,
+                    Deals = deals,
+                    Offset = offset,
+                    Limit = limit,
+                    StartDate = startDate,
+                    EndDate = endDate,
+                    Count = count,
                     AssetSettings = _settings.Assets,
                 };
                 return View(model);
