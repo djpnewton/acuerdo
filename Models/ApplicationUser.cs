@@ -28,12 +28,6 @@ namespace viafront3.Models
             return false;
         }
 
-        public bool EnsureExchangeBackendTablesPresent(ILogger logger, MySqlSettings settings)
-        {
-            //TODO: get rid of this!!
-            return via_jsonrpc.sql.ViaSql.EnsureExchangeUserTablesPresent(logger, settings.Host, settings.Database, settings.User, settings.Password, this.Exchange.Id);
-        }
-
         public static ApplicationUser GetUserFromExchangeId(ApplicationDbContext context, UserManager<ApplicationUser> userManager, int exchangeId)
         {
             var exch = context.Exchange.SingleOrDefault(e => e.Id == exchangeId);

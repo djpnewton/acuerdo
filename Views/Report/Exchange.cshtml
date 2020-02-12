@@ -2,7 +2,7 @@
 @using viafront3.Views
 @model ExchangeViewModel
 @{
-    ViewData["Title"] = "Exchange Report";
+    ViewData["Title"] = "Exchange Trades Report";
     var startDate = Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "";
     var endDate = Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "";
 }
@@ -12,7 +12,7 @@
     <div class="col-md-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                Broker Orders
+                Exchange Trades
             </div>
             <div class="panel-body">
                 <form asp-action="Exchange" method="get" class="form-group form-inline">
@@ -35,19 +35,16 @@
                             Date
                         </th>
                         <th>
-                            User Id
+                            Xch User Id
                         </th>
                         <th>
                             Market
                         </th>
                         <th>
-                            Deal Id
+                            Trade Id
                         </th>
                         <th>
                             Order Id
-                        </th>
-                        <th>
-                            Deal Order Id
                         </th>
                         <th>
                             Side
@@ -59,16 +56,13 @@
                             Price
                         </th>
                         <th class="pad-decimals">
-                            Amount
+                            Amount (base currency)
                         </th>
                         <th class="pad-decimals">
-                            Deal
+                            Amount (quote currency)
                         </th>
                         <th class="pad-decimals">
                             Fee
-                        </th>
-                        <th class="pad-decimals">
-                            Deal Fee
                         </th>
                     </tr>
                     <tbody>
@@ -90,9 +84,6 @@
                                     </td>
                                     <td>
                                         @item.order_id
-                                    </td>
-                                    <td>
-                                        @item.deal_order_id
                                     </td>
                                     <td>
                                         @item.side
@@ -118,11 +109,6 @@
                                     <td>
                                         <span class="pad-decimals-data">
                                             @item.fee
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="pad-decimals-data">
-                                            @item.deal_fee
                                         </span>
                                     </td>
                                 </tr>

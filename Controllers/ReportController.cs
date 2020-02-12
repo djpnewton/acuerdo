@@ -45,19 +45,19 @@ namespace viafront3.Controllers
     {
         public DealMap()
         {
-            Map(m => m.time);
-            Map(m => m.user_id);
-            Map(m => m.market);
-            Map(m => m.deal_id);
-            Map(m => m.order_id);
-            Map(m => m.deal_order_id);
-            Map(m => m.side);
-            Map(m => m.role);
-            Map(m => m.price);
-            Map(m => m.amount);
-            Map(m => m.deal);
-            Map(m => m.fee);
-            Map(m => m.deal_fee);
+            Map(m => m.time).Name("Date");
+            Map(m => m.user_id).Name("Exchange User Id");
+            Map(m => m.market).Name("Market");
+            Map(m => m.deal_id).Name("Trade Id");
+            Map(m => m.order_id).Name("Order Id");
+            //Map(m => m.deal_order_id).Name("Counterparty Order Id");
+            Map(m => m.side).Name("Side");
+            Map(m => m.role).Name("Role");
+            Map(m => m.price).Name("Price");
+            Map(m => m.amount).Name("Amount (base currency)");
+            Map(m => m.deal).Name("Amount (quote currency)");
+            Map(m => m.fee).Name("Fee");
+            //Map(m => m.deal_fee).Name("Counterparty fee");
         }
     }
 

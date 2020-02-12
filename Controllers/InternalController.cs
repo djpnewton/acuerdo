@@ -201,8 +201,6 @@ namespace viafront3.Controllers
             var userInspect = _userManager.FindByIdAsync(model.UserId).Result;
             if (userInspect.EnsureExchangePresent(_context))
                 _context.SaveChanges();
-            if (!userInspect.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
-                _logger.LogError("Failed to ensure backend tables present");
             this.FlashSuccess($"User exchange created for '{userInspect.Email}'");
             return RedirectToAction("Users");
         }

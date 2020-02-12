@@ -51,8 +51,6 @@ namespace viafront3.Controllers
 
                 if (user.EnsureExchangePresent(_context))
                     _context.SaveChanges();
-                if (!user.EnsureExchangeBackendTablesPresent(_logger, _settings.MySql))
-                    _logger.LogError("Failed to ensure backend tables present");
             }
             return (result, user);
         }
