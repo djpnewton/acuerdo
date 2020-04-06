@@ -128,6 +128,11 @@ namespace viafront3
     {
         public string Name { get; set; }
         public string WithdrawalLimit { get; set; }
+
+        public override string ToString()
+        {
+            return $"Withdrawal limit: {WithdrawalLimit} ({Name})";
+        }
     }
 
     public class KycSettings

@@ -22,11 +22,10 @@ namespace viafront3.Controllers
 {
     [Authorize(Roles = Utils.AdminRole)]
     [Route("[controller]/[action]")]
-    public class InternalController : BaseSettingsController
+    public class InternalController : BaseWalletController
     {
         private readonly IWebsocketTokens _websocketTokens;
         private readonly WalletSettings _walletSettings;
-        private readonly IWalletProvider _walletProvider;
         private readonly ITripwire _tripwire;
         private readonly TripwireSettings _tripwireSettings;
 
@@ -37,12 +36,12 @@ namespace viafront3.Controllers
             IOptions<ExchangeSettings> settings,
             IOptions<WalletSettings> walletSettings,
             IWalletProvider walletProvider,
+            IOptions<KycSettings> kycSettings,
             IWebsocketTokens websocketTokens,
             ITripwire tripwire,
-            IOptions<TripwireSettings> tripwireSettings) : base(logger, userManager, context, settings)
+            IOptions<TripwireSettings> tripwireSettings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _walletSettings = walletSettings.Value;
-            _walletProvider = walletProvider;
             _websocketTokens = websocketTokens;
             _tripwire = tripwire;
             _tripwireSettings = tripwireSettings.Value;
@@ -213,11 +212,24 @@ namespace viafront3.Controllers
             var via = new ViaJsonRpc(_settings.AccessHttpUrl);
             var balances = Utils.GetUsedBalances(_settings, via, userInspect.Exchange);
 
+            // get kyc level
+            var level = user.Kyc != null ? user.Kyc.Level : 0;
+            KycLevel kycLevel = null;
+            if (level < _kycSettings.Levels.Count())
+                kycLevel = _kycSettings.Levels[level];
+            // get user kyc request
+            string kycRequestUrl = null;
+            var kycRequest = _context.KycRequests.Where(r => r.ApplicationUserId == user.Id).OrderByDescending(r => r.Date).FirstOrDefault();
+            if (kycRequest != null)
+                kycRequestUrl = $"{_kycSettings.KycServerUrl}/request/{kycRequest.Token}";
+ 
             var model = new UserViewModel
             {
                 User = user,
                 UserInspect = userInspect,
                 Balances = new BalancesPartialViewModel{Balances=balances},
+                KycLevel = kycLevel,
+                KycRequestUrl = kycRequestUrl,
                 AssetSettings = _settings.Assets,
             };
             return View(model);
