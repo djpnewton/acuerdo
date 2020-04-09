@@ -1327,7 +1327,7 @@ namespace viafront3.Controllers
                         _logger.LogError($"fiat payments of '${order.AssetSend}' not enabled");
                         return BadRequest($"fiat payments of '${order.AssetSend}' not enabled");
                     }
-                    var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend);
+                    var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend, order.Expiry);
                     if (fiatReq == null)
                     {
                         _logger.LogError("fiat payment request creation failed");
