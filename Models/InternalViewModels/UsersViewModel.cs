@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using Grpc.Core;
 using Microsoft.AspNetCore.Identity;
 using via_jsonrpc;
+using viafront3.Data;
 using viafront3.Models.TradeViewModels;
 
 namespace viafront3.Models.InternalViewModels
@@ -12,7 +14,32 @@ namespace viafront3.Models.InternalViewModels
     public class UserInfo
     {
         public ApplicationUser User { set; get; }
-        public List<string> Roles { set; get; } 
+        public List<string> Roles { set; get; }
+
+        public static IEnumerable<UserInfo> Query(ApplicationDbContext context, string role, string email, string name)
+        {
+            var userInfos = (from u in context.Users
+                             let query = (from ur in context.Set<IdentityUserRole<string>>()
+                                          where ur.UserId.Equals(u.Id)
+                                          join r in context.Roles on ur.RoleId equals r.Id
+                                          select r.Name)
+                             select new UserInfo() { User = u, Roles = query.ToList<string>() });
+            if (role == "")
+                role = null;
+            if (role != null)
+                userInfos = userInfos.Where(ui => ui.Roles.Contains(role));
+            if (email == "")
+                email = null;
+            if (email != null)
+                userInfos = userInfos.Where(ui => ui.User.NormalizedEmail.Contains(email.ToUpper()));
+            if (name == "")
+                name = null;
+            if (name != null)
+                userInfos = userInfos.Where(ui => ui.User.NormalizedUserName.Contains(name.ToUpper()));
+            userInfos = userInfos.OrderBy(ui => ui.User.Exchange == null ? -1 : ui.User.Exchange.Id);
+
+            return userInfos;
+        }
     }
 
     public class UsersViewModel : BaseViewModel

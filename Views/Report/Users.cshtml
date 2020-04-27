@@ -1,0 +1,118 @@
+﻿@using viafront3.Models.InternalViewModels
+@using viafront3.Views
+@model UsersViewModel
+@{
+    ViewData["Title"] = "User list";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                Users
+            </div>
+            <div class="panel-body">
+                <form asp-action="Users" method="get" class="form-group form-inline">
+                    <div asp-validation-summary="All" class="text-danger"></div>
+                    <input type="hidden" asp-for="Offset" value="@Model.Offset" />
+                    <input type="hidden" asp-for="Limit" value="@Model.Limit" />
+                    <div class="form-group">
+                        <label for="Role" class="col-2 col-form-label">Role</label>
+                        <select asp-for="Role" class="onchange-submit">
+                            <option value="@(Utils.AdminRole)" selected="@(Model.Role == Utils.AdminRole ? "selected" : null)">@Utils.AdminRole</option>
+                            <option value="@(Utils.FinanceRole)" selected="@(Model.Role == Utils.FinanceRole ? "selected" : null)">@Utils.FinanceRole</option>
+                            <option value="@(Utils.EmailConfirmedRole)" selected="@(Model.Role == Utils.EmailConfirmedRole ? "selected" : null)">@Utils.EmailConfirmedRole</option>
+                            <option value="" selected="@(Model.Role == null ? "selected" : null)">All</option>
+                        </select>
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        <label for="EmailSearch" class="col-2 col-form-label">Email</label>
+                        <input class="form-control input-sm onenter-submit" asp-for="EmailSearch" value="@Model.EmailSearch">
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        <label for="NameSearch" class="col-2 col-form-label">Name</label>
+                        <input class="form-control input-sm onenter-submit" asp-for="NameSearch" value="@Model.NameSearch">
+                    </div>
+                </form>
+                <table class="table table-condensed table-responsive table-hover">
+                    <tr>
+                        <th>
+                            Email
+                        </th>
+                        <th>
+                            Name
+                        </th>
+                        <th>
+                            Exchange Id
+                        </th>
+                        <th>
+                            Roles
+                        </th>
+                        <th>
+                            Kyc Level
+                        </th>
+                    </tr>
+                    <tbody>
+                        @{
+                            foreach (var userInfo in Model.UserInfos)
+                            {
+                                var user = userInfo.User;
+                                var roles = userInfo.Roles;
+                                <tr>
+                                    <td>
+                                        @user.Email
+                                    </td>
+                                    <td>
+                                        @user.UserName
+                                    </td>
+                                    <td>
+                                        @user.Exchange?.Id
+                                        @{
+                                            if (user.Exchange == null)
+                                            {
+                                                <form method="post" asp-action="UserExchangeCreate">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" asp-for="UserId" value="@user.Id" />
+                                                    <button type="submit" class="btn btn-warning btn-xs">
+                                                        Create Exchange
+                                                    </button>
+                                                </form>
+                                            }
+                                        }
+                                    </td>
+                                    <td>
+                                        @string.Join(",", roles)
+                                    </td>
+                                    <td>
+                                        @user.Kyc?.Level
+                                    </td>
+                                </tr>
+                            }
+                    }
+                </tbody>
+            </table>
+            @{
+                var count = Model.Count;
+                var offset = Model.Offset;
+                var limit = Model.Limit;
+                if (offset >= limit)
+                {
+                    <a asp-action="Users" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">prev</a>
+                }
+                else if (offset > 0)
+                {
+                    <a asp-action="Users" asp-route-offset="0" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">prev</a>
+                }
+                if (count - offset > limit)
+                {
+                    <a asp-action="Users" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch">next</a>
+                }
+                <br/>
+                <a asp-action="Users" asp-route-offset="-1" asp-route-limit="-1" asp-route-role="@Model.Role" asp-route-emailSearch="@Model.EmailSearch" asp-route-nameSearch="@Model.NameSearch" asp-route-csv="true">csv</a>
+            }
+            </div>
+        </div>
+    </div>
+</div>

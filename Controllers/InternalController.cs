@@ -163,24 +163,7 @@ namespace viafront3.Controllers
         {
             var user = GetUser(required: true).Result;
 
-            var userInfos = (from u in _context.Users
-                        let query = (from ur in _context.Set<IdentityUserRole<string>>()
-                            where ur.UserId.Equals(u.Id)
-                            join r in _context.Roles on ur.RoleId equals r.Id select r.Name)
-                        select new UserInfo() {User = u, Roles = query.ToList<string>()});
-            if (role == "")
-                role = null;
-            if (role != null)
-                userInfos = userInfos.Where(ui => ui.Roles.Contains(role));
-            if (emailSearch == "")
-                emailSearch = null;
-            if (emailSearch != null)
-                userInfos = userInfos.Where(ui => ui.User.NormalizedEmail.Contains(emailSearch.ToUpper()));
-            if (nameSearch == "")
-                nameSearch = null;
-            if (nameSearch != null)
-                userInfos = userInfos.Where(ui => ui.User.NormalizedUserName.Contains(nameSearch.ToUpper()));
-
+            var userInfos = UserInfo.Query(_context, role, emailSearch, nameSearch);
             var model = new UsersViewModel
             {
                 User = user,

@@ -13,6 +13,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using viafront3.Models;
 using viafront3.Models.ReportViewModels;
+using viafront3.Models.InternalViewModels;
 using viafront3.Data;
 using via_jsonrpc.sql;
 
@@ -58,6 +59,18 @@ namespace viafront3.Controllers
             Map(m => m.deal).Name("Amount (quote currency)");
             Map(m => m.fee).Name("Fee");
             //Map(m => m.deal_fee).Name("Counterparty fee");
+        }
+    }
+
+    public sealed class UserInfoMap : ClassMap<UserInfo>
+    {
+        public UserInfoMap()
+        {
+            Map(m => m.User.Email).Name("Email");
+            Map(m => m.User.UserName).Name("Name");
+            Map(m => m.User.Exchange).Name("Exchange Id").ConvertUsing(ui => ui.User.Exchange == null ? "" : ui.User.Exchange.Id.ToString());
+            Map(m => m.Roles).Name("Roles").ConvertUsing(ui => string.Join(",", ui.Roles));
+            Map(m => m.User.Kyc).Name("Kyc Level").ConvertUsing(ui => ui.User.Kyc == null ? "" : ui.User.Kyc.Level.ToString());
         }
     }
 
@@ -195,6 +208,41 @@ namespace viafront3.Controllers
                     EndDate = endDate,
                     Count = count,
                     AssetSettings = _settings.Assets,
+                };
+                return View(model);
+            }
+        }
+
+        public IActionResult Users(int offset = 0, int limit = 20, string role = null, string emailSearch = null, string nameSearch = null, bool csv = false)
+        {
+            var user = GetUser(required: true).Result;
+
+            if (csv)
+            {
+                var userInfos = UserInfo.Query(_context, role, emailSearch, nameSearch);
+                var stream = new MemoryStream();
+                var streamWriter = new StreamWriter(stream);
+                streamWriter.AutoFlush = true;
+                using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
+                {
+                    csvWriter.Configuration.RegisterClassMap<UserInfoMap>();
+                    csvWriter.WriteRecords(userInfos);
+                    return File(stream.GetBuffer(), "application/octet-stream", "users.csv");
+                }
+            }
+            else
+            {
+                var userInfos = UserInfo.Query(_context, role, emailSearch, nameSearch);
+                var model = new UsersViewModel
+                {
+                    User = user,
+                    UserInfos = userInfos.Skip(offset).Take(limit),
+                    Offset = offset,
+                    Limit = limit,
+                    Count = userInfos.Count(),
+                    Role = role,
+                    EmailSearch = emailSearch,
+                    NameSearch = nameSearch,
                 };
                 return View(model);
             }
