@@ -107,6 +107,18 @@
         src: templates/telegraf_nginx.conf.j2
         dest: /etc/telegraf/telegraf.d/nginx.conf
 
+    # market_depth config and script
+    - name: install telegraf market_depth config
+      template:
+        src: templates/telegraf_market_depth.conf.j2
+        dest: /etc/telegraf/telegraf.d/telegraf_market_depth.conf
+
+    - name: install market_depth telegraf script
+      template:
+        src: templates/telegraf_market_depth.py
+        dest: /opt/telegraf/telegraf_market_depth.py
+        mode: 0755
+
     # general config
     - name: install telegraf config
       template:
