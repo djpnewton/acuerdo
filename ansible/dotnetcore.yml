@@ -36,6 +36,9 @@
 
     - name: .NET | Install dotnet core SDK
       package:
-        name: "dotnet-sdk-2.2"
+        name: "dotnet-sdk-3.1"
         state: present
         update_cache: true
+
+    - name: install ef dotnet tool
+      shell: mkdir -p /opt/dotnet; dotnet tool install --tool-path /opt/dotnet dotnet-ef

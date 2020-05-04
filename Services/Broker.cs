@@ -102,7 +102,7 @@ namespace viafront3.Services
             // get wallet and only update from the blockchain one time
             IWallet wallet = _walletProvider.GetChain(order.AssetSend);
 
-            var txs = wallet.GetAddrUnacknowledgedTransactions(order.PaymentAddress);
+            var txs = wallet.GetAddrUnacknowledgedTransactions(order.PaymentAddress).ToList();
             var ackTxs = new List<WalletTx>();
             foreach (var tx in txs)
             {

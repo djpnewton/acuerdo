@@ -6,17 +6,17 @@ using via_jsonrpc;
 
 namespace viafront3.Models.ApiViewModels
 {
-    public struct ApiToken
+    public class ApiToken
     {
         [Required]
-        public string Token;
+        public string Token { get; set; }
     }
 
-    public struct ApiKey
+    public class ApiKey
     {
-        public bool Completed;
-        public string Key;
-        public string Secret;
+        public bool Completed { get; set; }
+        public string Key { get; set; }
+        public string Secret { get; set; }
     }
 
     public class ApiAccountCreate

@@ -69,7 +69,7 @@ namespace viafront3
 
             // get wallet transactions
             var newlySeenTxs = new List<WalletTx>();
-            var incommingTxs = wallet.GetAddrTransactions(addr.Address);
+            IEnumerable<WalletTx> incommingTxs = wallet.GetAddrTransactions(addr.Address).ToList();
             if (incommingTxs != null)
                 incommingTxs = incommingTxs.Where(t => t.Direction == WalletDirection.Incomming);
             else
@@ -83,7 +83,7 @@ namespace viafront3
                     if (!string.IsNullOrEmpty(user.Email))
                         await emailSender.SendEmailChainDepositDetectedAsync(user.Email, asset, wallet.AmountToString(tx.AmountOutputs()), tx.ChainTx.TxId);
                 }
-            var unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address);
+            IEnumerable<WalletTx> unackedTxs = wallet.GetAddrUnacknowledgedTransactions(addr.Address).ToList();
             if (unackedTxs != null)
                 unackedTxs = unackedTxs.Where(t => t.Direction == WalletDirection.Incomming && t.ChainTx.Confirmations >= chainAssetSettings.MinConf);
             else
@@ -97,10 +97,8 @@ namespace viafront3
             }
 
             // ack txs and save wallet
-            IEnumerable<WalletTx> justAckedTxs = unackedTxs;
             if (unackedTxs.Any())
             {
-                justAckedTxs = new List<WalletTx>(unackedTxs); // wallet.Save will kill unackedTxs because they are no longer unacked
                 wallet.AcknowledgeTransactions(unackedTxs);
                 wallet.Save();
             }
@@ -108,7 +106,7 @@ namespace viafront3
                 wallet.Save();
 
             // register new deposits with the exchange backend
-            foreach (var tx in justAckedTxs)
+            foreach (var tx in unackedTxs)
             {
                 var amount = wallet.AmountToString(tx.AmountOutputs());
                 var source = new Dictionary<string, object>();
@@ -117,7 +115,7 @@ namespace viafront3
                 via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", businessId, amount, source);
             }
 
-            return new AddressIncommingTxs { IncommingTxs=incommingTxs, NewlySeenTxs=newlySeenTxs, JustAckedTxs=justAckedTxs, NewDeposits=newDeposits };
+            return new AddressIncommingTxs { IncommingTxs=incommingTxs, NewlySeenTxs=newlySeenTxs, JustAckedTxs=unackedTxs, NewDeposits=newDeposits };
         }
 
         public static string CreateToken(int chars = 16)

@@ -8,7 +8,6 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -208,8 +207,11 @@ namespace viafront3.Controllers
                 return null;
             }
             var signature = headerValue.ToString();
+            // Opt into sync IO support until we can work out an alternative https://github.com/aspnet/AspNetCore/issues/6397
+            var syncIOFeature = HttpContext.Features.Get<Microsoft.AspNetCore.Http.Features.IHttpBodyControlFeature>();
+            if (syncIOFeature != null)
+                syncIOFeature.AllowSynchronousIO = true;
             // read raw body text
-            Request.EnableRewind();
             Request.Body.Seek(0, System.IO.SeekOrigin.Begin);
             using (var stream = new System.IO.StreamReader(HttpContext.Request.Body))
             {
@@ -250,7 +252,7 @@ namespace viafront3.Controllers
                 return BadRequest(error);
             _context.ApiKeys.Remove(apikey);
             _context.SaveChanges();
-            return Ok();          
+            return Ok();
         }
 
         [HttpPost]

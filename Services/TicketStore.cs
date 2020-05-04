@@ -125,8 +125,8 @@ namespace viafront3.Services
                         var uaParser = UAParser.Parser.GetDefault();
                         var clientInfo = uaParser.Parse(userAgent);
                         authenticationTicket.OperatingSystem = clientInfo.OS.ToString();
-                        authenticationTicket.UserAgentFamily = clientInfo.UserAgent.Family;
-                        authenticationTicket.UserAgentVersion = $"{clientInfo.UserAgent.Major}.{clientInfo.UserAgent.Minor}.{clientInfo.UserAgent.Patch}";
+                        authenticationTicket.UserAgentFamily = clientInfo.UA.Family;
+                        authenticationTicket.UserAgentVersion = $"{clientInfo.UA.Major}.{clientInfo.UA.Minor}.{clientInfo.UA.Patch}";
                     }
                 }
 

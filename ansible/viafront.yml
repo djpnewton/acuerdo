@@ -259,7 +259,7 @@
       become_user: viafront
 
     - name: EF migrations
-      shell: cd /opt/viafront; dotnet ef database update
+      shell: cd /opt/viafront; /opt/dotnet/dotnet-ef database update
       become: yes
       become_user: viafront
 
@@ -299,4 +299,4 @@
       become_user: viafront
     - file: path=/opt/telegraf/xchwallet_test state=directory
     - name: copy xchwallet test
-      shell: cp /opt/viafront/xchwallet/test/bin/Release/netcoreapp2.1/* /opt/telegraf/xchwallet_test; chmod 0755 /opt/telegraf/xchwallet_test -R;
+      shell: cp /opt/viafront/xchwallet/test/bin/Release/netcoreapp3.1/* /opt/telegraf/xchwallet_test; chmod 0755 /opt/telegraf/xchwallet_test -R;

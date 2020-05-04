@@ -71,16 +71,16 @@ namespace viafront3
                             switch (cr.Topic)
                             {
                                 case OrdersTopic:
-                                    ProcessOrder(context, userManager, settings, emailSender, cr.Value);
+                                    ProcessOrder(context, userManager, settings, emailSender, cr.Message.Value);
                                     break;
                                 case DealsTopic:
-                                    ProcessDeal(context, userManager, emailSender, cr.Value);
+                                    ProcessDeal(context, userManager, emailSender, cr.Message.Value);
                                     break;
                                 default:
                                     break;
                             }
                             // commit queue offsets
-                            c.Commit(cr, cts.Token);
+                            c.Commit(cr);
                         }
                         catch (ConsumeException e)
                         {

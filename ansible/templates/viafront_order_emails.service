@@ -6,7 +6,7 @@ After=network.target
 User=viafront
 Group=viafront
 
-ExecStart=/bin/bash -c "cd /opt/viafront; {{dotnet_run_env}} dotnet bin/Debug/netcoreapp2.2/viafront3.dll console kafka_order_updates"
+ExecStart=/bin/bash -c "cd /opt/viafront; {{dotnet_run_env}} dotnet bin/Debug/netcoreapp3.1/viafront3.dll console kafka_order_updates"
 
 Restart=always
 PrivateTmp=true

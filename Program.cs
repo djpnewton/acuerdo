@@ -232,6 +232,9 @@ namespace viafront3
             var configuration = builder.Build();
             var startup = new Startup(configuration);
             var sc = new ServiceCollection();
+            sc.AddLogging(builder => {
+                builder.AddConsole().AddFilter(level => level >= LogLevel.Debug);
+            });
             startup.ConfigureServices(sc);
             return sc.BuildServiceProvider();
         }

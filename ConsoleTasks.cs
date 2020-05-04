@@ -83,9 +83,6 @@ namespace viafront3
                 Console.WriteLine("ERROR: use either a list of emails *OR* the all users flag");
                 return WalletError.Cancelled;
             }
-            // create our logger
-            var factory = new LoggerFactory().AddConsole(LogLevel.Debug);
-            var _logger = factory.CreateLogger("main");
             // get the user manager
             var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
             // get the wallet
@@ -352,7 +349,7 @@ namespace viafront3
             var emailSender = serviceProvider.GetRequiredService<IEmailSender>();
 
             // update for each user
-            foreach (var user in userManager.Users)
+            foreach (var user in userManager.Users.ToList())
             {
                 // skip broker user because his chain deposits are handled in the Broker class
                 if (user.UserName == apiSettings.Broker.BrokerTag)

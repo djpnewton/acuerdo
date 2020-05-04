@@ -226,7 +226,7 @@ namespace viafront3.Controllers
                 using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
                 {
                     csvWriter.Configuration.RegisterClassMap<UserInfoMap>();
-                    csvWriter.WriteRecords(userInfos);
+                    csvWriter.WriteRecords(userInfos.ToList());
                     return File(stream.GetBuffer(), "application/octet-stream", "users.csv");
                 }
             }
@@ -236,7 +236,7 @@ namespace viafront3.Controllers
                 var model = new UsersViewModel
                 {
                     User = user,
-                    UserInfos = userInfos.Skip(offset).Take(limit),
+                    UserInfos = userInfos.Skip(offset).Take(limit).ToList(),
                     Offset = offset,
                     Limit = limit,
                     Count = userInfos.Count(),

@@ -8,10 +8,10 @@ using System.Security.Cryptography;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using viafront3.Models;
 using viafront3.Models.DevApiViewModels;
@@ -28,7 +28,7 @@ namespace viafront3.Controllers
     [IgnoreAntiforgeryToken]
     public class DevApiController : BaseWalletController
     {
-        protected readonly IHostingEnvironment _hostingEnvironment;
+        protected readonly IWebHostEnvironment _webhostEnvironment;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly RoleManager<IdentityRole> _roleManager;
@@ -36,7 +36,7 @@ namespace viafront3.Controllers
         private readonly ITripwire _tripwire;
 
         public DevApiController(
-            IHostingEnvironment hostingEnvironment,
+            IWebHostEnvironment webhostEnvironment,
             ILogger<ApiController> logger,
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
@@ -49,7 +49,7 @@ namespace viafront3.Controllers
             IWalletProvider walletProvider,
             ITripwire tripwire) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
-            _hostingEnvironment = hostingEnvironment;
+            _webhostEnvironment = webhostEnvironment;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _roleManager = roleManager;
@@ -59,7 +59,7 @@ namespace viafront3.Controllers
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (!_hostingEnvironment.IsDevelopment())
+            if (!_webhostEnvironment.IsDevelopment())
                 context.Result = NotFound();
         }
 

@@ -58,7 +58,7 @@ namespace viafront3.Services
                         var assetSettings = walletProvider.ChainAssetSettings(asset);
 
                         // update for each user
-                        foreach (var user in userManager.Users)
+                        foreach (var user in userManager.Users.ToList())
                         {
                             // skip broker user because his chain deposits are handled in the Broker class
                             if (user.UserName == apiSettings.Broker.BrokerTag)
@@ -110,7 +110,7 @@ namespace viafront3.Services
                         var wallet = walletProvider.GetChain(asset);
                         var assetSettings = walletProvider.ChainAssetSettings(asset);
                         // get pending spends
-                        var spends = wallet.PendingSpendsGet(null, new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error });
+                        var spends = wallet.PendingSpendsGet(null, new PendingSpendState[] { PendingSpendState.Pending, PendingSpendState.Error }).ToList();
                         foreach (var spend in spends)
                         {
                             // recheck tripwire
@@ -206,7 +206,7 @@ namespace viafront3.Services
                         // get wallet
                         var wallet = walletProvider.GetFiat(asset);
                         // get pending withdrawals
-                        var withdrawals = wallet.GetPendingWithdrawals();
+                        var withdrawals = wallet.GetPendingWithdrawals().ToList();
                         foreach (var withdrawal in withdrawals)
                         {
                             // recheck tripwire

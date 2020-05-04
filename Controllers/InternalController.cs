@@ -136,7 +136,7 @@ namespace viafront3.Controllers
             var user = GetUser(required: true).Result;
 
             var wallet = _walletProvider.GetFiat(asset);
-            var pendingTxs = wallet.GetTransactions();
+            IEnumerable<FiatWalletTx> pendingTxs = wallet.GetTransactions().ToList();
             if (onlyIncomplete)
                 pendingTxs = pendingTxs.Where(t => t.BankTx == null);
             if (direction.HasValue)
@@ -167,7 +167,7 @@ namespace viafront3.Controllers
             var model = new UsersViewModel
             {
                 User = user,
-                UserInfos = userInfos.Skip(offset).Take(limit),
+                UserInfos = userInfos.Skip(offset).Take(limit).ToList(),
                 Offset = offset,
                 Limit = limit,
                 Count = userInfos.Count(),
