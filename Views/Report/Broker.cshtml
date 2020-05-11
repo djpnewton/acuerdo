@@ -66,10 +66,10 @@
                             Market
                         </th>
                         <th>
-                            Asset Receive
-                        </th>
-                        <th>
                             Payment Address
+                        </th>
+                        <th class="pad-decimals">
+                            Amount Send
                         </th>
                         <th class="pad-decimals">
                             Amount Receive
@@ -85,7 +85,8 @@
                         @{
                             foreach (var item in Model.Orders)
                             {
-                                var amount = ViewUtils.FormatStrDec(item.AmountReceive.ToString(), Model.AssetSettings[item.AssetReceive].Decimals);
+                                var amountSend = ViewUtils.FormatStrDec(item.AmountSend.ToString(), Model.AssetSettings[item.AssetSend].Decimals);
+                                var amountReceive = ViewUtils.FormatStrDec(item.AmountReceive.ToString(), Model.AssetSettings[item.AssetReceive].Decimals);
 
                                 <tr>
                                     <td>
@@ -110,17 +111,21 @@
                                         @item.Market
                                     </td>
                                     <td>
-                                        @item.AssetReceive
-                                    </td>
-                                    <td>
                                         <a href="data:,@item.PaymentAddress">
                                             @(item.PaymentAddress?.Substring(0, 5) ?? "")..
                                         </a>
                                     </td>
                                     <td>
                                         <span class="pad-decimals-data">
-                                            @amount
+                                            @amountSend
                                         </span>
+                                        @item.AssetSend
+                                    </td>
+                                    <td>
+                                        <span class="pad-decimals-data">
+                                            @amountReceive
+                                        </span>
+                                        @item.AssetReceive
                                     </td>
                                     <td>
                                         <a href="data:,@item.Recipient">
