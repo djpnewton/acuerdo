@@ -179,14 +179,15 @@ namespace viafront3
             wallet.Save();
             Console.WriteLine($"Saved {asset} wallet");
 
-            // register new deposits with the exchange backend
-            var source = new Dictionary<string, object>();
-            source["bankMetadata"] = bankMetadata;
-            var amountStr = amount.ToString();
-            if (!isDeposit)
-                amountStr = (-amount).ToString();
-            via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", depositCodeInt, amountStr, source);
-            Console.WriteLine($"Updated exchange backend");
+            if (isDeposit)
+            {
+                // register new deposits with the exchange backend
+                var source = new Dictionary<string, object>();
+                source["bankMetadata"] = bankMetadata;
+                var amountStr = amount.ToString();
+                via.BalanceUpdateQuery(user.Exchange.Id, asset, "deposit", depositCodeInt, amountStr, source);
+                Console.WriteLine($"Updated exchange backend");
+            }
 
             balance = via.BalanceQuery(user.Exchange.Id, asset);
             Console.WriteLine($"After - available {asset} balance: {balance.Available}");
