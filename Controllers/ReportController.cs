@@ -15,7 +15,9 @@ using viafront3.Models;
 using viafront3.Models.ReportViewModels;
 using viafront3.Models.InternalViewModels;
 using viafront3.Data;
+using viafront3.Services;
 using via_jsonrpc.sql;
+using xchwallet;
 
 namespace viafront3.Controllers
 {
@@ -76,7 +78,7 @@ namespace viafront3.Controllers
 
     [Authorize(Roles = Utils.AdminOrFinanceRole)]
     [Route("[controller]/[action]")]
-    public class ReportController : BaseSettingsController
+    public class ReportController : BaseWalletController
     {
         static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -84,7 +86,9 @@ namespace viafront3.Controllers
             ILogger<InternalController> logger,
             UserManager<ApplicationUser> userManager,
             ApplicationDbContext context,
-            IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings)
+            IWalletProvider walletProvider,
+            IOptions<KycSettings> kycSettings,
+            IOptions<ExchangeSettings> settings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
         }
 
@@ -162,6 +166,37 @@ namespace viafront3.Controllers
                 };
                 return View(model);
             }
+        }
+
+
+        public IActionResult BrokerOrder(string token)
+        {
+            var user = GetUser(required: true).Result;
+
+            var brokerOrder = _context.BrokerOrders.Where(bo => bo.Token == token).FirstOrDefault();
+            WalletPendingSpend pendingSpend = null;
+            FiatWalletTx fiatTx = null;
+            if (_walletProvider.IsChain(brokerOrder.AssetReceive))
+            {
+                var boc = _context.BrokerOrderChainWithdrawals.Where(boc => boc.BrokerOrderId == brokerOrder.Id).FirstOrDefault();
+                if (boc != null)
+                    pendingSpend = _walletProvider.GetChain(brokerOrder.AssetReceive).PendingSpendGet(boc.SpendCode);
+            }
+            else
+            {
+                var bof = _context.BrokerOrderFiatWithdrawals.Where(bof => bof.BrokerOrderId == brokerOrder.Id).FirstOrDefault();
+                if (bof != null)
+                    fiatTx = _walletProvider.GetFiat(brokerOrder.AssetReceive).GetTx(bof.DepositCode);
+            }
+            var model = new BrokerOrderViewModel
+            {
+                User = user,
+                Order = brokerOrder,
+                ChainWithdrawal = pendingSpend,
+                FiatWithdrawal = fiatTx,
+                AssetSettings = _settings.Assets
+            };
+            return View(model);
         }
 
         public IActionResult Exchange(int offset = 0, int limit = 20, DateTime? startDate = null, DateTime? endDate = null, string orderStatus = null, string notOrderStatus = null, bool csv = false)

@@ -1,0 +1,57 @@
+﻿@using viafront3.Views
+
+@{
+    var order = (BrokerOrder)ViewData["order"];
+    var assetSettings = (Dictionary<string, AssetSettings>)ViewData["assetSettings"];
+    var amountSend = ViewUtils.FormatStrDec(order.AmountSend.ToString(), assetSettings[order.AssetSend].Decimals);
+    var amountReceive = ViewUtils.FormatStrDec(order.AmountReceive.ToString(), assetSettings[order.AssetReceive].Decimals);
+
+    <tr>
+        <td>
+            <nobr>@ViewUtils.FormatUnixTime(@order.Date)</nobr>
+        </td>
+        <td>
+            <a asp-action="BrokerOrder" asp-route-token="@order.Token">
+                @(order.Token?.Substring(0, 5) ?? "")..
+            </a>
+        </td>
+        <td>
+            <a href="data:,@order.InvoiceId">
+                @(order.InvoiceId?.Substring(0, 5) ?? "")..
+            </a>
+        </td>
+        <td>
+            <a asp-controller="Internal" asp-action="UserInspect" asp-route-id="@order.ApplicationUserId">
+                @order.User.Email
+            </a>
+        </td>
+        <td>
+            @order.Market
+        </td>
+        <td>
+            <a href="data:,@order.PaymentAddress">
+                @(order.PaymentAddress?.Substring(0, 5) ?? "")..
+            </a>
+        </td>
+        <td>
+            <span class="pad-decimals-data">
+                @amountSend
+            </span>
+            @order.AssetSend
+        </td>
+        <td>
+            <span class="pad-decimals-data">
+                @amountReceive
+            </span>
+            @order.AssetReceive
+        </td>
+        <td>
+            <a href="data:,@order.Recipient">
+                @(order.Recipient?.Substring(0, 5) ?? "")..
+            </a>
+        </td>
+        <td>
+            @order.Status
+        </td>
+    </tr>
+}

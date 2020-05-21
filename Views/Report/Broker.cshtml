@@ -82,61 +82,12 @@
                         </th>
                     </tr>
                     <tbody>
-                        @{
-                            foreach (var item in Model.Orders)
+                        @foreach (var item in Model.Orders)
+                        {
+                            @await Html.PartialAsync("_BrokerOrder", new ViewDataDictionary(ViewData)
                             {
-                                var amountSend = ViewUtils.FormatStrDec(item.AmountSend.ToString(), Model.AssetSettings[item.AssetSend].Decimals);
-                                var amountReceive = ViewUtils.FormatStrDec(item.AmountReceive.ToString(), Model.AssetSettings[item.AssetReceive].Decimals);
-
-                                <tr>
-                                    <td>
-                                        <nobr>@ViewUtils.FormatUnixTime(@item.Date)</nobr>
-                                    </td>
-                                    <td>
-                                        <a href="data:,@item.Token">
-                                            @(item.Token?.Substring(0, 5) ?? "")..
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a href="data:,@item.InvoiceId">
-                                            @(item.InvoiceId?.Substring(0, 5) ?? "")..
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <a asp-controller="Internal" asp-action="UserInspect" asp-route-id="@item.ApplicationUserId">
-                                            @item.User.Email
-                                        </a>
-                                    </td>
-                                    <td>
-                                        @item.Market
-                                    </td>
-                                    <td>
-                                        <a href="data:,@item.PaymentAddress">
-                                            @(item.PaymentAddress?.Substring(0, 5) ?? "")..
-                                        </a>
-                                    </td>
-                                    <td>
-                                        <span class="pad-decimals-data">
-                                            @amountSend
-                                        </span>
-                                        @item.AssetSend
-                                    </td>
-                                    <td>
-                                        <span class="pad-decimals-data">
-                                            @amountReceive
-                                        </span>
-                                        @item.AssetReceive
-                                    </td>
-                                    <td>
-                                        <a href="data:,@item.Recipient">
-                                            @(item.Recipient?.Substring(0, 5) ?? "")..
-                                        </a>
-                                    </td>
-                                    <td>
-                                        @item.Status
-                                    </td>
-                                </tr>
-                            }
+                                { "order", item }, { "assetSettings", Model.AssetSettings }
+                            });
                         }
                     </tbody>
                 </table>

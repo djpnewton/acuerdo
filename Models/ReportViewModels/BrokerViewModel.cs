@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using xchwallet;
 
 namespace viafront3.Models.ReportViewModels
 {
@@ -13,6 +14,14 @@ namespace viafront3.Models.ReportViewModels
         public DateTime? EndDate { get; set; }
         public string OrderStatus { get; set; }
         public string NotOrderStatus { get; set; }
+        public Dictionary<string, AssetSettings> AssetSettings { get; set; }
+    }
+
+    public class BrokerOrderViewModel : BaseViewModel
+    {
+        public BrokerOrder Order { set; get; }
+        public WalletPendingSpend ChainWithdrawal { get; set; }
+        public FiatWalletTx FiatWithdrawal { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
 }
