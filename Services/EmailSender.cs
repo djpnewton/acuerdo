@@ -32,6 +32,25 @@ namespace viafront3.Services
             subject = $"{SiteName}: {subject}";
             if (!string.IsNullOrEmpty(_settings.Signature))
                 message = $"{message}<br/><br/>{_settings.Signature}";
+            else if (!string.IsNullOrEmpty(_settings.TemplateFile))
+            {
+                // load template
+                string templateText = System.IO.File.ReadAllText(_settings.TemplateFile);
+                // insert content into template
+                templateText = templateText.Replace("<EMAILCONTENT/>", message);
+                // strip template comments
+                var htmlDoc = new HtmlAgilityPack.HtmlDocument();
+                htmlDoc.LoadHtml(templateText);
+                htmlDoc.DocumentNode.Descendants()
+                    .Where(n => n.NodeType == HtmlAgilityPack.HtmlNodeType.Comment)
+                    .ToList()
+                    .ForEach(n => n.Remove());
+                templateText = htmlDoc.DocumentNode.InnerHtml;
+                // inline template css
+                templateText = PreMailer.Net.PreMailer.MoveCssInline(templateText).Html;
+
+                message = templateText;
+            }
             // check for null email
             if (email == null)
             {
