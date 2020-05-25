@@ -397,6 +397,7 @@ namespace viafront3.Controllers
                     High = marketStatus.high,
                     Low = marketStatus.low,
                     Volume = marketStatus.volume,
+                    Last = marketStatus.last,
                 };
                 return model;
             }

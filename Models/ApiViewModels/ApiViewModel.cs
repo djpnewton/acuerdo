@@ -112,6 +112,7 @@ namespace viafront3.Models.ApiViewModels
         public string High { get; set; }
         public string Low { get; set; }
         public string Volume { get; set; }
+        public string Last { get; set; }
     }
 
     public class ApiMarket
