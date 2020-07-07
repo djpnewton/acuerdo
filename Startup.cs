@@ -205,7 +205,7 @@ namespace viafront3
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()
-                       .UseMySql(Configuration.GetConnectionString("DefaultConnection")));
+                    .UseMySql(Configuration.GetConnectionString("DefaultConnection"), b => b.CharSetBehavior(Pomelo.EntityFrameworkCore.MySql.Infrastructure.CharSetBehavior.NeverAppend)));
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
