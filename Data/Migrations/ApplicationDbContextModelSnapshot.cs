@@ -14,24 +14,21 @@ namespace viafront3.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.3")
+                .HasAnnotation("ProductVersion", "2.2.3-servicing-35854")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .ValueGeneratedOnAdd();
 
                     b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsConcurrencyToken();
 
                     b.Property<string>("Name")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
                     b.Property<string>("NormalizedName")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
                     b.HasKey("Id");
@@ -46,18 +43,14 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ClaimType");
 
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ClaimValue");
 
                     b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .IsRequired();
 
                     b.HasKey("Id");
 
@@ -69,18 +62,14 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ClaimType");
 
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ClaimValue");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .IsRequired();
 
                     b.HasKey("Id");
 
@@ -91,18 +80,14 @@ namespace viafront3.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("LoginProvider");
 
-                    b.Property<string>("ProviderKey")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ProviderKey");
 
-                    b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ProviderDisplayName");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .IsRequired();
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
@@ -113,11 +98,9 @@ namespace viafront3.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("UserId");
 
-                    b.Property<string>("RoleId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("RoleId");
 
                     b.HasKey("UserId", "RoleId");
 
@@ -128,17 +111,13 @@ namespace viafront3.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("UserId");
 
-                    b.Property<string>("LoginProvider")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("LoginProvider");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Name");
 
-                    b.Property<string>("Value")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Value");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
@@ -148,17 +127,13 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Data.TripwireEvent", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTimeOffset?>("Date")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset?>("Date");
 
-                    b.Property<string>("RemoteIpAddress")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("RemoteIpAddress");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<int>("Type");
 
                     b.HasKey("Id");
 
@@ -168,29 +143,21 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.AccountCreationRequest", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<bool>("Completed")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("Completed");
 
-                    b.Property<long>("Date")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Date");
 
-                    b.Property<string>("RequestedDeviceName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("RequestedDeviceName");
 
-                    b.Property<string>("RequestedEmail")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("RequestedEmail");
 
-                    b.Property<string>("Secret")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Secret");
 
-                    b.Property<string>("Token")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Token");
 
                     b.HasKey("Id");
 
@@ -203,29 +170,21 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.ApiKey", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<int>("AccountCreationRequestId")
-                        .HasColumnType("int");
+                    b.Property<int>("AccountCreationRequestId");
 
-                    b.Property<int>("ApiKeyCreationRequestId")
-                        .HasColumnType("int");
+                    b.Property<int>("ApiKeyCreationRequestId");
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<string>("Key")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Key");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Name");
 
-                    b.Property<long>("Nonce")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Nonce");
 
-                    b.Property<string>("Secret")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Secret");
 
                     b.HasKey("Id");
 
@@ -240,26 +199,19 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.ApiKeyCreationRequest", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<bool>("Completed")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("Completed");
 
-                    b.Property<long>("Date")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Date");
 
-                    b.Property<string>("RequestedDeviceName")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("RequestedDeviceName");
 
-                    b.Property<string>("Secret")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Secret");
 
-                    b.Property<string>("Token")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Token");
 
                     b.HasKey("Id");
 
@@ -272,53 +224,39 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                    b.Property<int>("AccessFailedCount");
 
                     b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                        .IsConcurrencyToken();
 
                     b.Property<string>("Email")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("EmailConfirmed");
 
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("LockoutEnabled");
 
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset?>("LockoutEnd");
 
                     b.Property<string>("NormalizedEmail")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
                     b.Property<string>("NormalizedUserName")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("PasswordHash");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("PhoneNumber");
 
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("PhoneNumberConfirmed");
 
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("SecurityStamp");
 
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("tinyint(1)");
+                    b.Property<bool>("TwoFactorEnabled");
 
                     b.Property<string>("UserName")
-                        .HasColumnType("varchar(256) CHARACTER SET utf8mb4")
                         .HasMaxLength(256);
 
                     b.HasKey("Id");
@@ -336,32 +274,23 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.AuthenticationTicket", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("char(36)");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<DateTimeOffset?>("Expires")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset?>("Expires");
 
-                    b.Property<DateTimeOffset?>("LastActivity")
-                        .HasColumnType("datetime(6)");
+                    b.Property<DateTimeOffset?>("LastActivity");
 
-                    b.Property<string>("OperatingSystem")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("OperatingSystem");
 
-                    b.Property<string>("RemoteIpAddress")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("RemoteIpAddress");
 
-                    b.Property<string>("UserAgentFamily")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("UserAgentFamily");
 
-                    b.Property<string>("UserAgentVersion")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("UserAgentVersion");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("UserId");
 
-                    b.Property<byte[]>("Value")
-                        .HasColumnType("longblob");
+                    b.Property<byte[]>("Value");
 
                     b.HasKey("Id");
 
@@ -373,69 +302,47 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.BrokerOrder", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<decimal>("AmountReceive")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<decimal>("AmountReceive");
 
-                    b.Property<decimal>("AmountSend")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<decimal>("AmountSend");
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<string>("AssetReceive")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("AssetReceive");
 
-                    b.Property<string>("AssetSend")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("AssetSend");
 
-                    b.Property<long>("Date")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Date");
 
-                    b.Property<long>("Expiry")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Expiry");
 
-                    b.Property<decimal>("Fee")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<decimal>("Fee");
 
-                    b.Property<string>("InvoiceId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("InvoiceId");
 
-                    b.Property<string>("Market")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Market");
 
-                    b.Property<string>("PaymentAddress")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("PaymentAddress");
 
-                    b.Property<string>("PaymentUrl")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("PaymentUrl");
 
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)");
+                    b.Property<decimal>("Price");
 
-                    b.Property<string>("Recipient")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Recipient");
 
-                    b.Property<int>("Side")
-                        .HasColumnType("int");
+                    b.Property<int>("Side");
 
-                    b.Property<string>("Status")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Status");
 
-                    b.Property<string>("Token")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Token");
 
-                    b.Property<string>("TxIdPayment")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("TxIdPayment");
 
-                    b.Property<string>("TxIdRecipient")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("TxIdRecipient");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApplicationUserId");
 
                     b.HasIndex("InvoiceId")
                         .IsUnique();
@@ -449,14 +356,11 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.BrokerOrderChainWithdrawal", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<int>("BrokerOrderId")
-                        .HasColumnType("int");
+                    b.Property<int>("BrokerOrderId");
 
-                    b.Property<string>("SpendCode")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("SpendCode");
 
                     b.HasKey("Id");
 
@@ -472,14 +376,11 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.BrokerOrderFiatWithdrawal", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<int>("BrokerOrderId")
-                        .HasColumnType("int");
+                    b.Property<int>("BrokerOrderId");
 
-                    b.Property<string>("DepositCode")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("DepositCode");
 
                     b.HasKey("Id");
 
@@ -495,11 +396,9 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.Exchange", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
                     b.HasKey("Id");
 
@@ -512,14 +411,11 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.Kyc", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<int>("Level")
-                        .HasColumnType("int");
+                    b.Property<int>("Level");
 
                     b.HasKey("Id");
 
@@ -532,17 +428,13 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.KycRequest", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<long>("Date")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Date");
 
-                    b.Property<string>("Token")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("Token");
 
                     b.HasKey("Id");
 
@@ -555,23 +447,17 @@ namespace viafront3.Data.Migrations
             modelBuilder.Entity("viafront3.Models.Withdrawal", b =>
                 {
                     b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd();
 
-                    b.Property<string>("Amount")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Amount");
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("varchar(255) CHARACTER SET utf8mb4");
+                    b.Property<string>("ApplicationUserId");
 
-                    b.Property<string>("Asset")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("Asset");
 
-                    b.Property<long>("Date")
-                        .HasColumnType("bigint");
+                    b.Property<long>("Date");
 
-                    b.Property<string>("WithdrawalAssetEquivalent")
-                        .HasColumnType("longtext CHARACTER SET utf8mb4");
+                    b.Property<string>("WithdrawalAssetEquivalent");
 
                     b.HasKey("Id");
 
@@ -582,58 +468,52 @@ namespace viafront3.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole")
                         .WithMany()
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("viafront3.Models.ApiKey", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany("ApiKeys")
                         .HasForeignKey("ApplicationUserId");
                 });
@@ -645,30 +525,23 @@ namespace viafront3.Data.Migrations
                         .HasForeignKey("UserId");
                 });
 
-            modelBuilder.Entity("viafront3.Models.BrokerOrder", b =>
-                {
-                    b.HasOne("viafront3.Models.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("ApplicationUserId");
-                });
-
             modelBuilder.Entity("viafront3.Models.Exchange", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithOne("Exchange")
                         .HasForeignKey("viafront3.Models.Exchange", "ApplicationUserId");
                 });
 
             modelBuilder.Entity("viafront3.Models.Kyc", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithOne("Kyc")
                         .HasForeignKey("viafront3.Models.Kyc", "ApplicationUserId");
                 });
 
             modelBuilder.Entity("viafront3.Models.Withdrawal", b =>
                 {
-                    b.HasOne("viafront3.Models.ApplicationUser", null)
+                    b.HasOne("viafront3.Models.ApplicationUser")
                         .WithMany("Withdrawals")
                         .HasForeignKey("ApplicationUserId");
                 });
