@@ -27,7 +27,7 @@ def init_db(project, startup_project, context, host, db_name, user, password):
     print(":: create db '%s'.." % db_name) 
     os.environ["CONNECTION_STRING"] = "host=%s;database=%s;uid=%s;password=%s;" % (host, db_name, user, password)
     print("   > %s" % os.environ["CONNECTION_STRING"])
-    cmd = "dotnet ef database update --project %s --startup-project %s --context %s" % (project, startup_project, context)
+    cmd = "/opt/dotnet/dotnet-ef database update --project %s --startup-project %s --context %s" % (project, startup_project, context)
     print("   > %s" % cmd)
     res = os.system(cmd)
     if res != 0:
