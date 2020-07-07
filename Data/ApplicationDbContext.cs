@@ -18,6 +18,7 @@ namespace viafront3.Data
         public DbSet<Withdrawal> Withdrawals { get; set; }
         public DbSet<KycRequest> KycRequests { get; set; }
         public DbSet<BrokerOrder> BrokerOrders { get; set; }
+        public DbSet<BrokerOrderCustomRecipientParams> BrokerOrderCustomRecipientParams { get; set; }
         public DbSet<BrokerOrderFiatWithdrawal> BrokerOrderFiatWithdrawals { get; set; }
         public DbSet<BrokerOrderChainWithdrawal> BrokerOrderChainWithdrawals { get; set; }
         public DbSet<AuthenticationTicket> AuthenticationTickets { get; set; }
@@ -64,6 +65,10 @@ namespace viafront3.Data
                 .IsUnique();
 
             builder.Entity<BrokerOrderFiatWithdrawal>()
+                .HasIndex(r => r.BrokerOrderId)
+                .IsUnique();
+
+            builder.Entity<BrokerOrderCustomRecipientParams>()
                 .HasIndex(r => r.BrokerOrderId)
                 .IsUnique();
 

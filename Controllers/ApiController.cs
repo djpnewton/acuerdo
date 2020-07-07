@@ -1234,6 +1234,18 @@ namespace viafront3.Controllers
                 Status = BrokerOrderStatus.Created.ToString(),
             };
             _context.BrokerOrders.Add(order);
+            if (req.CustomRecipientParams != null)
+            {
+                var recipientParams = new BrokerOrderCustomRecipientParams
+                {
+                    Reference = req.CustomRecipientParams.Reference,
+                    Code = req.CustomRecipientParams.Code,
+                    Particulars = req.CustomRecipientParams.Particulars
+                };
+                _context.BrokerOrderCustomRecipientParams.Add(recipientParams);
+                // use temporary value generated on add (https://docs.microsoft.com/en-us/ef/core/modeling/generated-properties?tabs=data-annotations#value-generated-on-add)
+                recipientParams.BrokerOrderId = order.Id;
+            }
             _context.SaveChanges();
             // respond
             return FormatOrder(_walletProvider, order);
