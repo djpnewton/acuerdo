@@ -336,11 +336,19 @@ namespace viafront3.Models.ApiViewModels
         public string AmountReceive { get; set; }
         public int TimeLimit { get; set; }
     }
-    
+
+    public class ApiCustomRecipientParams
+    {
+        public string Reference { get; set; }
+        public string Code { get; set; }
+        public string Particulars { get; set; }
+    }
+
     public class ApiBrokerCreate : ApiBrokerQuote
     {
         [Required]
         public string Recipient { get; set; }
+        public ApiCustomRecipientParams CustomRecipientParams { get; set; }
     }
     
     public class ApiBrokerOrder

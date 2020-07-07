@@ -199,6 +199,15 @@ namespace viafront3.Models
         public string Status { get; set; }
     }
 
+    public class BrokerOrderCustomRecipientParams
+    {
+        public int Id { get; set; }
+        public int BrokerOrderId { get; set; }
+        public string Reference { get; set; }
+        public string Code { get; set; }
+        public string Particulars { get; set; }
+    }
+
     public class BrokerOrderFiatWithdrawal
     {
         public int Id { get; set; }

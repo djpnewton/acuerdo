@@ -284,8 +284,17 @@ namespace viafront3.Services
             using (var dbtx = wallet.BeginDbTransaction())
             {
                 // register withdrawal with wallet
+                RecipientParams rp = null;
+                var borp = _context.BrokerOrderCustomRecipientParams.SingleOrDefault(r => r.BrokerOrderId == order.Id);
+                if (borp != null)
+                    rp = new RecipientParams
+                    {
+                        Reference = borp.Reference,
+                        Code = borp.Code,
+                        Particulars = borp.Particulars
+                    };
                 var acct = new BankAccount { AccountNumber = order.Recipient };
-                var tx = wallet.RegisterPendingWithdrawal(brokerUser.Id, amountInt, acct);
+                var tx = wallet.RegisterPendingWithdrawal(brokerUser.Id, amountInt, acct, rp);
                 if (tx == null)
                 {
                     _logger.LogError($"Failed to create fiat withdrawal ('{order.Token}')");
