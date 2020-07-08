@@ -203,6 +203,7 @@ namespace viafront3.Models
     {
         public int Id { get; set; }
         public int BrokerOrderId { get; set; }
+        public virtual BrokerOrder BrokerOrder { get; set; }
         public string Reference { get; set; }
         public string Code { get; set; }
         public string Particulars { get; set; }

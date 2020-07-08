@@ -1238,13 +1238,12 @@ namespace viafront3.Controllers
             {
                 var recipientParams = new BrokerOrderCustomRecipientParams
                 {
+                    BrokerOrder = order,
                     Reference = req.CustomRecipientParams.Reference,
                     Code = req.CustomRecipientParams.Code,
                     Particulars = req.CustomRecipientParams.Particulars
                 };
                 _context.BrokerOrderCustomRecipientParams.Add(recipientParams);
-                // use temporary value generated on add (https://docs.microsoft.com/en-us/ef/core/modeling/generated-properties?tabs=data-annotations#value-generated-on-add)
-                recipientParams.BrokerOrderId = order.Id;
             }
             _context.SaveChanges();
             // respond

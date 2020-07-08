@@ -179,6 +179,9 @@ def construct_parser():
     parser_broker_create.add_argument("amount", metavar="AMOUNT", type=str, help="The amount of the asset")
     parser_broker_create.add_argument("amount_as_quote_currency", metavar="AMOUNT_AS_QUOTE_CURRENCY", type=bool, nargs="?", default=False, help="Denominate the amount parameter as the 'quote currency' of the market ticker")
     parser_broker_create.add_argument("recipient", metavar="RECIPIENT", type=str, help="The recipient (cryptocurrency address or bank account number")
+    parser_broker_create.add_argument("recipient_reference", metavar="RECIPIENT_REFERENCE", type=str, nargs="?", help="The custom reference parameter for the recipient")
+    parser_broker_create.add_argument("recipient_code", metavar="RECIPIENT_CODE", type=str, nargs="?", help="The custom code parameter for the recipient")
+    parser_broker_create.add_argument("recipient_particulars", metavar="RECIPIENT_PARTICULARS", type=str, nargs="?", help="The custom particulars parameter for the recipient")
 
     parser_broker_accept = subparsers.add_parser("broker_accept", help="Accept a brokerage order")
     parser_broker_accept.add_argument("key", metavar="KEY", type=str, help="the api key")
@@ -464,6 +467,9 @@ def broker_quote(args):
 def broker_create(args):
     print(":: calling broker create..")
     params = {"market": args.market, "side": args.side, "amount": args.amount, "amountasquotecurrency": args.amount_as_quote_currency, "recipient": args.recipient}
+    if args.recipient_reference or args.recipient_code or args.recipient_particulars:
+        custom_recipient_params = {"reference": args.recipient_reference, "code": args.recipient_code, "particulars": args.recipient_particulars}
+        params["customrecipientparams"] = custom_recipient_params
     r = req("BrokerCreate", params, args.key, args.secret)
     check_request_status(r)
     print(r.text)
