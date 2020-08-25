@@ -1234,6 +1234,17 @@ namespace viafront3.Controllers
                 Status = BrokerOrderStatus.Created.ToString(),
             };
             _context.BrokerOrders.Add(order);
+            if (req.CustomRecipientParams != null)
+            {
+                var recipientParams = new BrokerOrderCustomRecipientParams
+                {
+                    BrokerOrder = order,
+                    Reference = req.CustomRecipientParams.Reference,
+                    Code = req.CustomRecipientParams.Code,
+                    Particulars = req.CustomRecipientParams.Particulars
+                };
+                _context.BrokerOrderCustomRecipientParams.Add(recipientParams);
+            }
             _context.SaveChanges();
             // respond
             return FormatOrder(_walletProvider, order);

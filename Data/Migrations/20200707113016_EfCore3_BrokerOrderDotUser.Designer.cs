@@ -2,15 +2,17 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using viafront3.Data;
 
 namespace viafront3.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20200707113016_EfCore3_BrokerOrderDotUser")]
+    partial class EfCore3_BrokerOrderDotUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -467,32 +469,6 @@ namespace viafront3.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("BrokerOrderChainWithdrawals");
-                });
-
-            modelBuilder.Entity("viafront3.Models.BrokerOrderCustomRecipientParams", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    b.Property<int>("BrokerOrderId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Code")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Particulars")
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("Reference")
-                        .HasColumnType("longtext");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("BrokerOrderId")
-                        .IsUnique();
-
-                    b.ToTable("BrokerOrderCustomRecipientParams");
                 });
 
             modelBuilder.Entity("viafront3.Models.BrokerOrderFiatWithdrawal", b =>

@@ -11,6 +11,7 @@ using RestSharp;
 using Newtonsoft.Json;
 using viafront3.Data;
 using viafront3.Models;
+using xchwallet;
 
 namespace viafront3
 {
@@ -102,13 +103,23 @@ namespace viafront3
         }
 
 
-        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, ExchangeSettings settings, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, string account_number, string email)
+        public static  viafront3.Models.ApiViewModels.ApiFiatPayoutRequest CreateFiatPayoutRequest(ILogger logger, ExchangeSettings settings, FiatProcessorSettings fiatSettings, FiatWalletTx withdrawal, IFiatWallet wallet, string asset, string email)
         {
-            var cents = amount * Utils.IntPow(10, settings.Assets[asset].Decimals);
-            var centsInt = Convert.ToInt64(cents);
-
+            var token = withdrawal.DepositCode;
             // call payment server to create request
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = centsInt, account_number = account_number, account_name = email, reference = fiatSettings.PayoutsReference, code = token });
+            var sender_reference = fiatSettings.PayoutsReference;
+            var sender_code = withdrawal.DepositCode;
+            var reference = fiatSettings.PayoutsReference;
+            var code = withdrawal.DepositCode;
+            var particulars = "";
+            var recipientParams = wallet.GetRecipientParams(withdrawal);
+            if (recipientParams != null)
+            {
+                reference = recipientParams.Reference;
+                code = recipientParams.Code;
+                particulars = recipientParams.Particulars;
+            }
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token, asset, amount = withdrawal.Amount, account_number = withdrawal.AccountNumber, account_name = email, sender_reference, sender_code, reference, code, particulars });
             var response = ServiceRequest(fiatSettings.FiatServerUrl, "payout_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
@@ -122,7 +133,7 @@ namespace viafront3
                         Token = token,
                         Status = status,
                         Asset = asset,
-                        Amount = amount,
+                        Amount = withdrawal.Amount,
                     };
                     return model;
                 }
