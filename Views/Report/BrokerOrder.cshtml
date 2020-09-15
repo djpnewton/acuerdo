@@ -55,117 +55,141 @@
                 </table>
             </div>
         </div>
+        @if (Model.KycRequestUrl != null)
+        {
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    KYC
+                </div>
+                <div class="panel-body">
+                    <table class="table table-condensed table-responsive table-hover">
+                        <tr>
+                            <th>
+                                Kyc Request Url
+                            </th>
+                        </tr>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    @Model.KycRequestUrl
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
         @if (Model.ChainWithdrawal != null)
         {
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Chain Withdrawal
-            </div>
-            <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                            Spend Code
-                        </th>
-                        <th>
-                            State
-                        </th>
-                        <th>
-                            Error
-                        </th>
-                        <th>
-                            Error Message
-                        </th>
-                        <th>
-                            Amount
-                        </th>
-                        <th>
-                            TxIds
-                        </th>
-                    </tr>
-                    <tbody>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Chain Withdrawal
+                </div>
+                <div class="panel-body">
+                    <table class="table table-condensed table-responsive table-hover">
                         <tr>
-                            <td>
-                                @Model.ChainWithdrawal.SpendCode
-                            </td>
-                            <td>
-                                @Model.ChainWithdrawal.State
-                            </td>
-                            <td>
-                                @Model.ChainWithdrawal.Error
-                            </td>
-                            <td>
-                                @Model.ChainWithdrawal.ErrorMessage
-                            </td>
-                            <td>
-                                @Model.ChainWithdrawal.Amount
-                            </td>
-                            <td>
-                                @Model.ChainWithdrawal.TxIds
-                            </td>
+                            <th>
+                                Spend Code
+                            </th>
+                            <th>
+                                State
+                            </th>
+                            <th>
+                                Error
+                            </th>
+                            <th>
+                                Error Message
+                            </th>
+                            <th>
+                                Amount
+                            </th>
+                            <th>
+                                TxIds
+                            </th>
                         </tr>
-                    </tbody>
-                </table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    @Model.ChainWithdrawal.SpendCode
+                                </td>
+                                <td>
+                                    @Model.ChainWithdrawal.State
+                                </td>
+                                <td>
+                                    @Model.ChainWithdrawal.Error
+                                </td>
+                                <td>
+                                    @Model.ChainWithdrawal.ErrorMessage
+                                </td>
+                                <td>
+                                    @Model.ChainWithdrawal.Amount
+                                </td>
+                                <td>
+                                    @Model.ChainWithdrawal.TxIds
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         }
         @if (Model.FiatWithdrawal != null)
         {
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Fiat Withdrawal
-            </div>
-            <div class="panel-body">
-                <table class="table table-condensed table-responsive table-hover">
-                    <tr>
-                        <th>
-                            Deposit Code
-                        </th>
-                        <th>
-                            Complete
-                        </th>
-                        <th>
-                            Amount
-                        </th>
-                        <th>
-                            Bank Name
-                        </th>
-                        <th>
-                            Account Name
-                        </th>
-                        <th>
-                            Account Number
-                        </th>
-                    </tr>
-                    <tbody>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    Fiat Withdrawal
+                </div>
+                <div class="panel-body">
+                    <table class="table table-condensed table-responsive table-hover">
                         <tr>
-                            <td>
-                                @Model.FiatWithdrawal.DepositCode
-                            </td>
-                            <td>
-                                @(Model.FiatWithdrawal.BankTx != null)
-                            </td>
-                            <td>
-                                @Model.FiatWithdrawal.Amount
-                            </td>
-                            <td>
-                                @Model.FiatWithdrawal.BankName
-                            </td>
-                            <td>
-                                @Model.FiatWithdrawal.AccountName
-                            </td>
-                            <td>
-                                @Model.FiatWithdrawal.AccountNumber
-                            </td>
+                            <th>
+                                Deposit Code
+                            </th>
+                            <th>
+                                Complete
+                            </th>
+                            <th>
+                                Amount
+                            </th>
+                            <th>
+                                Bank Name
+                            </th>
+                            <th>
+                                Account Name
+                            </th>
+                            <th>
+                                Account Number
+                            </th>
                         </tr>
-                    </tbody>
-                </table>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    @Model.FiatWithdrawal.DepositCode
+                                </td>
+                                <td>
+                                    @(Model.FiatWithdrawal.BankTx != null)
+                                </td>
+                                <td>
+                                    @Model.FiatWithdrawal.Amount
+                                </td>
+                                <td>
+                                    @Model.FiatWithdrawal.BankName
+                                </td>
+                                <td>
+                                    @Model.FiatWithdrawal.AccountName
+                                </td>
+                                <td>
+                                    @Model.FiatWithdrawal.AccountNumber
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
         }
     </div>
-</div>
+            </div>
 
-@section Scripts {
-    @await Html.PartialAsync("_PadDecimalsScriptsPartial")
-}
+            @section Scripts {
+                @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+            }

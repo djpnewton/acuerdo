@@ -188,12 +188,18 @@ namespace viafront3.Controllers
                 if (bof != null)
                     fiatTx = _walletProvider.GetFiat(brokerOrder.AssetReceive).GetTx(bof.DepositCode);
             }
+            // get user kyc request
+            string kycRequestUrl = null;
+            var kycRequest = _context.KycRequests.Where(r => r.ApplicationUserId == brokerOrder.ApplicationUserId).OrderByDescending(r => r.Date).FirstOrDefault();
+            if (kycRequest != null)
+                kycRequestUrl = $"{_kycSettings.KycServerUrl}/request/{kycRequest.Token}";
             var model = new BrokerOrderViewModel
             {
                 User = user,
                 Order = brokerOrder,
                 ChainWithdrawal = pendingSpend,
                 FiatWithdrawal = fiatTx,
+                KycRequestUrl = kycRequestUrl,
                 AssetSettings = _settings.Assets
             };
             return View(model);

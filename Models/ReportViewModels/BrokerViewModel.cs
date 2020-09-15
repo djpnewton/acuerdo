@@ -22,6 +22,7 @@ namespace viafront3.Models.ReportViewModels
         public BrokerOrder Order { set; get; }
         public WalletPendingSpend ChainWithdrawal { get; set; }
         public FiatWalletTx FiatWithdrawal { get; set; }
+        public string KycRequestUrl { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
 }
