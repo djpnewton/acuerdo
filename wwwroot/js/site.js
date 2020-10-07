@@ -14,7 +14,10 @@
 ready(function() {
     // submit the form when element changes
     $(".onchange-submit").each(function(index) {
-        $(this).change(function() {
+        $(this).change(function () {
+            var offsetInput = this.form.querySelector("#Offset");
+            if (offsetInput)
+                offsetInput.value = 0;
             this.form.submit();
         });
     });
@@ -23,6 +26,9 @@ ready(function() {
     $(".onenter-submit").each(function(index) {
         $(this).keypress(function(e) {
             if (e.which == 13) {
+                var offsetInput = this.form.querySelector("#Offset");
+                if (offsetInput)
+                    offsetInput.value = 0;
                 this.form.submit();
             }
         });

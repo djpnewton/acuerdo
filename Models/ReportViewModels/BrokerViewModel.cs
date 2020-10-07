@@ -12,6 +12,7 @@ namespace viafront3.Models.ReportViewModels
         public int Count { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
+        public string Email { get; set; }
         public string OrderStatus { get; set; }
         public string NotOrderStatus { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }

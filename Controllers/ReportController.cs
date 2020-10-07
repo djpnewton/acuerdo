@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Primitives;
 using CsvHelper;
 using CsvHelper.Configuration;
 using viafront3.Models;
@@ -112,30 +112,28 @@ namespace viafront3.Controllers
             return View(BaseViewModel());
         }
 
-        public IActionResult Broker(int offset=0, int limit=20, DateTime? startDate=null, DateTime? endDate=null, string orderStatus=null, string notOrderStatus=null, bool csv=false)
+        public IActionResult Broker(int offset=0, int limit=20, DateTime? startDate=null, DateTime? endDate=null, string email=null, string orderStatus=null, string notOrderStatus=null, bool csv=false)
         {
             var user = GetUser(required: true).Result;
 
-            var orders = _context.BrokerOrders.AsEnumerable();
+            long startUnixTimestamp = 0;
             if (startDate.HasValue)
             {
                 startDate = StartOfDay(startDate.Value);
-                var unixTimestamp = DateTimeToUnix(startDate.Value);
-                orders = orders.Where(o => o.Date >= unixTimestamp);
+                startUnixTimestamp = DateTimeToUnix(startDate.Value);
             }
+            long endUnixTimestamp = 0;
             if (endDate.HasValue)
             {
                 endDate = EndOfDay(endDate.Value);
-                var unixTimestamp = DateTimeToUnix(endDate.Value);
-                orders = orders.Where(o => o.Date <= unixTimestamp);
+                endUnixTimestamp = DateTimeToUnix(endDate.Value);
             }
-            if (orderStatus == "")
-                orderStatus = null;
-            if (orderStatus != null)
-                orders = orders.Where(o => o.Status == orderStatus);
-            if (notOrderStatus != null)
-                orders = orders.Where(o => o.Status != notOrderStatus);
-            orders = orders.OrderByDescending(o => o.Date);
+            var orders = _context.BrokerOrders.Include(o => o.User).
+                                               Where(o => (!startDate.HasValue || o.Date >= startUnixTimestamp) && (!endDate.HasValue || o.Date <= endUnixTimestamp) &&
+                                                          (string.IsNullOrEmpty(email) || o.User.Email == email) &&
+                                                          (string.IsNullOrEmpty(orderStatus) || o.Status == orderStatus) &&
+                                                          (string.IsNullOrEmpty(notOrderStatus) || o.Status != notOrderStatus)).
+                                               OrderByDescending(o => o.Date);
 
             if (csv)
             {
@@ -145,21 +143,23 @@ namespace viafront3.Controllers
                 using (var csvWriter = new CsvWriter(streamWriter, System.Globalization.CultureInfo.InvariantCulture))
                 {
                     csvWriter.Configuration.RegisterClassMap<BrokerOrderMap>();
-                    csvWriter.WriteRecords(orders);
+                    csvWriter.WriteRecords(orders.AsEnumerable());
                     return File(stream.GetBuffer(), "application/octet-stream", "broker.csv");
                 }
             }
             else
             {
+                var count = orders.Count();
                 var model = new BrokerViewModel
                 {
                     User = user,
-                    Orders = orders.Skip(offset).Take(limit),
+                    Orders = orders.Skip(offset).Take(limit).AsEnumerable(),
                     Offset = offset,
                     Limit = limit,
                     StartDate = startDate,
                     EndDate = endDate,
-                    Count = orders.Count(),
+                    Email = email,
+                    Count = count,
                     OrderStatus = orderStatus,
                     NotOrderStatus = notOrderStatus,
                     AssetSettings = _settings.Assets,

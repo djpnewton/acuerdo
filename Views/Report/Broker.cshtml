@@ -5,6 +5,7 @@
     ViewData["Title"] = "Broker Report";
     var startDate = Model.StartDate.HasValue ? Model.StartDate.Value.ToString("yyyy/MM/dd") : "";
     var endDate = Model.EndDate.HasValue ? Model.EndDate.Value.ToString("yyyy/MM/dd") : "";
+    var email = Model.Email;
 }
 <h4>@ViewData["Title"]</h4>
 
@@ -15,18 +16,23 @@
                 Broker Orders
             </div>
             <div class="panel-body">
-                <form asp-action="Broker" method="get" class="form-group form-inline">
+                <form id="search-form" asp-action="Broker" method="get" class="form-group form-inline">
                     <div asp-validation-summary="All" class="text-danger"></div>
                     <input type="hidden" asp-for="Offset" value="@Model.Offset" />
                     <input type="hidden" asp-for="Limit" value="@Model.Limit" />
                     <div class="form-group">
                         Start date:
-                        <input type="text" asp-for="StartDate" class="datepicker onchange-submit" autocomplete="off" value="@startDate"/>
+                        <input type="text" asp-for="StartDate" class="datepicker onchange-submit" autocomplete="off" value="@startDate" />
                     </div>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
                         End date:
-                        <input type="text" asp-for="EndDate" class="datepicker onchange-submit" autocomplete="off" value="@endDate"/>
+                        <input type="text" asp-for="EndDate" class="datepicker onchange-submit" autocomplete="off" value="@endDate" />
+                    </div>
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    <div class="form-group">
+                        Email:
+                        <input type="text" asp-for="Email" class="onchange-submit" autocomplete="off" value="@email" />
                     </div>
                     &nbsp;&nbsp;&nbsp;&nbsp;
                     <div class="form-group">
@@ -97,24 +103,30 @@
                     var limit = Model.Limit;
                     if (offset >= limit)
                     {
-                        <a asp-action="Broker" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
+                        <a asp-action="Broker" asp-route-offset="@(offset-limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-email="@email" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
                     }
                     else if (offset > 0)
                     {
-                        <a asp-action="Broker" asp-route-offset="0" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
+                        <a asp-action="Broker" asp-route-offset="0" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-email="@email" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">prev</a>
                     }
                     if (count - offset > limit)
                     {
-                        <a asp-action="Broker" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">next</a>
+                        <a asp-action="Broker" asp-route-offset="@(offset+limit)" asp-route-limit="@limit" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-email="@email" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus">next</a>
                     }
-                    <br/>
-                    <a asp-action="Broker" asp-route-offset="-1" asp-route-limit="-1" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus" asp-route-csv="true">csv</a>
+                    <br />
+                    <a asp-action="Broker" asp-route-offset="-1" asp-route-limit="-1" asp-route-startDate="@startDate" asp-route-endDate="@endDate" asp-route-email="@email" asp-route-orderStatus="@Model.OrderStatus" asp-route-notOrderStatus="@Model.NotOrderStatus" asp-route-csv="true">csv</a>
                 }
             </div>
+        </div>
     </div>
-</div>
 </div>
 
 @section Scripts {
     @await Html.PartialAsync("_PadDecimalsScriptsPartial")
+    <environment include="Development">
+        <script src="~/js/set-email.js" asp-append-version="true"></script>
+    </environment>
+    <environment exclude="Development">
+        <script src="~/js/set-email.min.js" asp-append-version="true"></script>
+    </environment>
 }
