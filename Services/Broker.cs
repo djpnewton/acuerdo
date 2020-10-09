@@ -17,6 +17,7 @@ namespace viafront3.Services
     public interface IBroker
     {
         void ProcessOrders();
+        void ProcessOrder(BrokerOrder order);
         bool FiatWithdrawToCustomer(ApplicationUser brokerUser, BrokerOrder order);
     }
 
@@ -525,7 +526,7 @@ namespace viafront3.Services
                 return;
             }
             // get lock - ensure that this function ends before it is started again
-            lock(lockObj)
+            lock (lockObj)
             {
                 _logger.LogInformation("Process Orders - Broker");
                 var date = DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -555,6 +556,39 @@ namespace viafront3.Services
                     }
                 }
                 _context.SaveChanges();
+            }
+        }
+
+        public void ProcessOrder(BrokerOrder order)
+        {
+            // if tripwire tripped cancel
+            if (!_tripwire.TradingEnabled() || !_tripwire.WithdrawalsEnabled())
+            {
+                _logger.LogError("Tripwire tripped, exiting ProcessOrders()");
+                return;
+            }
+            // get lock - ensure that this function ends before it is started again
+            lock (lockObj)
+            {
+                _logger.LogInformation("Process Order - Broker");
+                var currentStatus = order.Status;
+                // process created order
+                while (order.Status == BrokerOrderStatus.Ready.ToString() || order.Status == BrokerOrderStatus.Incomming.ToString() ||
+                    order.Status == BrokerOrderStatus.Confirmed.ToString() || order.Status == BrokerOrderStatus.PayoutWait.ToString())
+                {
+                    if (_walletProvider.IsChain(order.AssetSend))
+                        ProcessOrderChain(order);
+                    else
+                        ProcessOrderFiat(order);
+
+                    _context.SaveChanges();
+
+                    // break loop if order status does not progress
+                    if (order.Status == currentStatus)
+                        break;
+                    else
+                        currentStatus = order.Status;
+                }
             }
         }
     }

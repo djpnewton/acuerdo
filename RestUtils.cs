@@ -46,11 +46,17 @@ namespace viafront3
             return ServiceRequest(url, endpoint, null, jsonBody);
         }
 
-        public static viafront3.Models.ApiViewModels.ApiFiatPaymentRequest CreateFiatPaymentRequest(ILogger logger, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, long expiry)
+        public static string CreateBrokerWebhookSig(string secret, string token, long nonce)
+        {
+            var message = string.Format("{0}-{1}", token, nonce);
+            return HMacWithSha256(secret, message);
+        }
+
+        public static viafront3.Models.ApiViewModels.ApiFiatPaymentRequest CreateFiatPaymentRequest(ILogger logger, FiatProcessorSettings fiatSettings, string token, string asset, decimal amount, long expiry, string webhook)
         {
             // call payment server to create request
             var amount_cents =  Convert.ToInt32(amount * 100);
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount_cents, return_url = "", expiry = expiry });
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount_cents, return_url = "", expiry = expiry, webhook = webhook });
             var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {

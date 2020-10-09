@@ -52,5 +52,14 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { code },
                 protocol: scheme);
         }
+
+        public static string BrokerOrderWebhookLink(this IUrlHelper urlHelper, string token, long nonce, string signature, string scheme)
+        {
+            return urlHelper.Action(
+                action: nameof(ApiController.BrokerWebhook),
+                controller: "api/v1",
+                values: new { token, nonce, signature },
+                protocol: scheme);
+        }
     }
 }

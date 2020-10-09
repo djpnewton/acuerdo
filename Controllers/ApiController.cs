@@ -48,6 +48,7 @@ namespace viafront3.Controllers
         private readonly ITripwire _tripwire;
         private readonly IUserLocks _userLocks;
         private readonly FiatProcessorSettings _fiatSettings;
+        private readonly IBroker _broker;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -62,7 +63,8 @@ namespace viafront3.Controllers
             IWalletProvider walletProvider,
             ITripwire tripwire,
             IUserLocks userLocks,
-            IOptions<FiatProcessorSettings> fiatSettings) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IOptions<FiatProcessorSettings> fiatSettings,
+            IBroker broker) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
@@ -71,6 +73,7 @@ namespace viafront3.Controllers
             _tripwire = tripwire;
             _userLocks = userLocks;
             _fiatSettings = fiatSettings.Value;
+            _broker = broker;
         }
 
         [HttpPost]
@@ -1341,7 +1344,10 @@ namespace viafront3.Controllers
                         _logger.LogError($"fiat payments of '${order.AssetSend}' not enabled");
                         return BadRequest($"fiat payments of '${order.AssetSend}' not enabled");
                     }
-                    var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend, order.Expiry);
+                    var nonce = DateTimeOffset.Now.ToUnixTimeSeconds();
+                    var signature = RestUtils.CreateBrokerWebhookSig(_fiatSettings.FiatServerSecret, order.Token, nonce);
+                    var webhook = Url.BrokerOrderWebhookLink(order.Token, nonce, signature, Request.Scheme);
+                    var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend, order.Expiry, webhook);
                     if (fiatReq == null)
                     {
                         _logger.LogError("fiat payment request creation failed");
@@ -1394,6 +1400,30 @@ namespace viafront3.Controllers
             foreach (var order in orders)
                 formattedOrders.Add(FormatOrder(_walletProvider, order));
             return new ApiBrokerOrdersResponse { Offset = req.Offset, Limit = req.Limit, Orders = formattedOrders };
+        }
+
+        public ActionResult BrokerWebhook(string token, long nonce, string signature)
+        {
+            // check nonce age
+            if (DateTimeOffset.Now.ToUnixTimeSeconds() - (60 * 60 * 24) > nonce)
+                return BadRequest("old nonce");
+            // validate sig
+            var ourSig = RestUtils.CreateBrokerWebhookSig(_fiatSettings.FiatServerSecret, token, nonce);
+            if (signature != ourSig)
+                return BadRequest("invalid sig");
+            // get order
+            var order = _context.BrokerOrders.Where(o => o.Token == token).FirstOrDefault();
+            if (order == null)
+                return BadRequest("invalid token");
+            // check order status
+            if (!Enum.TryParse<BrokerOrderStatus>(order.Status, out var status))
+                return BadRequest("invalid order status");
+            if (status == BrokerOrderStatus.Error || status == BrokerOrderStatus.Expired || status == BrokerOrderStatus.Sent)
+                return BadRequest("invalid order status");
+            // update order status
+            _broker.ProcessOrder(order);
+
+            return Ok("ok");
         }
     }
 }
