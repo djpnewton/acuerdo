@@ -49,6 +49,7 @@ namespace viafront3.Controllers
         private readonly IUserLocks _userLocks;
         private readonly FiatProcessorSettings _fiatSettings;
         private readonly IBroker _broker;
+        private readonly IDepositsWithdrawals _depositsWithdrawals;
 
         public ApiController(
             ILogger<ApiController> logger,
@@ -64,7 +65,8 @@ namespace viafront3.Controllers
             ITripwire tripwire,
             IUserLocks userLocks,
             IOptions<FiatProcessorSettings> fiatSettings,
-            IBroker broker) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IBroker broker,
+            IDepositsWithdrawals depositsWithdrawals) : base(logger, userManager, context, settings, walletProvider, kycSettings)
         {
             _signInManager = signInManager;
             _emailSender = emailSender;
@@ -74,6 +76,7 @@ namespace viafront3.Controllers
             _userLocks = userLocks;
             _fiatSettings = fiatSettings.Value;
             _broker = broker;
+            _depositsWithdrawals = depositsWithdrawals;
         }
 
         [HttpPost]
@@ -1422,6 +1425,8 @@ namespace viafront3.Controllers
                 return BadRequest("invalid order status");
             // update order status
             _broker.ProcessOrder(order);
+            // process any chain withdrawals that are now ready
+            _depositsWithdrawals.ProcessChainWithdrawals();
 
             return Ok("ok");
         }
