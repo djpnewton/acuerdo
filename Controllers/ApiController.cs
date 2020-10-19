@@ -23,34 +23,8 @@ namespace viafront3.Controllers
     [Route("api/v1/[action]")]
     [ApiController]
     [IgnoreAntiforgeryToken]
-    public class ApiController : BaseWalletController
+    public class ApiController : BaseApiController
     {
-        const string EXPIRED = "expired";
-        const string INTERNAL_ERROR = "internal error";
-        const string AUTHENTICATION_FAILED = "authentication failed";
-        const string OLD_NONCE = "old nonce";
-        const string KYC_SERVICE_NOT_AVAILABLE = "kyc service not available";
-        const string FIAT_PAYMENT_SERVICE_NOT_AVAILABLE = "fiat payment service not available";
-        const string INVALID_MARKET = "invalid market";
-        const string INSUFFICIENT_BALANCE = "insufficient balance";
-        const string INSUFFICIENT_LIQUIDITY = "insufficient liquidity";
-        const string INVALID_ORDER = "invalid order";
-        const string AMOUNT_TOO_LOW = "amount too low (minumum is: {0})";
-        const string INVALID_RECIPIENT = "invalid recipient";
-        const string INVALID_INTERVAL = "invalid interval";
-        const string INVALID_AMOUNT = "invalid amount";
-        const string INVALID_BROKER_STATUS = "invalid broker status";
-
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly IEmailSender _emailSender;
-        private readonly RoleManager<IdentityRole> _roleManager;
-        private readonly ApiSettings _apiSettings;
-        private readonly ITripwire _tripwire;
-        private readonly IUserLocks _userLocks;
-        private readonly FiatProcessorSettings _fiatSettings;
-        private readonly IBroker _broker;
-        private readonly IDepositsWithdrawals _depositsWithdrawals;
-
         public ApiController(
             ILogger<ApiController> logger,
             UserManager<ApplicationUser> userManager,
@@ -66,17 +40,8 @@ namespace viafront3.Controllers
             IUserLocks userLocks,
             IOptions<FiatProcessorSettings> fiatSettings,
             IBroker broker,
-            IDepositsWithdrawals depositsWithdrawals) : base(logger, userManager, context, settings, walletProvider, kycSettings)
+            IDepositsWithdrawals depositsWithdrawals) : base(logger, userManager, signInManager, context, emailSender, settings, apiSettings, roleManager, kycSettings, walletProvider, tripwire, userLocks, fiatSettings, broker, depositsWithdrawals)
         {
-            _signInManager = signInManager;
-            _emailSender = emailSender;
-            _roleManager = roleManager;
-            _apiSettings = apiSettings.Value;
-            _tripwire = tripwire;
-            _userLocks = userLocks;
-            _fiatSettings = fiatSettings.Value;
-            _broker = broker;
-            _depositsWithdrawals = depositsWithdrawals;
         }
 
         [HttpPost]
@@ -276,22 +241,7 @@ namespace viafront3.Controllers
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
-            var xch = _context.Exchange.SingleOrDefault(x => x.ApplicationUserId == apikey.ApplicationUserId);
-            if (xch == null)
-                return BadRequest(INTERNAL_ERROR); 
-            try
-            {
-                //TODO: move this to a ViaRpcProvider in /Services (like IWalletProvider)
-                var via = new ViaJsonRpc(_settings.AccessHttpUrl);
-                var balances = Utils.GetUsedBalances(_settings, via, xch);
-                var model = new ApiAccountBalance { Assets = balances };
-                return model;
-            }
-            catch (ViaJsonException ex)
-            {
-                _logger.LogError(ex, "error in balance query");
-                return BadRequest(INTERNAL_ERROR);
-            }
+            return AccountBalance(apikey.ApplicationUserId);
         }
 
         [HttpPost]
@@ -300,29 +250,7 @@ namespace viafront3.Controllers
             var apikey = AuthKey(req.Key, req.Nonce, out string error);
             if (apikey == null)
                 return BadRequest(error);
-            var user = await _userManager.FindByIdAsync(apikey.ApplicationUserId);
-            if (user == null)
-                return BadRequest(INTERNAL_ERROR);
-            var level = user.Kyc != null ? user.Kyc.Level : 0;
-            KycLevel kycLevel = null;
-            if (level < _kycSettings.Levels.Count())
-                kycLevel = _kycSettings.Levels[level];
-            else
-                return BadRequest(INTERNAL_ERROR);
-            var withdrawalTotalThisPeriod = user.WithdrawalTotalThisPeriod(_kycSettings);
-            var withdrawalTotalThisPeriodString = _walletProvider.AmountToString(_kycSettings.WithdrawalAsset, withdrawalTotalThisPeriod);
-            if (withdrawalTotalThisPeriodString == null)
-                withdrawalTotalThisPeriodString = withdrawalTotalThisPeriod.ToString();
-            var model = new ApiAccountKyc
-            {
-                Level = level.ToString(),
-                WithdrawalLimit = kycLevel.WithdrawalLimit,
-                WithdrawalAsset = _kycSettings.WithdrawalAsset,
-                WithdrawalPeriod = _kycSettings.WithdrawalPeriod.ToString(),
-                WithdrawalTotal = withdrawalTotalThisPeriodString,
-
-            };
-            return model;
+            return await AccountKyc(apikey.ApplicationUserId);
         }
 
         [HttpPost]

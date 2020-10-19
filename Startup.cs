@@ -169,6 +169,17 @@ namespace viafront3
         public string PayoutsReference { get; set; }
     }
 
+    public class OAuthClientId
+    {
+        public string Secret { get; set; }
+        public string Name { get; set; }
+    }
+
+    public class OAuthSettings
+    {
+        public Dictionary<string, OAuthClientId> ClientIds { get; set; }
+    }
+
     public class HangfireAuthorizationFilter : IDashboardAuthorizationFilter
     {
         public bool Authorize(DashboardContext context)
@@ -202,6 +213,7 @@ namespace viafront3
             services.Configure<KycSettings>(options => Configuration.GetSection("Kyc").Bind(options));
             services.Configure<TripwireSettings>(options => Configuration.GetSection("Tripwire").Bind(options));
             services.Configure<FiatProcessorSettings>(options => Configuration.GetSection("FiatProcessor").Bind(options));
+            services.Configure<OAuthSettings>(options => Configuration.GetSection("OAuth").Bind(options));
 
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseLazyLoadingProxies()

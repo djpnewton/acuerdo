@@ -23,6 +23,7 @@ namespace viafront3.Data
         public DbSet<BrokerOrderChainWithdrawal> BrokerOrderChainWithdrawals { get; set; }
         public DbSet<AuthenticationTicket> AuthenticationTickets { get; set; }
         public DbSet<TripwireEvent> TripwireEvents { get; set; }
+        public DbSet<OAuthToken> OAuthTokens { get; set; }
 
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
@@ -82,6 +83,10 @@ namespace viafront3.Data
 
             builder.Entity<BrokerOrderChainWithdrawal>()
                 .HasIndex(r => r.SpendCode)
+                .IsUnique();
+
+            builder.Entity<OAuthToken>()
+                .HasIndex(t => t.AccessToken)
                 .IsUnique();
         }
     }

@@ -241,4 +241,16 @@ namespace viafront3.Models
         public string UserAgentFamily { get; set; }
         public string UserAgentVersion { get; set; }
     }
+
+    public class OAuthToken
+    {
+        public int Id { get; set; }
+        public string ApplicationUserId { get; set; }
+        public virtual ApplicationUser User { get; set; }
+        public long Date { get; set; }
+        public long ExpiresIn { get; set; }
+        public long ExpiresAt { get; set; }
+        public string AccessToken { get; set; }
+        public string Scope { get; set; }
+    }
 }

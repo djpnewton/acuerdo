@@ -1,0 +1,34 @@
+﻿@using viafront3.Models;  
+@model OAuthRequestViewModel
+@{
+    ViewData["Title"] = "Authorize";
+    var scopeDesc = "";
+    foreach (var scope in Model.Scope.Split(' '))
+    {
+        if (scopeDesc != "")
+            scopeDesc = scopeDesc + ", ";
+        scopeDesc = scopeDesc + Model.AvailableScopes[scope];
+    }
+}
+
+<div class="card">
+    <h5 class="card-header">An application would like to connect to your account</h5>
+    <div class="card-body">
+        <h5 class="card-title">The app <strong>@Model.ClientIds[Model.ClientId].Name</strong> would like the ability to to access your @scopeDesc</h5>
+        <p class="card-text">Allow <strong>@Model.ClientIds[Model.ClientId].Name</strong> access?</p>
+        <div class="row">
+            <div class="col-md-6">
+                <form asp-action="Deny" method="POST" class="pull-right">
+                    <input type="hidden" name="code" value="@Model.Code">
+                    <input type="submit" class="btn btn-primary" value="DENY">
+                </form>
+            </div>
+            <div class="col-md-6">
+                <form asp-action="Allow" method="POST">
+                    <input type="hidden" name="code" value="@Model.Code">
+                    <input type="submit" class="btn btn-primary" value="ALLOW">
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
