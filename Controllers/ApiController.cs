@@ -268,7 +268,7 @@ namespace viafront3.Controllers
             if (user == null)
                 return BadRequest(INTERNAL_ERROR);
             // call kyc server to create request
-            var model = await RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId, user.Email);
+            var model = await RestUtils.CreateKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId, user.Email, Url, Request.Scheme);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);
@@ -286,10 +286,25 @@ namespace viafront3.Controllers
             if (apikey == null)
                 return BadRequest(error);
             // call kyc server to check request
-            var model = await RestUtils.CheckKycRequest(_logger, _context, _userManager, _kycSettings, apikey.ApplicationUserId, req.Token);
+            var model = await RestUtils.CheckKycRequest(_logger, _context, _userManager, _kycSettings, req.Token);
             if (model != null)
                 return model;
             return BadRequest(INTERNAL_ERROR);
+        }
+
+        public async Task<ActionResult> AccountKycWebhook(string token, long nonce, string signature)
+        {
+            // check nonce age
+            if (DateTimeOffset.Now.ToUnixTimeSeconds() - (60 * 60 * 24) > nonce)
+                return BadRequest("old nonce");
+            // validate sig
+            var ourSig = RestUtils.CreateWebhookSig(_kycSettings.KycServerApiSecret, token, nonce);
+            if (signature != ourSig)
+                return BadRequest("invalid sig");
+            // call kyc server to check request
+            await RestUtils.CheckKycRequest(_logger, _context, _userManager, _kycSettings, token);
+ 
+            return Ok("ok");
         }
 
         [HttpGet]
@@ -1276,7 +1291,7 @@ namespace viafront3.Controllers
                         return BadRequest($"fiat payments of '${order.AssetSend}' not enabled");
                     }
                     var nonce = DateTimeOffset.Now.ToUnixTimeSeconds();
-                    var signature = RestUtils.CreateBrokerWebhookSig(_fiatSettings.FiatServerSecret, order.Token, nonce);
+                    var signature = RestUtils.CreateWebhookSig(_fiatSettings.FiatServerSecret, order.Token, nonce);
                     var webhook = Url.BrokerOrderWebhookLink(order.Token, nonce, signature, Request.Scheme);
                     var fiatReq = RestUtils.CreateFiatPaymentRequest(_logger, _fiatSettings, order.Token, order.AssetSend, order.AmountSend, order.Expiry, webhook);
                     if (fiatReq == null)
@@ -1339,7 +1354,7 @@ namespace viafront3.Controllers
             if (DateTimeOffset.Now.ToUnixTimeSeconds() - (60 * 60 * 24) > nonce)
                 return BadRequest("old nonce");
             // validate sig
-            var ourSig = RestUtils.CreateBrokerWebhookSig(_fiatSettings.FiatServerSecret, token, nonce);
+            var ourSig = RestUtils.CreateWebhookSig(_fiatSettings.FiatServerSecret, token, nonce);
             if (signature != ourSig)
                 return BadRequest("invalid sig");
             // get order

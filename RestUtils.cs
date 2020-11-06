@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 using viafront3.Data;
 using viafront3.Models;
 using xchwallet;
+using Microsoft.AspNetCore.Mvc;
 
 namespace viafront3
 {
@@ -46,7 +47,7 @@ namespace viafront3
             return ServiceRequest(url, endpoint, null, jsonBody);
         }
 
-        public static string CreateBrokerWebhookSig(string secret, string token, long nonce)
+        public static string CreateWebhookSig(string secret, string token, long nonce)
         {
             var message = string.Format("{0}-{1}", token, nonce);
             return HMacWithSha256(secret, message);
@@ -56,7 +57,7 @@ namespace viafront3
         {
             // call payment server to create request
             var amount_cents =  Convert.ToInt32(amount * 100);
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token = token, asset = asset, amount = amount_cents, return_url = "", expiry = expiry, webhook = webhook });
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = fiatSettings.FiatServerApiKey, token, asset, amount = amount_cents, return_url = "", expiry, webhook });
             var response = RestUtils.ServiceRequest(fiatSettings.FiatServerUrl, "payment_create", fiatSettings.FiatServerSecret, jsonBody);
             if (response.IsSuccessful)
             {
@@ -191,15 +192,18 @@ namespace viafront3
         }
 
         public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CreateKycRequest(ILogger logger, ApplicationDbContext context,
-            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string email)
+            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string email, IUrlHelper url, string requestScheme)
         {
             // check request does not already exist
             var kycReq = context.KycRequests.Where(r => r.ApplicationUserId == applicationUserId).FirstOrDefault();
             if (kycReq != null)
-                return await CheckKycRequest(logger, context, userManager, kycSettings, applicationUserId, kycReq.Token);
+                return await CheckKycRequest(logger, context, userManager, kycSettings, kycReq.Token);
             // call kyc server to create request
             var token = Utils.CreateToken();
-            var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token = token, email = email });
+            var nonce = DateTimeOffset.Now.ToUnixTimeSeconds();
+            var signature = RestUtils.CreateWebhookSig(kycSettings.KycServerApiSecret, token, nonce);
+            var webhook = url.KycRequestWebhookLink(token, nonce, signature, requestScheme);
+            var jsonBody = JsonConvert.SerializeObject(new { api_key = kycSettings.KycServerApiKey, token, email, webhook });
             var response = RestUtils.ServiceRequest(kycSettings.KycServerUrl, "request", kycSettings.KycServerApiSecret, jsonBody);
             if (response.IsSuccessful)
             {
@@ -228,9 +232,17 @@ namespace viafront3
         }
 
         public static async Task<Models.ApiViewModels.ApiAccountKycRequest> CheckKycRequest(ILogger logger, ApplicationDbContext context, 
-            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string applicationUserId, string token)
+            UserManager<ApplicationUser> userManager, KycSettings kycSettings, string token)
         {
-            var jsonBody = JsonConvert.SerializeObject(new { token = token });
+            // find request
+            var kycReq = context.KycRequests.Where(r => r.Token == token).FirstOrDefault();
+            if (kycReq == null)
+            {
+                logger.LogError($"::CheckKycRequest {token} not found");
+                return null;
+            }
+
+            var jsonBody = JsonConvert.SerializeObject(new { token });
             var response = RestUtils.ServiceRequest(kycSettings.KycServerUrl, "status", jsonBody);
             if (response.IsSuccessful)
             {
@@ -238,11 +250,12 @@ namespace viafront3
                 if (json.ContainsKey("status"))
                 {
                     var status = json["status"];
+                    logger.LogInformation($"::CheckKycRequest {token}, status: {status}");
                     // update kyc level if complete
                     if (status.ToLower() == viafront3.Models.ApiViewModels.ApiRequestStatus.Completed.ToString().ToLower())
                     {
                         var newLevel = 2;
-                        var user = await userManager.FindByIdAsync(applicationUserId);
+                        var user = await userManager.FindByIdAsync(kycReq.ApplicationUserId);
                         if (user == null)
                             return null;
                         var userKyc = user.Kyc;
@@ -250,12 +263,14 @@ namespace viafront3
                         {
                             userKyc = new Kyc { ApplicationUserId = user.Id, Level = newLevel };
                             context.Kycs.Add(userKyc);
+                            logger.LogInformation($"::CheckKycRequest {token}, ApplicationUserId: {user.Id}, Level: {newLevel}");
                         }
                         else if (userKyc.Level < newLevel)
                         {
 
                             userKyc.Level = newLevel;
                             context.Kycs.Update(userKyc);
+                            logger.LogInformation($"::CheckKycRequest {token}, ApplicationUserId: {user.Id}, Level: {newLevel}");
                         }
                         context.SaveChanges();
                     }
@@ -268,7 +283,10 @@ namespace viafront3
                     };
                     return model;
                 }
+                else
+                    logger.LogError($"::CheckKycRequest {token} response not valid");
             }
+            logger.LogError($"::CheckKycRequest {token} failed HTTP status code: {response.StatusCode}");
             return null;
         }
     }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using viafront3.Controllers;
 
 namespace Microsoft.AspNetCore.Mvc
@@ -55,11 +56,24 @@ namespace Microsoft.AspNetCore.Mvc
 
         public static string BrokerOrderWebhookLink(this IUrlHelper urlHelper, string token, long nonce, string signature, string scheme)
         {
-            return urlHelper.Action(
+            var url = urlHelper.Action(
                 action: nameof(ApiController.BrokerWebhook),
                 controller: "api/v1",
                 values: new { token, nonce, signature },
                 protocol: scheme);
+            // IUrlHelper.Action encodes the '/' in the controller part to %2F
+            return HttpUtility.UrlDecode(url);
+        }
+
+        public static string KycRequestWebhookLink(this IUrlHelper urlHelper, string token, long nonce, string signature, string scheme)
+        {
+            var url = urlHelper.Action(
+                action: nameof(ApiController.AccountKycWebhook),
+                controller: "api/v1",
+                values: new { token, nonce, signature },
+                protocol: scheme);
+            // IUrlHelper.Action encodes the '/' in the controller part to %2F
+            return HttpUtility.UrlDecode(url);
         }
     }
 }
