@@ -61,7 +61,28 @@
                     <tbody>
                         <tr>
                             <td>
-                                @Model.KycLevel
+                                <form asp-action="UserInspectKycSet" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@Model.UserInspect.Id" />
+                                    <select name="level">
+                                        @{
+                                            var levelInt = 0;
+                                            foreach (var level in Model.KycSettings.Levels)
+                                            {
+                                                if (Model.KycLevel == level)
+                                                {
+                                                    <option value="@levelInt" selected>@level</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@levelInt">@level</option>
+                                                }
+                                                levelInt++;
+                                            }
+                                        }
+                                    </select>
+                                    <input type="submit" />
+                                </form>
                             </td>
                             <td>
                                 <a href="@Model.KycRequestUrl">@Model.KycRequestUrl</a>

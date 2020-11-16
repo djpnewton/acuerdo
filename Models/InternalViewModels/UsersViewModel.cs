@@ -60,6 +60,7 @@ namespace viafront3.Models.InternalViewModels
         public BalancesPartialViewModel Balances { get; set; }
         public KycLevel KycLevel { get; set; }
         public string KycRequestUrl { get; set; }
+        public KycSettings KycSettings { get; set; }
         public Dictionary<string, AssetSettings> AssetSettings { get; set; }
     }
 

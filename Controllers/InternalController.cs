@@ -205,17 +205,36 @@ namespace viafront3.Controllers
             var kycRequest = _context.KycRequests.Where(r => r.ApplicationUserId == userInspect.Id).OrderByDescending(r => r.Date).FirstOrDefault();
             if (kycRequest != null)
                 kycRequestUrl = $"{_kycSettings.KycServerUrl}/request/{kycRequest.Token}";
- 
+
             var model = new UserViewModel
             {
                 User = user,
                 UserInspect = userInspect,
-                Balances = new BalancesPartialViewModel{Balances=balances},
+                Balances = new BalancesPartialViewModel { Balances = balances },
                 KycLevel = kycLevel,
                 KycRequestUrl = kycRequestUrl,
+                KycSettings = _kycSettings,
                 AssetSettings = _settings.Assets,
             };
             return View(model);
+        }
+
+        [ValidateAntiForgeryToken]
+        [HttpPost]
+        public IActionResult UserInspectKycSet(string id, int level)
+        {
+            var user = GetUser(required: true).Result;
+            var userInspect = _userManager.FindByIdAsync(id).Result;
+            if (level >= 0 && level < _kycSettings.Levels.Count())
+            {
+                if (userInspect.Kyc == null)
+                    userInspect.Kyc = new Kyc { ApplicationUserId = userInspect.Id, Level = level };
+                else
+                    userInspect.Kyc.Level = level;
+                _context.Add(userInspect.Kyc);
+                _context.SaveChanges();
+            }
+            return RedirectToAction("UserInspect", new { id = userInspect.Id });
         }
 
         public IActionResult UserInspectTrades(string id, string market)
