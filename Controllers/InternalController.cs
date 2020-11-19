@@ -228,10 +228,15 @@ namespace viafront3.Controllers
             if (level >= 0 && level < _kycSettings.Levels.Count())
             {
                 if (userInspect.Kyc == null)
+                {
                     userInspect.Kyc = new Kyc { ApplicationUserId = userInspect.Id, Level = level };
+                    _context.Add(userInspect.Kyc);
+                }
                 else
+                {
                     userInspect.Kyc.Level = level;
-                _context.Add(userInspect.Kyc);
+                    _context.Update(userInspect.Kyc);
+                }
                 _context.SaveChanges();
             }
             return RedirectToAction("UserInspect", new { id = userInspect.Id });
